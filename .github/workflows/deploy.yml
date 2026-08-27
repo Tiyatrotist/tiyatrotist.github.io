@@ -32,10 +32,13 @@ jobs:
           cache: "npm"
 
       - name: Install Dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build & Export Static Site
-        run: npm run build
+        run: |
+          npm run build
+          touch ./out/.nojekyll
+          cp ./out/_not-found.html ./out/404.html || true
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
