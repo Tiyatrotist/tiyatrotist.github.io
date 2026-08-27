@@ -1,35 +1,38 @@
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { Locale, getDictionary } from '@/dictionaries';
 
-export const metadata = {
-  title: 'CONTACT — TIYATROTIST',
-  description: 'Transmission and contact portals.',
-};
+interface ContactPageProps {
+  params: Promise<{ lang: string }>;
+}
 
-export default function ContactPage() {
+export default async function ContactPage({ params }: ContactPageProps) {
+  const { lang } = await params;
+  const currentLang = (lang === 'tr' ? 'tr' : 'en') as Locale;
+  const dict = getDictionary(currentLang);
+  const c = dict.contactPage;
+
   return (
     <main className="main-container">
-      <Header />
+      <Header lang={currentLang} dict={dict} />
       <div className="page-container">
         <header className="page-header">
-          <span className="page-tag">[ TRANSMISSION // CONTACT ]</span>
-          <h1 className="page-title">CONTACT</h1>
-          <p className="page-subtitle">
-            Initiate communication or explore collaborative technical ventures.
-          </p>
+          <span className="page-tag">{c.tag}</span>
+          <h1 className="page-title">{c.title}</h1>
+          <p className="page-subtitle">{c.subtitle}</p>
         </header>
 
         <section className="page-content">
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
             <div>
-              <span className="page-tag">[ DIRECT TRANSMISSION ]</span>
+              <span className="page-tag">{c.directLabel}</span>
               <p style={{ marginTop: '0.5rem', fontSize: '1.25rem', color: '#ffffff' }}>
                 contact@tiyatrotist.com
               </p>
             </div>
 
             <div>
-              <span className="page-tag">[ PUBLIC NETWORKS ]</span>
+              <span className="page-tag">{c.networksLabel}</span>
               <div style={{ marginTop: '0.75rem', display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
                 <a
                   href="https://github.com"
@@ -63,7 +66,7 @@ export default function ContactPage() {
           </div>
         </section>
       </div>
-      <Footer />
+      <Footer lang={currentLang} dict={dict} />
     </main>
   );
 }

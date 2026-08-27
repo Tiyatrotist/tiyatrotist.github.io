@@ -1,20 +1,29 @@
-import Header from '@/components/Header';
-import Hero from '@/components/Hero';
-import ScrollScene from '@/components/ScrollScene';
-import SecondScene from '@/components/SecondScene';
-import ProjectIntro from '@/components/ProjectIntro';
-import Footer from '@/components/Footer';
+'use client';
 
-export default function Home() {
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+export default function RootPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    // 1. Check stored preference in localStorage
+    const stored = localStorage.getItem('preferred_lang');
+    if (stored === 'tr' || stored === 'en') {
+      router.replace(`/${stored}`);
+      return;
+    }
+
+    // 2. Check browser navigator language
+    const navLang = navigator.language || (navigator as any).userLanguage || '';
+    if (navLang.toLowerCase().startsWith('tr')) {
+      router.replace('/tr');
+    } else {
+      router.replace('/en');
+    }
+  }, [router]);
+
   return (
-    <main className="main-container">
-      <Header />
-      <Hero />
-      <ScrollScene>
-        <SecondScene />
-        <ProjectIntro />
-      </ScrollScene>
-      <Footer />
-    </main>
+    <div style={{ background: '#000000', minHeight: '100vh' }} />
   );
 }

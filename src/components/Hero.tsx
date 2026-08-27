@@ -1,13 +1,6 @@
 /**
  * TIYATROTIST — Hero
- * Ana hero bölümü — nokta tipografisi, giriş animasyonu, fare etkileşimi.
- * (Main hero section — dot typography, entrance animation, mouse interaction)
- *
- * Çalışma prensibi:
- * 1. Siyah ekranla başlar.
- * 2. Küçük beyaz noktalar yavaşça belirir.
- * 3. Noktalar TIYATROTIST oluşumuna dönüşür.
- * 4. Alt başlık ve çevresel parçacık alanı stabilize olur.
+ * Main hero section — dot typography, entrance animation, independent dot particle interaction.
  */
 
 'use client';
@@ -16,8 +9,14 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { DotEngine } from '@/engine/DotEngine';
 import { textToDots } from '@/engine/DotTypography';
+import { Locale, Dictionary } from '@/dictionaries';
 
-export default function Hero() {
+interface HeroProps {
+  lang: Locale;
+  dict: Dictionary;
+}
+
+export default function Hero({ lang, dict }: HeroProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<DotEngine | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -25,7 +24,6 @@ export default function Hero() {
   const [showCta, setShowCta] = useState(false);
   const initRef = useRef(false);
 
-  // Azaltılmış hareket tespiti
   const reducedMotion = typeof window !== 'undefined'
     ? window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
     : false;
@@ -36,34 +34,25 @@ export default function Hero() {
     initRef.current = true;
 
     const canvas = canvasRef.current;
-
-    // Mobil parçacık yoğunluğu ayarı
     const isMobile = window.innerWidth < 768;
     const isTablet = window.innerWidth < 1024;
 
-    // Grid spacing: daha düşük = daha fazla nokta
-    const gridSpacing = isMobile ? 7 : isTablet ? 5 : 4;
+    const gridSpacing = isMobile ? 7 : isTablet ? 6 : 5;
     const fontSize = isMobile ? 48 : isTablet ? 80 : 120;
     const maxParticles = isMobile ? 1200 : isTablet ? 2000 : 3000;
 
-    console.debug('[Hero] Initializing...', { isMobile, isTablet, gridSpacing, fontSize });
-
-    // DotEngine oluştur
     const engine = new DotEngine({
       canvas,
       maxParticles,
       baseSize: isMobile ? 1.2 : 1.5,
-      mouseRadius: isMobile ? 60 : 100,
-      mouseForce: 0.25,
-      friction: 0.88,
-      springForce: 0.06,
       enableMouseInteraction: !isMobile,
       reducedMotion,
+      useGlobalMouse: true,
+      sectionMode: 'hero',
     });
 
     engineRef.current = engine;
 
-    // "TIYATROTIST" metnini nokta koordinatlarına dönüştür
     const layout = textToDots('TIYATROTIST', {
       fontSize,
       fontWeight: '700',
@@ -71,41 +60,27 @@ export default function Hero() {
       alphaThreshold: 100,
     });
 
-    console.debug(`[Hero] Text layout: ${layout.dots.length} dots, ${layout.width}x${layout.height}`);
-
-    // Hedef pozisyonları ayarla — canvas merkezine yerleştir
     const centerX = engine.getWidth() / 2;
     const centerY = engine.getHeight() * 0.42;
 
     engine.setTargets(layout.dots, centerX, centerY, true);
-
-    // Çevresel parçacıklar ekle
     const ambientCount = isMobile ? 30 : isTablet ? 50 : 80;
     engine.addAmbientParticles(ambientCount);
-
-    // Animasyon döngüsünü başlat
     engine.start();
 
-    // Alt başlık ve CTA'yı gecikmeyle göster
     const subtitleDelay = reducedMotion ? 200 : 1200;
     const ctaDelay = reducedMotion ? 400 : 2000;
 
     setTimeout(() => setShowSubtitle(true), subtitleDelay);
     setTimeout(() => setShowCta(true), ctaDelay);
-
-    console.debug('[Hero] Engine started, waiting for subtitle/CTA reveals');
   }, [reducedMotion]);
 
-  // Component mount
   useEffect(() => {
-    // Font yüklenmesini bekle, sonra engine'i başlat
     if (document.fonts) {
       document.fonts.ready.then(() => {
-        console.debug('[Hero] Fonts ready');
         initEngine();
       });
     } else {
-      // Fallback
       setTimeout(initEngine, 100);
     }
 
@@ -116,7 +91,6 @@ export default function Hero() {
     };
   }, [initEngine]);
 
-  // Pencere yeniden boyutlandırma
   useEffect(() => {
     const handleResize = () => {
       if (!engineRef.current || !canvasRef.current) return;
@@ -124,10 +98,9 @@ export default function Hero() {
       const engine = engineRef.current;
       engine.resize();
 
-      // Metni yeniden hesapla
       const isMobile = window.innerWidth < 768;
       const isTablet = window.innerWidth < 1024;
-      const gridSpacing = isMobile ? 7 : isTablet ? 5 : 4;
+      const gridSpacing = isMobile ? 7 : isTablet ? 6 : 5;
       const fontSize = isMobile ? 48 : isTablet ? 80 : 120;
 
       const layout = textToDots('TIYATROTIST', {
@@ -154,22 +127,21 @@ export default function Hero() {
         className="hero__canvas"
       />
 
-      {/* Alt bilgi katmanı (HTML overlay) */}
       <div className="hero__overlay">
         <div
           className={`hero__subtitle ${showSubtitle ? 'hero__subtitle--visible' : ''}`}
         >
-          <p className="hero__role">Software Developer</p>
-          <p className="hero__tagline">kod ve sahne arasında — between code & stage</p>
+          <p className="hero__role">{dict.hero.role}</p>
+          <p className="hero__tagline">{dict.hero.tagline}</p>
         </div>
 
         <Link
-          href="/projects"
+          href={`/${lang}/projects`}
           className={`hero__cta ${showCta ? 'hero__cta--visible' : ''}`}
           data-cursor="expand"
-          aria-label="Explore projects"
+          aria-label={dict.hero.cta}
         >
-          EXPLORE ↓
+          {dict.hero.cta}
         </Link>
       </div>
     </section>

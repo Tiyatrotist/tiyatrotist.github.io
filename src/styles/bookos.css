@@ -1,0 +1,632 @@
+/**
+ * BOOKOS — Software Product Microsite Design Tokens & Styles
+ * Independent operating-system product aesthetic.
+ * Primary: Orange (#FF6A00)
+ * Secondary: Restrained Navy Blue (#183B56, #214E6B)
+ * Neutrals: White, Slate, Pure Dark (#0A0A0B)
+ */
+
+:root {
+  /* BookOS Palette */
+  --bookos-bg: #0a0a0b;
+  --bookos-surface: #111215;
+  --bookos-elevated: #16181d;
+  --bookos-card: #1c1e24;
+  --bookos-border: rgba(255, 255, 255, 0.08);
+  --bookos-border-active: rgba(255, 106, 0, 0.4);
+
+  /* Primary Orange */
+  --bookos-orange: #FF6A00;
+  --bookos-orange-hover: #E85D04;
+  --bookos-orange-dark: #C94E00;
+  --bookos-orange-glow: rgba(255, 106, 0, 0.18);
+
+  /* Secondary Restrained Blue */
+  --bookos-blue-dark: #0f1d2b;
+  --bookos-blue-surface: #183b56;
+  --bookos-blue-accent: #214e6b;
+  --bookos-blue-light: #2c5d78;
+
+  /* Neutrals & Typography */
+  --bookos-text-primary: #ffffff;
+  --bookos-text-secondary: #94a3b8;
+  --bookos-text-muted: #64748b;
+  --bookos-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+}
+
+.bookos-microsite {
+  background-color: var(--bookos-bg);
+  color: var(--bookos-text-primary);
+  min-height: 100vh;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  position: relative;
+  z-index: 10;
+}
+
+/* ─── BOOKOS HEADER ─────────────────────────────────────────── */
+.bookos-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 64px;
+  background: rgba(10, 10, 11, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--bookos-border);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+}
+
+.bookos-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+}
+
+.bookos-header__logo {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--bookos-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bookos-header__logo-icon {
+  width: 10px;
+  height: 10px;
+  background-color: var(--bookos-orange);
+  border-radius: 2px;
+  box-shadow: 0 0 8px var(--bookos-orange-glow);
+}
+
+.bookos-header__badge {
+  font-family: var(--bookos-mono);
+  font-size: 0.65rem;
+  padding: 0.15rem 0.45rem;
+  background: rgba(255, 106, 0, 0.12);
+  color: var(--bookos-orange);
+  border: 1px solid rgba(255, 106, 0, 0.3);
+  border-radius: 4px;
+}
+
+.bookos-header__nav {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.bookos-header__link {
+  font-size: 0.8rem;
+  color: var(--bookos-text-secondary);
+  transition: color 0.25s ease;
+  text-decoration: none;
+}
+
+.bookos-header__link:hover {
+  color: var(--bookos-text-primary);
+}
+
+.bookos-header__right {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.bookos-header__back-btn {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: var(--bookos-text-muted);
+  border: 1px solid var(--bookos-border);
+  padding: 0.4rem 0.85rem;
+  border-radius: 4px;
+  transition: all 0.25s ease;
+  text-decoration: none;
+}
+
+.bookos-header__back-btn:hover {
+  color: var(--bookos-text-primary);
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* ─── BOOKOS HERO ───────────────────────────────────────────── */
+.bookos-hero {
+  padding: 10rem 2rem 5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2.5rem;
+  position: relative;
+}
+
+.bookos-hero__tag {
+  font-family: var(--bookos-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  color: var(--bookos-orange);
+  background: rgba(255, 106, 0, 0.08);
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 106, 0, 0.2);
+}
+
+.bookos-hero__title {
+  font-size: clamp(3.5rem, 8vw, 6.5rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.bookos-hero__tagline {
+  max-width: 680px;
+  font-size: clamp(1.1rem, 2vw, 1.35rem);
+  font-weight: 300;
+  color: var(--bookos-text-secondary);
+  line-height: 1.6;
+}
+
+.bookos-hero__actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.bookos-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 0.85rem 1.85rem;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.bookos-btn--primary {
+  background-color: var(--bookos-orange);
+  color: #ffffff;
+  box-shadow: 0 4px 20px var(--bookos-orange-glow);
+}
+
+.bookos-btn--primary:hover {
+  background-color: var(--bookos-orange-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(255, 106, 0, 0.35);
+}
+
+.bookos-btn--secondary {
+  background-color: var(--bookos-surface);
+  color: var(--bookos-text-primary);
+  border: 1px solid var(--bookos-border);
+}
+
+.bookos-btn--secondary:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  background-color: var(--bookos-elevated);
+  transform: translateY(-2px);
+}
+
+/* ─── OS WINDOW FRAME VISUAL ────────────────────────────────── */
+.bookos-window {
+  width: 100%;
+  max-width: 1050px;
+  background: var(--bookos-surface);
+  border: 1px solid var(--bookos-border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 1px rgba(255, 255, 255, 0.1);
+  margin-top: 2rem;
+  transition: transform 0.4s ease, border-color 0.4s ease;
+}
+
+.bookos-window:hover {
+  border-color: var(--bookos-border-active);
+}
+
+.bookos-window__bar {
+  height: 38px;
+  background: var(--bookos-elevated);
+  border-bottom: 1px solid var(--bookos-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+}
+
+.bookos-window__dots {
+  display: flex;
+  gap: 6px;
+}
+
+.bookos-window__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.bookos-window__dot--red { background: #ff5f56; }
+.bookos-window__dot--yellow { background: #ffbd2e; }
+.bookos-window__dot--green { background: #27c93f; }
+
+.bookos-window__title {
+  font-family: var(--bookos-mono);
+  font-size: 0.75rem;
+  color: var(--bookos-text-muted);
+}
+
+.bookos-window__body {
+  padding: 2rem;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 1.5rem;
+  min-height: 380px;
+}
+
+.bookos-sidebar {
+  background: var(--bookos-elevated);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  border: 1px solid var(--bookos-border);
+}
+
+.bookos-sidebar__group-title {
+  font-family: var(--bookos-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  color: var(--bookos-text-muted);
+  text-transform: uppercase;
+}
+
+.bookos-sidebar__item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  color: var(--bookos-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bookos-sidebar__item--active,
+.bookos-sidebar__item:hover {
+  background: rgba(255, 106, 0, 0.1);
+  color: var(--bookos-orange);
+}
+
+.bookos-main-panel {
+  background: var(--bookos-card);
+  border-radius: 8px;
+  padding: 1.5rem;
+  border: 1px solid var(--bookos-border);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.bookos-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--bookos-border);
+  padding-bottom: 1rem;
+}
+
+.bookos-panel-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--bookos-text-primary);
+}
+
+.bookos-panel-badge {
+  font-family: var(--bookos-mono);
+  font-size: 0.7rem;
+  color: var(--bookos-blue-light);
+  background: var(--bookos-blue-dark);
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  border: 1px solid var(--bookos-blue-accent);
+}
+
+.bookos-code-snippet {
+  font-family: var(--bookos-mono);
+  font-size: 0.8rem;
+  line-height: 1.7;
+  color: #cbd5e1;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 1.25rem;
+  border-radius: 6px;
+  border: 1px solid var(--bookos-border);
+  overflow-x: auto;
+}
+
+.bookos-code-keyword { color: var(--bookos-orange); }
+.bookos-code-string { color: #38bdf8; }
+.bookos-code-comment { color: var(--bookos-text-muted); }
+
+/* ─── SHOWCASE SECTION ───────────────────────────────────────── */
+.bookos-section {
+  padding: 6rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.bookos-section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 3.5rem;
+}
+
+.bookos-section-tag {
+  font-family: var(--bookos-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  color: var(--bookos-orange);
+}
+
+.bookos-section-title {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.bookos-section-desc {
+  font-size: 1.05rem;
+  color: var(--bookos-text-secondary);
+  max-width: 600px;
+  line-height: 1.6;
+}
+
+/* ─── FEATURES EDITORIAL SECTIONS ───────────────────────────── */
+.bookos-features-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5rem;
+}
+
+.bookos-feature-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.bookos-feature-row--reversed {
+  direction: rtl;
+}
+
+.bookos-feature-row--reversed > * {
+  direction: ltr;
+}
+
+.bookos-feature-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.bookos-feature-title {
+  font-size: 1.85rem;
+  font-weight: 600;
+  color: var(--bookos-text-primary);
+  line-height: 1.25;
+}
+
+.bookos-feature-desc {
+  font-size: 1rem;
+  color: var(--bookos-text-secondary);
+  line-height: 1.7;
+}
+
+.bookos-feature-meta {
+  font-family: var(--bookos-mono);
+  font-size: 0.7rem;
+  color: var(--bookos-orange);
+  letter-spacing: 0.1em;
+  background: rgba(255, 106, 0, 0.08);
+  padding: 0.4rem 0.75rem;
+  border-radius: 4px;
+  width: fit-content;
+  border: 1px solid rgba(255, 106, 0, 0.2);
+}
+
+.bookos-feature-visual {
+  background: var(--bookos-surface);
+  border: 1px solid var(--bookos-border);
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+}
+
+/* ─── TECHNICAL SPECS GRID ───────────────────────────────────── */
+.bookos-tech-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.bookos-tech-card {
+  background: var(--bookos-surface);
+  border: 1px solid var(--bookos-border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.bookos-tech-label {
+  font-family: var(--bookos-mono);
+  font-size: 0.75rem;
+  color: var(--bookos-text-muted);
+}
+
+.bookos-tech-val {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--bookos-text-primary);
+}
+
+/* ─── RELEASES SECTION ───────────────────────────────────────── */
+.bookos-releases-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.75rem;
+}
+
+.bookos-release-card {
+  background: var(--bookos-surface);
+  border: 1px solid var(--bookos-border);
+  border-radius: 10px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: relative;
+  transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.bookos-release-card--active {
+  border-color: var(--bookos-orange);
+  background: linear-gradient(180deg, var(--bookos-surface) 0%, rgba(255, 106, 0, 0.04) 100%);
+}
+
+.bookos-release-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bookos-release-channel {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.bookos-release-badge {
+  font-family: var(--bookos-mono);
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.bookos-release-badge--stable {
+  background: rgba(39, 201, 63, 0.12);
+  color: #27c93f;
+  border: 1px solid rgba(39, 201, 63, 0.3);
+}
+
+.bookos-release-badge--beta {
+  background: rgba(255, 189, 46, 0.12);
+  color: #ffbd2e;
+  border: 1px solid rgba(255, 189, 46, 0.3);
+}
+
+.bookos-release-badge--exp {
+  background: rgba(255, 106, 0, 0.12);
+  color: var(--bookos-orange);
+  border: 1px solid rgba(255, 106, 0, 0.3);
+}
+
+.bookos-release-desc {
+  font-size: 0.9rem;
+  color: var(--bookos-text-secondary);
+  line-height: 1.6;
+}
+
+/* ─── DOWNLOAD CALLOUT ───────────────────────────────────────── */
+.bookos-download-box {
+  background: linear-gradient(135deg, var(--bookos-blue-dark) 0%, var(--bookos-surface) 100%);
+  border: 1px solid var(--bookos-blue-accent);
+  border-radius: 16px;
+  padding: 4rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2rem;
+}
+
+.bookos-download-notice {
+  font-family: var(--bookos-mono);
+  font-size: 0.7rem;
+  color: var(--bookos-text-muted);
+}
+
+/* ─── BOOKOS FOOTER ─────────────────────────────────────────── */
+.bookos-footer {
+  border-top: 1px solid var(--bookos-border);
+  padding: 3rem 2rem;
+  background: var(--bookos-bg);
+}
+
+.bookos-footer__content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.bookos-footer__copy {
+  font-size: 0.8rem;
+  color: var(--bookos-text-muted);
+}
+
+/* ─── RESPONSIVE MOBILE FIXES ───────────────────────────────── */
+@media (max-width: 768px) {
+  .bookos-header {
+    padding: 0 1rem;
+  }
+
+  .bookos-header__nav {
+    display: none;
+  }
+
+  .bookos-hero {
+    padding: 7rem 1.25rem 3rem;
+  }
+
+  .bookos-window__body {
+    grid-template-columns: 1fr;
+  }
+
+  .bookos-sidebar {
+    display: none;
+  }
+
+  .bookos-feature-row,
+  .bookos-feature-row--reversed {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .bookos-footer__content {
+    flex-direction: column;
+    text-align: center;
+  }
+}

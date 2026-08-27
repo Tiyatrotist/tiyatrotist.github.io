@@ -29,6 +29,7 @@ body {
   color: #ffffff;
   overflow-x: hidden;
   min-height: 100vh;
+  position: relative;
 }
 
 ::selection {
@@ -47,6 +48,22 @@ button {
   color: inherit;
   font: inherit;
   cursor: pointer;
+}
+
+/* ─── GLOBAL DOT CANVAS ───────────────────────────────────────── */
+.global-dot-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.main-container {
+  position: relative;
+  z-index: 1;
 }
 
 /* ─── CUSTOM CURSOR ───────────────────────────────────────────── */
@@ -97,7 +114,7 @@ button {
 
 .site-header__nav {
   display: flex;
-  gap: 2.5rem;
+  gap: 2rem;
   align-items: center;
   justify-content: center;
 }
@@ -122,6 +139,36 @@ button {
   border-bottom-color: rgba(255, 255, 255, 0.7);
 }
 
+.site-header__lang-switcher {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: 1rem;
+  padding-left: 1.25rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.site-header__lang-btn {
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  color: rgba(255, 255, 255, 0.35);
+  transition: color 0.3s ease;
+}
+
+.site-header__lang-btn:hover {
+  color: #ffffff;
+}
+
+.site-header__lang-btn--active {
+  color: #ffffff;
+}
+
+.site-header__lang-divider {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.2);
+}
+
 /* ─── HERO ───────────────────────────────────────────────────── */
 .hero {
   position: relative;
@@ -132,7 +179,8 @@ button {
   justify-content: center;
   align-items: center;
   overflow: hidden;
-  background: #000000;
+  background: transparent;
+  z-index: 1;
 }
 
 .hero__canvas {
@@ -216,8 +264,9 @@ button {
   align-items: center;
   justify-content: center;
   padding: 6rem 2rem;
-  background: #000000;
+  background: transparent;
   position: relative;
+  z-index: 1;
 }
 
 .second-scene__content {
@@ -270,8 +319,9 @@ button {
   flex-direction: column;
   justify-content: space-between;
   padding: 6rem 2rem;
-  background: #000000;
+  background: transparent;
   position: relative;
+  z-index: 1;
 }
 
 .project-intro__header {
@@ -348,8 +398,10 @@ button {
 /* ─── FOOTER ─────────────────────────────────────────────────── */
 .site-footer {
   padding: 4rem 2rem 3rem;
-  background: #000000;
+  background: transparent;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  z-index: 1;
 }
 
 .site-footer__content {
@@ -414,6 +466,8 @@ button {
   display: flex;
   flex-direction: column;
   gap: 3rem;
+  position: relative;
+  z-index: 1;
 }
 
 .page-header {
@@ -499,12 +553,17 @@ button {
 /* ─── RESPONSIVE BREAKPOINTS ─────────────────────────────────── */
 @media (max-width: 768px) {
   .site-header__nav {
-    gap: 1.25rem;
+    gap: 1rem;
   }
 
   .site-header__link {
     font-size: 0.65rem;
     letter-spacing: 0.15em;
+  }
+
+  .site-header__lang-switcher {
+    margin-left: 0.5rem;
+    padding-left: 0.75rem;
   }
 
   .second-scene {

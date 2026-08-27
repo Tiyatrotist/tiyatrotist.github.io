@@ -1,30 +1,127 @@
 /**
  * TIYATROTIST — DotEngine
- * Tek, yeniden kullanılabilir Canvas tabanlı parçacık motoru.
- * (Single, reusable Canvas-based particle engine)
+ * Single, reusable Canvas-based particle physics engine.
  *
- * Tüm görsel sistemi güçlendirir:
- * - Hero tipografisi
- * - Arka plan parçacıkları
- * - Geçişler
- * - Fare etkileşimleri
- * - Kaydırma geçişleri
+ * FINE-TUNED PHYSICAL INTERACTION (BURST → HOLD → SLOW RETURN → SETTLE):
+ * 1. Small interaction radius (35-50% smaller) — tiny local stone disturbance.
+ * 2. Reduced initial burst velocity (35-50% slower) — smooth, weighted, controlled spread.
+ * 3. Quadratic falloff curve — strong center, soft edge, zero hard cutoffs.
+ * 4. Velocity clamping & early damping — weighted physical motion without chaotic explosions.
+ * 5. 100% Independent Particles — Zero neighbor physics, zero cloth/mesh simulation.
  */
 
-import { Particle, DotEngineConfig, MousePosition } from './types';
+import {
+  Particle,
+  DotEngineConfig,
+  MousePosition,
+  SectionMode,
+  SectionPresetConfig,
+} from './types';
 
-/** Varsayılan yapılandırma değerleri */
+/** Default configuration values */
 const DEFAULTS: Required<Omit<DotEngineConfig, 'canvas'>> = {
   particleColor: '#ffffff',
   maxParticles: 3000,
   baseSize: 1.5,
-  mouseRadius: 100,
-  mouseForce: 0.3,
-  friction: 0.85,
-  springForce: 0.08,
+  burstStrength: 240,
+  scatterRadius: 70,
+  holdDurationMin: 1.2,
+  holdDurationMax: 2.2,
+  returnSpring: 0.045,
+  velocityDamping: 0.90,
   enableMouseInteraction: true,
   reducedMotion: false,
   dpr: typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1,
+  useGlobalMouse: false,
+  sectionMode: 'hero',
+};
+
+/** Section Mode Presets for fine-tuned physical behavior */
+const SECTION_PRESETS: Record<SectionMode, SectionPresetConfig> = {
+  hero: {
+    burstStrength: 260,
+    scatterRadius: 72,
+    holdDurationMin: 1.2,
+    holdDurationMax: 2.4,
+    returnSpring: 0.042,
+    returnDamping: 0.90,
+    velocityDamping: 0.90,
+    reentryCooldown: 0.35,
+    ambientOpacity: 0.25,
+    speedMultiplier: 1.0,
+  },
+  intro: {
+    burstStrength: 190,
+    scatterRadius: 55,
+    holdDurationMin: 1.0,
+    holdDurationMax: 2.0,
+    returnSpring: 0.048,
+    returnDamping: 0.89,
+    velocityDamping: 0.89,
+    reentryCooldown: 0.35,
+    ambientOpacity: 0.15,
+    speedMultiplier: 0.6,
+  },
+  projects: {
+    burstStrength: 230,
+    scatterRadius: 65,
+    holdDurationMin: 1.1,
+    holdDurationMax: 2.2,
+    returnSpring: 0.045,
+    returnDamping: 0.90,
+    velocityDamping: 0.89,
+    reentryCooldown: 0.35,
+    ambientOpacity: 0.20,
+    speedMultiplier: 0.8,
+  },
+  about: {
+    burstStrength: 150,
+    scatterRadius: 45,
+    holdDurationMin: 0.9,
+    holdDurationMax: 1.8,
+    returnSpring: 0.052,
+    returnDamping: 0.88,
+    velocityDamping: 0.88,
+    reentryCooldown: 0.40,
+    ambientOpacity: 0.10,
+    speedMultiplier: 0.4,
+  },
+  now: {
+    burstStrength: 130,
+    scatterRadius: 40,
+    holdDurationMin: 0.8,
+    holdDurationMax: 1.6,
+    returnSpring: 0.055,
+    returnDamping: 0.88,
+    velocityDamping: 0.88,
+    reentryCooldown: 0.40,
+    ambientOpacity: 0.08,
+    speedMultiplier: 0.3,
+  },
+  contact: {
+    burstStrength: 210,
+    scatterRadius: 60,
+    holdDurationMin: 1.0,
+    holdDurationMax: 2.0,
+    returnSpring: 0.048,
+    returnDamping: 0.89,
+    velocityDamping: 0.89,
+    reentryCooldown: 0.35,
+    ambientOpacity: 0.22,
+    speedMultiplier: 0.9,
+  },
+  footer: {
+    burstStrength: 100,
+    scatterRadius: 35,
+    holdDurationMin: 0.7,
+    holdDurationMax: 1.4,
+    returnSpring: 0.060,
+    returnDamping: 0.87,
+    velocityDamping: 0.87,
+    reentryCooldown: 0.45,
+    ambientOpacity: 0.08,
+    speedMultiplier: 0.3,
+  },
 };
 
 export class DotEngine {
@@ -35,55 +132,52 @@ export class DotEngine {
   private particles: Particle[] = [];
   private activeCount = 0;
 
-  private mouse: MousePosition = { x: 0, y: 0, active: false };
+  private mouse: MousePosition = {
+    x: 0,
+    y: 0,
+    prevX: 0,
+    prevY: 0,
+    vx: 0,
+    vy: 0,
+    speed: 0,
+    active: false,
+  };
+
+  private isHoveringInteractive = false;
   private animationId: number | null = null;
   private lastTime = 0;
+  private timeOffset = 0;
   private isVisible = true;
   private observer: IntersectionObserver | null = null;
 
-  /** Canvas boyutları (CSS piksel cinsinden) */
+  /** Canvas dimensions in CSS pixels */
   private width = 0;
   private height = 0;
 
-  /** Scroll offset — dış bileşenler tarafından ayarlanır */
+  /** Scroll offset set by external layout handlers */
   private scrollOffset = 0;
 
-  /** Global opasite çarpanı (geçişler için) */
+  /** Global opacity multiplier for page transitions */
   private globalOpacity = 1;
 
   constructor(config: DotEngineConfig) {
     const ctx = config.canvas.getContext('2d');
     if (!ctx) {
-      throw new Error('[DotEngine] Canvas 2D context oluşturulamadı');
+      throw new Error('[DotEngine] Canvas 2D context creation failed');
     }
 
     this.canvas = config.canvas;
     this.ctx = ctx;
     this.config = { ...DEFAULTS, ...config } as Required<Omit<DotEngineConfig, 'canvas'>>;
 
-    // Debug log
-    console.debug('[DotEngine] Initialized with config:', {
-      maxParticles: this.config.maxParticles,
-      baseSize: this.config.baseSize,
-      reducedMotion: this.config.reducedMotion,
-    });
-
-    // Parçacık havuzunu ön-tahsis et
     this.initParticlePool();
-
-    // Canvas boyutunu ayarla
     this.resize();
-
-    // Event listener'ları bağla
     this.bindEvents();
-
-    // Viewport gözlemcisini ayarla
     this.setupVisibilityObserver();
   }
 
-  // ─── BAŞLATMA (Initialization) ────────────────────────────────
+  // ─── INITIALIZATION ──────────────────────────────────────────
 
-  /** Parçacık havuzunu ön-tahsis eder */
   private initParticlePool(): void {
     this.particles = [];
     for (let i = 0; i < this.config.maxParticles; i++) {
@@ -100,37 +194,44 @@ export class DotEngine {
         targetOpacity: 0,
         size: this.config.baseSize,
         active: false,
+        seed: Math.random() * 100,
+        state: 'REST',
+        stateTimer: 0,
+        holdDuration: 1.5,
+        cooldownTimer: 0,
       });
     }
   }
 
-  // ─── BOYUTLANDIRMA (Sizing) ───────────────────────────────────
+  // ─── SIZING ──────────────────────────────────────────────────
 
-  /** Canvas'ı container boyutlarına göre yeniden boyutlandırır */
   resize(): void {
     const rect = this.canvas.getBoundingClientRect();
     this.width = rect.width;
     this.height = rect.height;
 
-    // HiDPI desteği
     this.canvas.width = this.width * this.config.dpr;
     this.canvas.height = this.height * this.config.dpr;
     this.ctx.scale(this.config.dpr, this.config.dpr);
-
-    console.debug(`[DotEngine] Resized to ${this.width}x${this.height} (dpr: ${this.config.dpr})`);
   }
 
-  // ─── PARÇACIK YÖNETİMİ (Particle Management) ─────────────────
+  // ─── SECTION PRESETS ─────────────────────────────────────────
 
-  /**
-   * Parçacıkları belirtilen hedef pozisyonlarına ayarlar.
-   * (Sets particles to specified target positions)
-   *
-   * @param targets - Hedef koordinatlar dizisi [{x, y}]
-   * @param centerX - Hedeflerin merkezleneceği X (canvas koordinatlarında)
-   * @param centerY - Hedeflerin merkezleneceği Y
-   * @param scatter - true ise parçacıklar rastgele başlangıç pozisyonlarından animasyonlanır
-   */
+  setSectionMode(mode: SectionMode): void {
+    this.config.sectionMode = mode;
+    const preset = SECTION_PRESETS[mode];
+    if (preset) {
+      this.config.burstStrength = preset.burstStrength;
+      this.config.scatterRadius = preset.scatterRadius;
+      this.config.holdDurationMin = preset.holdDurationMin;
+      this.config.holdDurationMax = preset.holdDurationMax;
+      this.config.returnSpring = preset.returnSpring;
+      this.config.velocityDamping = preset.velocityDamping;
+    }
+  }
+
+  // ─── PARTICLE HOME COORD MANAGEMENT ──────────────────────────
+
   setTargets(
     targets: Array<{ x: number; y: number }>,
     centerX: number,
@@ -151,18 +252,22 @@ export class DotEngine {
         p.originY = p.targetY;
         p.targetOpacity = 1;
         p.active = true;
+        p.state = 'REST';
+        p.stateTimer = 0;
+        p.cooldownTimer = 0;
 
         if (scatter) {
-          // Rastgele başlangıç pozisyonu (ekranın farklı yerlerinden)
           p.x = centerX + (Math.random() - 0.5) * this.width * 1.5;
           p.y = centerY + (Math.random() - 0.5) * this.height * 1.5;
           p.opacity = 0;
           p.vx = 0;
           p.vy = 0;
+        } else {
+          p.x = p.targetX;
+          p.y = p.targetY;
         }
 
         if (this.config.reducedMotion) {
-          // Azaltılmış hareket: doğrudan hedefe ışınlan
           p.x = p.targetX;
           p.y = p.targetY;
           p.opacity = 1;
@@ -172,14 +277,8 @@ export class DotEngine {
         p.targetOpacity = 0;
       }
     }
-
-    console.debug(`[DotEngine] setTargets: ${count} particles activated, scatter: ${scatter}`);
   }
 
-  /**
-   * Ambient (arka plan) parçacıkları ekler.
-   * (Adds ambient/background particles)
-   */
   addAmbientParticles(count: number, bounds?: { x: number; y: number; w: number; h: number }): void {
     const bx = bounds?.x ?? 0;
     const by = bounds?.y ?? 0;
@@ -202,20 +301,19 @@ export class DotEngine {
         p.vx = 0;
         p.vy = 0;
         p.opacity = 0;
-        p.targetOpacity = Math.random() * 0.3 + 0.05;
+        p.targetOpacity = Math.random() * 0.25 + 0.05;
         p.size = this.config.baseSize * (Math.random() * 0.6 + 0.4);
         p.active = true;
+        p.state = 'REST';
+        p.stateTimer = 0;
+        p.cooldownTimer = 0;
         added++;
       }
     }
 
     this.activeCount += added;
-    console.debug(`[DotEngine] addAmbientParticles: ${added} ambient particles added`);
   }
 
-  /**
-   * Tüm parçacıkları dağıtır (scatter).
-   */
   scatterAll(force: number = 1): void {
     for (let i = 0; i < this.activeCount; i++) {
       const p = this.particles[i];
@@ -228,9 +326,6 @@ export class DotEngine {
     }
   }
 
-  /**
-   * Tüm parçacıkları orijinal pozisyonlarına geri toplar.
-   */
   reformAll(): void {
     for (let i = 0; i < this.config.maxParticles; i++) {
       const p = this.particles[i];
@@ -241,24 +336,14 @@ export class DotEngine {
     }
   }
 
-  /**
-   * Parçacıkları scroll offset'e göre dikey kaydırır.
-   */
   setScrollOffset(offset: number): void {
     this.scrollOffset = offset;
   }
 
-  /**
-   * Global opasite çarpanını ayarlar (0-1).
-   */
   setGlobalOpacity(opacity: number): void {
     this.globalOpacity = Math.max(0, Math.min(1, opacity));
   }
 
-  /**
-   * Scatter progress: 0 = formed, 1 = fully scattered
-   * Kaydırma geçişleri için kullanılır.
-   */
   setScatterProgress(progress: number): void {
     const p0 = Math.max(0, Math.min(1, progress));
 
@@ -266,7 +351,6 @@ export class DotEngine {
       const particle = this.particles[i];
       if (!particle.active) continue;
 
-      // Her parçacık için deterministik scatter yönü (origin tabanlı)
       const angle = (particle.originX * 0.01 + particle.originY * 0.013) % (Math.PI * 2);
       const dist = 300 * p0;
 
@@ -276,59 +360,76 @@ export class DotEngine {
     }
   }
 
-  // ─── FARE ETKİLEŞİMİ (Mouse Interaction) ─────────────────────
+  // ─── MOUSE TRACKING ───────────────────────────────────────────
 
-  /** Fare pozisyonunu günceller (CSS piksel cinsinden, canvas'a göre) */
   updateMouse(x: number, y: number): void {
+    const now = performance.now();
+    const dt = Math.max((now - ((this.mouse as any).lastUpdate || now - 16)) / 1000, 0.001);
+    (this.mouse as any).lastUpdate = now;
+
+    const dx = x - this.mouse.x;
+    const dy = y - this.mouse.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    this.mouse.vx = dx / dt;
+    this.mouse.vy = dy / dt;
+
+    const currentSpeed = dist / dt;
+    this.mouse.speed = this.mouse.speed * 0.75 + currentSpeed * 0.25;
+
+    this.mouse.prevX = this.mouse.x;
+    this.mouse.prevY = this.mouse.y;
     this.mouse.x = x;
     this.mouse.y = y;
     this.mouse.active = true;
   }
 
-  /** Fare etkileşimini devre dışı bırakır */
   clearMouse(): void {
     this.mouse.active = false;
+    this.mouse.speed = 0;
+    this.mouse.vx = 0;
+    this.mouse.vy = 0;
   }
 
-  // ─── ANİMASYON DÖNGÜSÜ (Animation Loop) ──────────────────────
+  // ─── ANIMATION LOOP ──────────────────────────────────────────
 
-  /** Animasyon döngüsünü başlatır */
   start(): void {
     if (this.animationId !== null) return;
     this.lastTime = performance.now();
     this.tick(this.lastTime);
-    console.debug('[DotEngine] Animation loop started');
   }
 
-  /** Animasyon döngüsünü durdurur */
   stop(): void {
     if (this.animationId !== null) {
       cancelAnimationFrame(this.animationId);
       this.animationId = null;
-      console.debug('[DotEngine] Animation loop stopped');
     }
   }
 
-  /** Ana animasyon tick'i */
   private tick = (time: number): void => {
     this.animationId = requestAnimationFrame(this.tick);
 
-    // Viewport dışındaysa hesaplama yapma
     if (!this.isVisible) return;
 
-    // Delta time hesapla (saniye cinsinden, max 50ms)
     const dt = Math.min((time - this.lastTime) / 1000, 0.05);
     this.lastTime = time;
+    this.timeOffset += dt;
 
     this.update(dt);
     this.render();
   };
 
-  /** Fizik güncelleme adımı */
+  /**
+   * FINE-TUNED INDEPENDENT PARTICLE PHYSICS & STATE MACHINE UPDATE
+   * BURST → HOLD (SCATTERED) → SLOW RETURN → SETTLE → REST
+   * - Reduced burst speed (~40% slower)
+   * - Reduced interaction radius (~40% smaller)
+   * - Quadratic falloff curve (strong center, soft edge)
+   * - Max velocity capping for smooth weighted physical movement
+   */
   private update(dt: number): void {
-    const { friction, springForce, mouseRadius, mouseForce, enableMouseInteraction, reducedMotion } = this.config;
+    const { enableMouseInteraction, reducedMotion } = this.config;
 
-    // Azaltılmış hareket modunda fizik atla
     if (reducedMotion) {
       for (let i = 0; i < this.config.maxParticles; i++) {
         const p = this.particles[i];
@@ -341,65 +442,183 @@ export class DotEngine {
     }
 
     const mouseActive = enableMouseInteraction && this.mouse.active;
-    const mx = this.mouse.x;
-    const my = this.mouse.y;
-    const mr2 = mouseRadius * mouseRadius;
 
-    for (let i = 0; i < this.config.maxParticles; i++) {
+    // Mouse position relative to canvas
+    const rect = this.canvas.getBoundingClientRect();
+    const mx = this.mouse.x - rect.left;
+    const my = this.mouse.y - rect.top;
+
+    const preset = SECTION_PRESETS[this.config.sectionMode] || SECTION_PRESETS.hero;
+
+    const radius = preset.scatterRadius * (this.isHoveringInteractive ? 1.2 : 1.0);
+    const radiusSq = radius * radius;
+
+    const speedFactor = 1 + Math.min(this.mouse.speed * 0.0006, 0.6);
+    const effBurstStrength = preset.burstStrength * speedFactor * (this.isHoveringInteractive ? 1.2 : 1.0);
+
+    const maxVel = 260; // Max velocity cap (px/s) for smooth weighted movement
+
+    for (let i = 0; i < this.activeCount; i++) {
       const p = this.particles[i];
       if (!p.active) continue;
 
-      // Spring force — hedefe doğru çek
-      const dx = p.targetX - p.x;
-      const dy = p.targetY - p.y;
-      p.vx += dx * springForce;
-      p.vy += dy * springForce;
+      p.stateTimer += dt;
+      if (p.cooldownTimer > 0) {
+        p.cooldownTimer -= dt;
+      }
 
-      // Mouse repulsion
-      if (mouseActive) {
-        const mdx = p.x - mx;
-        const mdy = p.y - my;
-        const dist2 = mdx * mdx + mdy * mdy;
+      // Organic per-particle micro-variations (balanced range)
+      const pBurstMult = 0.85 + ((p.seed % 7) * 0.05); // 0.85 ~ 1.15
+      const pHoldDuration = preset.holdDurationMin + ((p.seed % 9) * 0.13); // 1.0s ~ 2.2s
+      const pSpring = preset.returnSpring + ((p.seed % 5) * 0.002);
+      const pDamping = preset.velocityDamping;
 
-        if (dist2 < mr2 && dist2 > 0.01) {
-          const dist = Math.sqrt(dist2);
-          const force = (1 - dist / mouseRadius) * mouseForce;
-          p.vx += (mdx / dist) * force * 60 * dt;
-          p.vy += (mdy / dist) * force * 60 * dt;
+      // ─────────────────────────────────────────────────────────
+      // TRIGGER CHECK: CURSOR BURST (QUADRATIC FALLOFF)
+      // ─────────────────────────────────────────────────────────
+      if (mouseActive && p.cooldownTimer <= 0) {
+        const dx = p.x - mx;
+        const dy = p.y - my;
+        const distSq = dx * dx + dy * dy;
+
+        if (distSq < radiusSq && distSq > 0.001) {
+          const dist = Math.sqrt(distSq);
+          // Quadratic falloff: strong center, soft edge, zero hard cutoff
+          const forceRatio = Math.pow(1.0 - dist / radius, 2);
+
+          const dirX = dx / dist;
+          const dirY = dy / dist;
+
+          const impulseMag = forceRatio * effBurstStrength * pBurstMult;
+          p.vx += dirX * impulseMag * dt * 60;
+          p.vy += dirY * impulseMag * dt * 60;
+
+          // Swipe momentum addition if cursor is moving fast
+          if (this.mouse.speed > 50) {
+            p.vx += (this.mouse.vx * 0.015) * forceRatio;
+            p.vy += (this.mouse.vy * 0.015) * forceRatio;
+          }
+
+          // Trigger particle state change
+          p.state = 'BURST';
+          p.stateTimer = 0;
+          p.holdDuration = pHoldDuration;
+          p.cooldownTimer = preset.reentryCooldown;
         }
       }
 
-      // Friction
-      p.vx *= friction;
-      p.vy *= friction;
+      // Velocity Capping for weighted physical control
+      const velSq = p.vx * p.vx + p.vy * p.vy;
+      if (velSq > maxVel * maxVel) {
+        const scale = maxVel / Math.sqrt(velSq);
+        p.vx *= scale;
+        p.vy *= scale;
+      }
 
-      // Pozisyon güncelle
-      p.x += p.vx;
-      p.y += p.vy;
+      // ─────────────────────────────────────────────────────────
+      // INDEPENDENT STATE MACHINE LOGIC
+      // ─────────────────────────────────────────────────────────
+      switch (p.state) {
+        case 'REST': {
+          // Stable at home position with micro ambient drift
+          const driftX = Math.sin(this.timeOffset * 0.7 + p.seed) * 0.35 * preset.speedMultiplier;
+          const driftY = Math.cos(this.timeOffset * 0.5 + p.seed * 1.4) * 0.35 * preset.speedMultiplier;
 
-      // Opasite yumuşak geçiş
-      p.opacity += (p.targetOpacity - p.opacity) * 0.05;
+          const homeDx = (p.targetX + driftX) - p.x;
+          const homeDy = (p.targetY + driftY) - p.y;
+
+          p.vx += homeDx * 0.08;
+          p.vy += homeDy * 0.08;
+          p.vx *= pDamping;
+          p.vy *= pDamping;
+          p.x += p.vx;
+          p.y += p.vy;
+          break;
+        }
+
+        case 'BURST': {
+          // Controlled initial outward burst movement
+          p.vx *= pDamping;
+          p.vy *= pDamping;
+          p.x += p.vx;
+          p.y += p.vy;
+
+          if (p.stateTimer > 0.2) {
+            p.state = 'SCATTERED';
+          }
+          break;
+        }
+
+        case 'SCATTERED': {
+          // Particle remains visibly displaced away from home (1.0 - 2.2s)
+          // ZERO home return spring force during hold phase! Particle drifts freely.
+          p.vx *= pDamping;
+          p.vy *= pDamping;
+          p.x += p.vx;
+          p.y += p.vy;
+
+          if (p.stateTimer >= p.holdDuration) {
+            p.state = 'RETURNING';
+            p.stateTimer = 0;
+          }
+          break;
+        }
+
+        case 'RETURNING': {
+          // Particle slowly travels back toward its OWN home coordinate
+          const homeDx = p.targetX - p.x;
+          const homeDy = p.targetY - p.y;
+          const distToHome = Math.sqrt(homeDx * homeDx + homeDy * homeDy);
+
+          p.vx += homeDx * pSpring;
+          p.vy += homeDy * pSpring;
+          p.vx *= preset.returnDamping;
+          p.vy *= preset.returnDamping;
+
+          p.x += p.vx;
+          p.y += p.vy;
+
+          // Close to home -> SETTLED
+          if (distToHome < 0.8 && Math.abs(p.vx) < 0.1 && Math.abs(p.vy) < 0.1) {
+            p.state = 'SETTLED';
+            p.stateTimer = 0;
+          }
+          break;
+        }
+
+        case 'SETTLED': {
+          // Precise final settling into home coordinates
+          p.x += (p.targetX - p.x) * 0.15;
+          p.y += (p.targetY - p.y) * 0.15;
+          p.vx = 0;
+          p.vy = 0;
+
+          if (p.stateTimer > 0.3) {
+            p.state = 'REST';
+          }
+          break;
+        }
+      }
+
+      // Smooth opacity lerp
+      p.opacity += (p.targetOpacity - p.opacity) * 0.06;
     }
   }
 
-  /** Canvas'ı temizle ve parçacıkları çiz */
   private render(): void {
     const ctx = this.ctx;
     const w = this.width;
     const h = this.height;
 
-    // Temizle
     ctx.clearRect(0, 0, w, h);
 
-    // Parçacıkları çiz
-    for (let i = 0; i < this.config.maxParticles; i++) {
+    for (let i = 0; i < this.activeCount; i++) {
       const p = this.particles[i];
       if (!p.active) continue;
 
       const finalOpacity = p.opacity * this.globalOpacity;
       if (finalOpacity < 0.01) continue;
 
-      // Ekran dışındaki parçacıkları atla
       const px = p.x;
       const py = p.y - this.scrollOffset;
       if (px < -20 || px > w + 20 || py < -20 || py > h + 20) continue;
@@ -414,11 +633,36 @@ export class DotEngine {
     ctx.globalAlpha = 1;
   }
 
-  // ─── OLAY DİNLEYİCİLERİ (Event Listeners) ────────────────────
+  // ─── EVENT LISTENERS ──────────────────────────────────────────
 
   private handleMouseMove = (e: MouseEvent): void => {
-    const rect = this.canvas.getBoundingClientRect();
-    this.updateMouse(e.clientX - rect.left, e.clientY - rect.top);
+    this.updateMouse(e.clientX, e.clientY);
+  };
+
+  private handleMouseOver = (e: MouseEvent): void => {
+    const target = e.target as HTMLElement;
+    if (
+      target.tagName === 'A' ||
+      target.tagName === 'BUTTON' ||
+      target.closest('a') ||
+      target.closest('button') ||
+      target.dataset.cursor === 'expand'
+    ) {
+      this.isHoveringInteractive = true;
+    }
+  };
+
+  private handleMouseOut = (e: MouseEvent): void => {
+    const target = e.target as HTMLElement;
+    if (
+      target.tagName === 'A' ||
+      target.tagName === 'BUTTON' ||
+      target.closest('a') ||
+      target.closest('button') ||
+      target.dataset.cursor === 'expand'
+    ) {
+      this.isHoveringInteractive = false;
+    }
   };
 
   private handleMouseLeave = (): void => {
@@ -430,42 +674,57 @@ export class DotEngine {
   };
 
   private bindEvents(): void {
-    this.canvas.addEventListener('mousemove', this.handleMouseMove);
-    this.canvas.addEventListener('mouseleave', this.handleMouseLeave);
+    if (this.config.useGlobalMouse) {
+      window.addEventListener('mousemove', this.handleMouseMove, { passive: true });
+      document.addEventListener('mouseleave', this.handleMouseLeave);
+      document.addEventListener('mouseover', this.handleMouseOver);
+      document.addEventListener('mouseout', this.handleMouseOut);
+    } else {
+      this.canvas.addEventListener('mousemove', this.handleMouseMove, { passive: true });
+      this.canvas.addEventListener('mouseleave', this.handleMouseLeave);
+      document.addEventListener('mouseover', this.handleMouseOver);
+      document.addEventListener('mouseout', this.handleMouseOut);
+    }
     window.addEventListener('resize', this.handleResize);
   }
 
   private unbindEvents(): void {
-    this.canvas.removeEventListener('mousemove', this.handleMouseMove);
-    this.canvas.removeEventListener('mouseleave', this.handleMouseLeave);
+    if (this.config.useGlobalMouse) {
+      window.removeEventListener('mousemove', this.handleMouseMove);
+      document.removeEventListener('mouseleave', this.handleMouseLeave);
+      document.removeEventListener('mouseover', this.handleMouseOver);
+      document.removeEventListener('mouseout', this.handleMouseOut);
+    } else {
+      this.canvas.removeEventListener('mousemove', this.handleMouseMove);
+      this.canvas.removeEventListener('mouseleave', this.handleMouseLeave);
+      document.removeEventListener('mouseover', this.handleMouseOver);
+      document.removeEventListener('mouseout', this.handleMouseOut);
+    }
     window.removeEventListener('resize', this.handleResize);
   }
 
-  // ─── GÖRÜNÜRLÜK GÖZLEMCİSİ (Visibility Observer) ─────────────
+  // ─── VISIBILITY OBSERVER ──────────────────────────────────────
 
   private setupVisibilityObserver(): void {
     this.observer = new IntersectionObserver(
       (entries) => {
         this.isVisible = entries[0]?.isIntersecting ?? true;
-        console.debug(`[DotEngine] Visibility changed: ${this.isVisible}`);
       },
       { threshold: 0 }
     );
     this.observer.observe(this.canvas);
   }
 
-  // ─── TEMİZLİK (Cleanup) ──────────────────────────────────────
+  // ─── CLEANUP ──────────────────────────────────────────────────
 
-  /** Motoru tamamen temizler ve kaynakları serbest bırakır */
   destroy(): void {
     this.stop();
     this.unbindEvents();
     this.observer?.disconnect();
     this.particles = [];
-    console.debug('[DotEngine] Destroyed');
   }
 
-  // ─── GETTER'LAR ───────────────────────────────────────────────
+  // ─── GETTERS ──────────────────────────────────────────────────
 
   getWidth(): number {
     return this.width;

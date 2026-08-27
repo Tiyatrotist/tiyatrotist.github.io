@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import CustomCursor from '@/components/CustomCursor';
+import DevToolsNotice from '@/components/DevToolsNotice';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -13,9 +13,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr">
+    <html lang="en">
       <body>
-        <CustomCursor />
+        <DevToolsNotice />
         {children}
       </body>
     </html>

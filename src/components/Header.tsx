@@ -1,12 +1,7 @@
 /**
  * TIYATROTIST — Header
- * Son derece minimal başlık bileşeni.
- * (Extremely minimal header component)
- *
- * - Sol tarafta HİÇBİR ŞEY yok.
- * - Navigasyon görsel olarak ortalanmış.
- * - Aşağı kaydırmada gizlenir, yukarı kaydırmada görünür.
- * - Sayfa yönlendirmeleri Next.js Link ile gerçek rotalara yapılır.
+ * Minimal, centered navigation with subtle TR / EN language switcher.
+ * Left side remains 100% empty per design rules.
  */
 
 'use client';
@@ -14,16 +9,14 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Locale, Dictionary } from '@/dictionaries';
 
-const NAV_ITEMS = [
-  { label: 'HOME', path: '/' },
-  { label: 'PROJECTS', path: '/projects' },
-  { label: 'ABOUT', path: '/about' },
-  { label: 'NOW', path: '/now' },
-  { label: 'CONTACT', path: '/contact' },
-];
+interface HeaderProps {
+  lang: Locale;
+  dict: Dictionary;
+}
 
-export default function Header() {
+export default function Header({ lang, dict }: HeaderProps) {
   const headerRef = useRef<HTMLElement>(null);
   const [hidden, setHidden] = useState(false);
   const lastScrollY = useRef(0);
@@ -39,7 +32,6 @@ export default function Header() {
         const currentY = window.scrollY;
         const delta = currentY - lastScrollY.current;
 
-        // Aşağı kaydırmada gizle (50px eşik), yukarı kaydırmada göster
         if (delta > 5 && currentY > 80) {
           setHidden(true);
         } else if (delta < -5) {
@@ -52,11 +44,35 @@ export default function Header() {
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const navItems = [
+    { label: dict.nav.home, path: `/${lang}` },
+    { label: dict.nav.projects, path: `/${lang}/projects` },
+    { label: dict.nav.about, path: `/${lang}/about` },
+    { label: dict.nav.now, path: `/${lang}/now` },
+    { label: dict.nav.contact, path: `/${lang}/contact` },
+  ];
+
+  // Calculate target path for language toggle preserving current subpath
+  const getLangSwitchPath = (targetLang: Locale) => {
+    if (!pathname) return `/${targetLang}`;
+    const segments = pathname.split('/').filter(Boolean);
+    if (segments.length === 0) return `/${targetLang}`;
+    if (segments[0] === 'tr' || segments[0] === 'en') {
+      segments[0] = targetLang;
+      return '/' + segments.join('/');
+    }
+    return `/${targetLang}/${segments.join('/')}`;
+  };
+
+  const handleLangSwitch = (targetLang: Locale) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('preferred_lang', targetLang);
+      document.cookie = `preferred_lang=${targetLang};path=/;max-age=31536000`;
+    }
+  };
 
   return (
     <header
@@ -64,10 +80,10 @@ export default function Header() {
       className={`site-header ${hidden ? 'site-header--hidden' : ''}`}
     >
       <nav className="site-header__nav">
-        {NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const isActive =
-            item.path === '/'
-              ? pathname === '/'
+            item.path === `/${lang}`
+              ? pathname === `/${lang}`
               : pathname.startsWith(item.path);
 
           return (
@@ -81,6 +97,27 @@ export default function Header() {
             </Link>
           );
         })}
+
+        {/* Minimal Language Switcher */}
+        <div className="site-header__lang-switcher">
+          <Link
+            href={getLangSwitchPath('tr')}
+            onClick={() => handleLangSwitch('tr')}
+            className={`site-header__lang-btn ${lang === 'tr' ? 'site-header__lang-btn--active' : ''}`}
+            data-cursor="expand"
+          >
+            TR
+          </Link>
+          <span className="site-header__lang-divider">/</span>
+          <Link
+            href={getLangSwitchPath('en')}
+            onClick={() => handleLangSwitch('en')}
+            className={`site-header__lang-btn ${lang === 'en' ? 'site-header__lang-btn--active' : ''}`}
+            data-cursor="expand"
+          >
+            EN
+          </Link>
+        </div>
       </nav>
     </header>
   );

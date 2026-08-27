@@ -1,38 +1,37 @@
 /**
  * TIYATROTIST — SecondScene
- * Minimal giriş sahnesi.
- * (Minimal introduction scene)
- *
- * - Kart YOK.
- * - Kutu YOK.
- * - Sadece tipografi ve noktalar.
- * - Bazı önemli kelimeler nokta tipografisine geçiş yapar veya vurgulanır.
- * - Biyografi uydurmak yok (Placeholder içeriği).
+ * Minimal manifesto scene with localized text.
  */
 
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
+import { Dictionary } from '@/dictionaries';
 
-export default function SecondScene() {
+interface SecondSceneProps {
+  dict: Dictionary;
+}
+
+export default function SecondScene({ dict }: SecondSceneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const m = dict.manifesto;
 
   return (
     <section id="about" className="second-scene" ref={containerRef}>
       <div className="second-scene__content">
-        <p className="second-scene__label">[ SCENE 01 — MANIFESTO ]</p>
-        
+        <p className="second-scene__label">{m.tag}</p>
+
         <h2 className="second-scene__heading">
-          Digital experiences constructed from <span className="second-scene__dot-word">pure logic</span> and <span className="second-scene__dot-word">minimal form</span>.
+          {m.headingPrefix}
+          <span className="second-scene__dot-word">{m.logicWord}</span>
+          {m.headingMiddle}
+          <span className="second-scene__dot-word">{m.formWord}</span>
+          {m.headingSuffix}
         </h2>
 
         <div className="second-scene__body">
-          <p>
-            The interface is not a wrapper. It is a living canvas where typography, code, and space converge into a singular quiet environment.
-          </p>
-          <p className="second-scene__subtext">
-            Sessiz bir dijital alan. Fazlalıklardan arındırılmış, noktaların ve ışığın ritmiyle şekillenen bir deneyim.
-          </p>
+          <p>{m.paragraph1}</p>
+          <p className="second-scene__subtext">{m.paragraph2}</p>
         </div>
       </div>
     </section>

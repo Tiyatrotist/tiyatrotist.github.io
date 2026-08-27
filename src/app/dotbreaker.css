@@ -1,0 +1,275 @@
+/**
+ * TIYATROTIST — Hidden Dot Breaker Styles
+ * Pure monochrome, expansive widescreen layout, minimal HUD.
+ */
+
+.breaker-container {
+  min-height: 100vh;
+  padding: 3rem 1.5rem 2rem;
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  position: relative;
+  z-index: 10;
+  color: #ffffff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  user-select: none;
+}
+
+.breaker-secret-toast {
+  position: absolute;
+  top: 1.5rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+  padding: 0.35rem 1rem;
+  font-size: 0.75rem;
+  font-family: 'Courier New', Courier, monospace;
+  letter-spacing: 0.15em;
+  color: #ffffff;
+  animation: toastFade 3s ease forwards;
+}
+
+@keyframes toastFade {
+  0% { opacity: 0; transform: translateY(-10px); }
+  15% { opacity: 1; transform: translateY(0); }
+  85% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-5px); }
+}
+
+.breaker-hud {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 880px;
+  padding: 0.6rem 1.25rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+}
+
+.breaker-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.breaker-stat__label {
+  font-size: 0.65rem;
+  font-family: 'Courier New', Courier, monospace;
+  letter-spacing: 0.15em;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.breaker-stat__val {
+  font-size: 1.05rem;
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: 0.08em;
+}
+
+.breaker-lives {
+  letter-spacing: 0.25em;
+  font-size: 0.9rem;
+}
+
+.breaker-powerup-badge {
+  font-size: 0.72rem;
+  font-family: 'Courier New', Courier, monospace;
+  letter-spacing: 0.15em;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  animation: pulseBadge 1.2s infinite ease-in-out;
+}
+
+@keyframes pulseBadge {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; border-color: #ffffff; }
+}
+
+.breaker-canvas-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 880px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #000000;
+  border-radius: 8px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  touch-action: none;
+}
+
+.breaker-canvas {
+  display: block;
+  background: #000000;
+  cursor: ew-resize;
+}
+
+.breaker-hint-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: opacity 0.5s ease;
+}
+
+.breaker-hint-text {
+  font-size: 0.9rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 400;
+}
+
+.breaker-hint-sub {
+  font-size: 0.72rem;
+  font-family: 'Courier New', Courier, monospace;
+  letter-spacing: 0.15em;
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.breaker-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  z-index: 10;
+}
+
+.breaker-overlay__tag {
+  font-size: 0.75rem;
+  font-family: 'Courier New', Courier, monospace;
+  letter-spacing: 0.25em;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.breaker-overlay__score {
+  font-size: 1.2rem;
+  font-family: 'Courier New', Courier, monospace;
+  letter-spacing: 0.15em;
+  color: #ffffff;
+}
+
+.breaker-overlay__secret {
+  font-size: clamp(1.75rem, 5vw, 2.75rem);
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  color: #ffffff;
+  font-style: italic;
+}
+
+.breaker-overlay__sub {
+  font-size: 0.8rem;
+  font-family: 'Courier New', Courier, monospace;
+  letter-spacing: 0.15em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.breaker-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.breaker-btn {
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #000000;
+  background: #ffffff;
+  padding: 0.75rem 2rem;
+  border: 1px solid #ffffff;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.breaker-btn:hover {
+  background: transparent;
+  color: #ffffff;
+}
+
+.breaker-btn--secondary {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.breaker-btn--secondary:hover {
+  color: #ffffff;
+  border-color: #ffffff;
+}
+
+.breaker-mobile-bar {
+  display: none;
+  gap: 1rem;
+  width: 100%;
+  max-width: 880px;
+  justify-content: space-between;
+}
+
+.breaker-touch-btn {
+  flex: 1;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.75);
+  font-family: monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.breaker-touch-btn:active {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: #ffffff;
+  color: #ffffff;
+}
+
+.breaker-footer {
+  margin-top: 0.25rem;
+}
+
+.breaker-home-link {
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  color: rgba(255, 255, 255, 0.3);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.breaker-home-link:hover {
+  color: #ffffff;
+}
+
+@media (max-width: 768px) {
+  .breaker-mobile-bar {
+    display: flex;
+  }
+}

@@ -1,14 +1,6 @@
 /**
  * TIYATROTIST — ProjectIntro
- * Geleceğin Projeler bölümünün başlangıcı (BookOS kapısı).
- * (Beginning of future Projects section — BookOS doorway)
- *
- * - Jenerik kartlar YOK.
- * - Büyük proje başlığı (BookOS).
- * - Muazzam miktarda negatif alan.
- * - Kontrollü nokta alanı.
- * - Monochrome (siyah/bez/gri).
- * - /projects/bookos sayfasına yönlendirir.
+ * BookOS project doorway with independent dot typography particle interaction and localized text.
  */
 
 'use client';
@@ -17,25 +9,33 @@ import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { textToDots } from '@/engine/DotTypography';
 import { DotEngine } from '@/engine/DotEngine';
+import { Locale, Dictionary } from '@/dictionaries';
 
-export default function ProjectIntro() {
+interface ProjectIntroProps {
+  lang: Locale;
+  dict: Dictionary;
+}
+
+export default function ProjectIntro({ lang, dict }: ProjectIntroProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<DotEngine | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const p = dict.projectIntro;
 
   useEffect(() => {
     if (!canvasRef.current) return;
 
     const isMobile = window.innerWidth < 768;
-    const gridSpacing = isMobile ? 6 : 4;
+    const gridSpacing = isMobile ? 7 : 5;
     const fontSize = isMobile ? 56 : 100;
 
     const engine = new DotEngine({
       canvas: canvasRef.current,
       maxParticles: isMobile ? 800 : 1800,
       baseSize: isMobile ? 1.2 : 1.5,
-      mouseRadius: 90,
       enableMouseInteraction: !isMobile,
+      useGlobalMouse: true,
+      sectionMode: 'projects',
     });
 
     engineRef.current = engine;
@@ -59,7 +59,7 @@ export default function ProjectIntro() {
       const newLayout = textToDots('BookOS', {
         fontSize: window.innerWidth < 768 ? 56 : 100,
         fontWeight: '700',
-        gridSpacing: window.innerWidth < 768 ? 6 : 4,
+        gridSpacing: window.innerWidth < 768 ? 7 : 5,
       });
       engineRef.current.setTargets(
         newLayout.dots,
@@ -81,11 +81,11 @@ export default function ProjectIntro() {
   return (
     <section id="projects" className="project-intro" ref={containerRef}>
       <div className="project-intro__header">
-        <span className="project-intro__tag">[ SELECTED WORK 01 ]</span>
+        <span className="project-intro__tag">{p.tag}</span>
       </div>
 
       <Link
-        href="/projects/bookos"
+        href={`/${lang}/projects/bookos`}
         className="project-intro__canvas-container"
         data-cursor="expand"
         aria-label="View BookOS project"
@@ -94,17 +94,14 @@ export default function ProjectIntro() {
       </Link>
 
       <div className="project-intro__footer">
-        <p className="project-intro__desc">
-          An experimental digital operating system & workspace concept.
-        </p>
+        <p className="project-intro__desc">{p.description}</p>
 
         <Link
-          href="/projects/bookos"
+          href={`/${lang}/projects/bookos`}
           className="project-intro__enter-btn"
           data-cursor="expand"
         >
-          <span>ENTER ENVIRONMENT</span>
-          <span className="project-intro__arrow">→</span>
+          <span>{p.enterBtn}</span>
         </Link>
       </div>
     </section>
