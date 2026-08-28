@@ -134,4 +134,16 @@ export const tr: Dictionary = {
     downloadSubtitle: 'Farklı platformlar için hazırlanmış statik derlemeler veya kaynak kodlar.',
     downloadNotice: 'İndirme butonları GitHub Releases API entegrasyonu için hazırlanmış işlevsel yer tutuculardır.',
   },
+  maintenance: {
+    title: 'BAKIM',
+    tagline: 'Sistem bakımda. Kısa süre içinde geri döneceğiz.',
+    status: '[ SİSTEM BAKIMDA ]',
+  },
+  notFound: {
+    tag: '[ HATA // 404 ]',
+    survivedMessage: 'SAYFA DAYANDI.',
+    completedMessage: 'HİÇBİR ŞEY BULAMADIN.',
+    restartBtn: 'TEKRAR DENE',
+    returnHomeBtn: 'ANA SAYFAYA DÖN',
+  },
 };

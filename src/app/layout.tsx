@@ -5,6 +5,9 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'TIYATROTIST — Digital Environment',
   description: 'A black-and-white, dot-typography-driven digital environment and landing experience.',
+  icons: {
+    icon: '/icon.svg',
+  },
 };
 
 export default function RootLayout({

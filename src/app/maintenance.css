@@ -1,0 +1,152 @@
+/**
+ * TIYATROTIST — Maintenance Page Styles
+ * Fullscreen monochrome maintenance mode with DotEngine particle canvas.
+ * Pure black background, centered typography, subtle ambient pulse.
+ */
+
+/* ─── MAINTENANCE LAYOUT ─────────────────────────────────────── */
+.maintenance {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #000000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.maintenance__canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* ─── MAINTENANCE INFO OVERLAY ───────────────────────────────── */
+.maintenance__overlay {
+  position: absolute;
+  bottom: 12vh;
+  left: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.maintenance__status {
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  color: rgba(255, 255, 255, 0.25);
+  opacity: 0;
+  transform: translateY(10px);
+  animation: maintenance-fade-in 1.2s ease 0.8s forwards;
+}
+
+.maintenance__tagline {
+  font-size: 0.95rem;
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.45);
+  text-align: center;
+  max-width: 500px;
+  padding: 0 1.5rem;
+  line-height: 1.6;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: maintenance-fade-in 1.2s ease 1.4s forwards;
+}
+
+.maintenance__progress-bar {
+  width: 180px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: -0.25rem;
+}
+
+.maintenance__progress-fill {
+  height: 100%;
+  background: #ffffff;
+  transition: width 0.1s linear;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+}
+
+/* ─── PULSE LINE ─────────────────────────────────────────────── */
+.maintenance__pulse {
+  width: 60px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.15);
+  position: relative;
+  overflow: hidden;
+  opacity: 0;
+  animation: maintenance-fade-in 1.2s ease 2s forwards;
+}
+
+.maintenance__pulse::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  animation: maintenance-pulse-sweep 3s ease-in-out infinite;
+}
+
+/* ─── ANIMATIONS ─────────────────────────────────────────────── */
+@keyframes maintenance-fade-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes maintenance-pulse-sweep {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 200%;
+  }
+}
+
+/* ─── RESPONSIVE ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .maintenance__overlay {
+    bottom: 10vh;
+    gap: 1.25rem;
+  }
+
+  .maintenance__status {
+    font-size: 0.6rem;
+  }
+
+  .maintenance__tagline {
+    font-size: 0.85rem;
+    padding: 0 1.25rem;
+  }
+
+  .maintenance__pulse {
+    width: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .maintenance__overlay {
+    bottom: 8vh;
+    gap: 1rem;
+  }
+
+  .maintenance__tagline {
+    font-size: 0.78rem;
+  }
+}

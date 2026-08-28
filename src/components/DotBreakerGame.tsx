@@ -73,26 +73,69 @@ interface FloatingText {
   alpha: number;
 }
 
-// 7x5 Dot Matrix Font for "4", "0", "4"
-const BITMAP_4 = [
-  [1, 0, 0, 1, 0],
-  [1, 0, 0, 1, 0],
-  [1, 0, 0, 1, 0],
-  [1, 1, 1, 1, 1],
-  [0, 0, 0, 1, 0],
-  [0, 0, 0, 1, 0],
-  [0, 0, 0, 1, 0],
-];
+import { textToDots } from '@/engine/DotTypography';
 
-const BITMAP_0 = [
-  [0, 1, 1, 1, 0],
-  [1, 0, 0, 0, 1],
-  [1, 0, 0, 0, 1],
-  [1, 0, 0, 0, 1],
-  [1, 0, 0, 0, 1],
-  [1, 0, 0, 0, 1],
-  [0, 1, 1, 1, 0],
-];
+interface TargetDot {
+  id: number;
+  x: number;
+  y: number;
+  originX: number;
+  originY: number;
+  radius: number;
+  active: boolean;
+  type: 'NORMAL' | 'SPECIAL' | 'POWERUP' | 'MYSTERY';
+  powerType?: 'MULTI' | 'WIDE' | 'SLOW' | '2X' | 'LASER';
+  points: number;
+  hitTimer: number;
+  pulseOffset: number;
+  glyph?: string;
+  charLabel?: '4' | '0' | 'DECOR';
+}
+
+interface Ball {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  radius: number;
+  speed: number;
+  active: boolean;
+}
+
+interface Particle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  radius: number;
+  alpha: number;
+  decay: number;
+}
+
+interface PowerUpPill {
+  id: number;
+  x: number;
+  y: number;
+  vy: number;
+  type: 'MULTI' | 'WIDE' | 'SLOW' | '2X' | 'LASER';
+  label: string;
+  radius: number;
+}
+
+interface LaserBullet {
+  x: number;
+  y: number;
+  vy: number;
+  active: boolean;
+}
+
+interface FloatingText {
+  id: number;
+  x: number;
+  y: number;
+  text: string;
+  alpha: number;
+}
 
 export default function DotBreakerGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -141,128 +184,90 @@ export default function DotBreakerGame() {
     gameState: 'PLAYING' as 'PLAYING' | 'WIN' | 'GAMEOVER',
   });
 
-  // Construct target dots forming the giant "4 0 4" dot typography
+  // Construct target dots forming massive 2x larger "404" using DotTypography
   const initDots = useCallback((w: number, h: number): TargetDot[] => {
+    const isMobile = w < 768;
+    const isSmallMobile = w < 480;
+
+    // 2x LARGER font size for 404
+    const fontSize = isSmallMobile ? 100 : isMobile ? 160 : 250;
+    const gridSpacing = isSmallMobile ? 9 : isMobile ? 10 : 12;
+    const dotRadius = isMobile ? 3.5 : 4.8;
+
+    const layout = textToDots('404', {
+      fontSize,
+      fontWeight: '900', // Massive bold weight
+      gridSpacing,
+      alphaThreshold: 80,
+    });
+
+    const centerX = w / 2;
+    const centerY = h * 0.30;
+
     const dots: TargetDot[] = [];
     let id = 0;
 
-    const dotSpacing = Math.min(w * 0.038, 28);
-    const charWidth = 4 * dotSpacing;
-    const charGap = dotSpacing * 2.4;
-    const totalWidth = charWidth * 3 + charGap * 2;
+    layout.dots.forEach((dotCoords, index) => {
+      const x = dotCoords.x + centerX;
+      const y = dotCoords.y + centerY;
 
-    const startX = (w - totalWidth) / 2;
-    const startY = h * 0.12;
+      let type: TargetDot['type'] = 'NORMAL';
+      let powerType: TargetDot['powerType'] = undefined;
+      let points = 60;
+      let radius = dotRadius;
 
-    const buildChar = (
-      bitmap: number[][],
-      offsetX: number,
-      offsetY: number,
-      charLabel: '4' | '0'
-    ) => {
-      for (let r = 0; r < bitmap.length; r++) {
-        for (let c = 0; c < bitmap[r].length; c++) {
-          if (bitmap[r][c] === 1) {
-            const x = offsetX + c * dotSpacing;
-            const y = offsetY + r * (dotSpacing * 1.15);
-
-            let type: TargetDot['type'] = 'NORMAL';
-            let powerType: TargetDot['powerType'] = undefined;
-            let points = 60 + (7 - r) * 10;
-            let radius = 6.0;
-            let glyph: string | undefined = undefined;
-
-            // Mystery core dot in center of "0"
-            if (charLabel === '0' && r === 3 && (c === 1 || c === 3)) {
-              type = 'SPECIAL';
-              points = 150;
-              radius = 6.8;
-            } else if (charLabel === '0' && r === 0 && c === 2) {
-              type = 'MYSTERY';
-              points = 404;
-              radius = 7.5;
-              glyph = '✦';
-            }
-            // Power-Up dots (~15% chance)
-            else if ((r * 5 + c + (charLabel === '4' ? 3 : 1)) % 5 === 0) {
-              type = 'POWERUP';
-              const ptypes: TargetDot['powerType'][] = ['MULTI', 'WIDE', 'SLOW', '2X', 'LASER'];
-              powerType = ptypes[(r + c + id) % ptypes.length];
-              radius = 6.5;
-              points = 120;
-            }
-
-            dots.push({
-              id: ++id,
-              x,
-              y,
-              originX: x,
-              originY: y,
-              radius,
-              active: true,
-              type,
-              powerType,
-              points,
-              hitTimer: 0,
-              pulseOffset: Math.random() * Math.PI * 2,
-              glyph,
-              charLabel,
-            });
-          }
-        }
+      if (index % 10 === 0) {
+        type = 'POWERUP';
+        const ptypes: TargetDot['powerType'][] = ['MULTI', 'WIDE', 'SLOW', '2X', 'LASER'];
+        powerType = ptypes[index % ptypes.length];
+        radius = dotRadius * 1.2;
+        points = 120;
+      } else if (index % 23 === 0) {
+        type = 'MYSTERY';
+        points = 404;
+        radius = dotRadius * 1.35;
       }
-    };
 
-    // Draw first "4"
-    buildChar(BITMAP_4, startX, startY, '4');
-    // Draw "0"
-    buildChar(BITMAP_0, startX + charWidth + charGap, startY, '0');
-    // Draw second "4"
-    buildChar(BITMAP_4, startX + (charWidth + charGap) * 2, startY, '4');
-
-    // Add subtle upper constellation halo dots
-    const haloCount = 14;
-    for (let i = 0; i < haloCount; i++) {
-      const hx = startX - 20 + (i / (haloCount - 1)) * (totalWidth + 40);
-      const hy = startY - 24 + Math.sin(i * 0.8) * 8;
       dots.push({
         id: ++id,
-        x: hx,
-        y: hy,
-        originX: hx,
-        originY: hy,
-        radius: 3.5,
+        x,
+        y,
+        originX: x,
+        originY: y,
+        radius,
         active: true,
-        type: 'NORMAL',
-        points: 40,
+        type,
+        powerType,
+        points,
         hitTimer: 0,
-        pulseOffset: i * 0.5,
-        charLabel: 'DECOR',
+        pulseOffset: Math.random() * Math.PI * 2,
+        charLabel: '4',
       });
-    }
+    });
 
     return dots;
   }, []);
 
-  // Particle explosion on dot destruction
-  const spawnDotBurst = (x: number, y: number, count: number, baseRadius = 2.8) => {
+  // Subtle pop effect in place when dot is destroyed (classic Brick Breaker style)
+  const spawnDotBurst = (x: number, y: number, count: number, baseRadius = 2.0) => {
     if (reducedMotionRef.current) return;
     const parts: Particle[] = [];
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = Math.random() * 5.0 + 1.5;
+      const speed = Math.random() * 1.5 + 0.5;
       parts.push({
         x,
         y,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
-        radius: Math.random() * baseRadius + 1.0,
-        alpha: 1,
-        decay: Math.random() * 0.03 + 0.018,
+        radius: Math.random() * baseRadius + 0.5,
+        alpha: 0.9,
+        decay: 0.08,
       });
     }
     stateRef.current.particles.push(...parts);
   };
+
 
   // Reset ball attached to paddle
   const resetBallOnPaddle = useCallback(() => {
@@ -603,7 +608,7 @@ export default function DotBreakerGame() {
             const minDist = dot.radius + b.radius;
 
             if (distSq < minDist * minDist) {
-              // Destroy Dot
+              // Destroy Dot (Vanish cleanly in place like classic Brick Breaker)
               dot.active = false;
 
               // Elastic bounce
@@ -613,21 +618,6 @@ export default function DotBreakerGame() {
               const dotProduct = b.vx * nx + b.vy * ny;
               b.vx = b.vx - 2 * dotProduct * nx;
               b.vy = b.vy - 2 * dotProduct * ny;
-
-              // Ripple effect across neighboring "404" dots
-              s.targetDots.forEach((nb) => {
-                if (!nb.active || nb.id === dot.id) return;
-                const ndx = nb.x - dot.x;
-                const ndy = nb.y - dot.y;
-                const nDistSq = ndx * ndx + ndy * ndy;
-                if (nDistSq < 85 * 85) {
-                  const nDist = Math.sqrt(nDistSq);
-                  const force = (1 - nDist / 85) * 4.0;
-                  nb.x += (ndx / nDist) * force;
-                  nb.y += (ndy / nDist) * force;
-                  nb.hitTimer = 1.0;
-                }
-              });
 
               // Add Score
               s.combo++;
@@ -644,13 +634,13 @@ export default function DotBreakerGame() {
                 alpha: 1,
               });
 
-              // Burst particles
-              spawnDotBurst(dot.x, dot.y, 18, dot.radius);
+              // Subtle pop in place
+              spawnDotBurst(dot.x, dot.y, 6, dot.radius);
 
               // Mystery Dot Secret
               if (dot.type === 'MYSTERY') {
                 setSecretToast('✦ CORE 404 MATRIX SHATTERED ✦');
-                spawnDotBurst(w / 2, h * 0.3, 45, 5);
+                spawnDotBurst(w / 2, h * 0.3, 20, 4);
               }
 
               // Power-up Drop
@@ -706,15 +696,15 @@ export default function DotBreakerGame() {
           s.gameState = 'WIN';
           setGameState('WIN');
           setSecretToast('You found it.');
-          spawnDotBurst(w / 2, h / 2, 90, 6);
+          spawnDotBurst(w / 2, h / 2, 40, 6);
         }
       }
 
-      // ─── 6. SPRING RELAXATION FOR 404 SHAPED DOTS ──
+      // ─── 6. STATIC 404 TARGET DOT POSITIONING (NO SCATTER) ──
       s.targetDots.forEach((dot) => {
-        dot.x += (dot.originX - dot.x) * 0.09;
-        dot.y += (dot.originY - dot.y) * 0.09;
-        if (dot.hitTimer > 0) dot.hitTimer = Math.max(0, dot.hitTimer - 0.045);
+        if (!dot.active) return;
+        dot.x = dot.originX;
+        dot.y = dot.originY;
       });
 
       // ─── 7. RENDER ─────────────────────────────────

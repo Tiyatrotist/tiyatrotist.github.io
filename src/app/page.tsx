@@ -2,11 +2,18 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { SITE_CONFIG } from '@/config/site';
 
 export default function RootPage() {
   const router = useRouter();
 
   useEffect(() => {
+    // 0. Check global maintenance mode
+    if (SITE_CONFIG.maintenanceMode) {
+      router.replace('/maintenance');
+      return;
+    }
+
     // 1. Check stored preference in localStorage
     const stored = localStorage.getItem('preferred_lang');
     if (stored === 'tr' || stored === 'en') {

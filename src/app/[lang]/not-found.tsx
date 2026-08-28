@@ -1,10 +1,18 @@
-import FullScreenDotBreaker from '@/components/FullScreenDotBreaker';
-import '../fullscreen-breaker.css';
+/**
+ * TIYATROTIST — Localized 404 Not Found Page (/tr/not-found or dynamic subpaths)
+ */
 
-export default function LangNotFound() {
-  return (
-    <main style={{ backgroundColor: '#000000', width: '100vw', height: '100vh', overflow: 'hidden' }}>
-      <FullScreenDotBreaker />
-    </main>
-  );
+import BrickBreaker404 from '@/components/BrickBreaker404';
+import { Locale, getDictionary } from '@/dictionaries';
+
+interface LangNotFoundProps {
+  params?: Promise<{ lang: string }>;
+}
+
+export default async function LangNotFound({ params }: LangNotFoundProps) {
+  const resolvedParams = params ? await params : undefined;
+  const currentLang = (resolvedParams?.lang === 'tr' ? 'tr' : 'en') as Locale;
+  const dict = getDictionary(currentLang);
+
+  return <BrickBreaker404 lang={currentLang} dict={dict} />;
 }

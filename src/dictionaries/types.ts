@@ -131,4 +131,16 @@ export interface Dictionary {
     downloadSubtitle: string;
     downloadNotice: string;
   };
+  maintenance: {
+    title: string;
+    tagline: string;
+    status: string;
+  };
+  notFound: {
+    tag: string;
+    survivedMessage: string;
+    completedMessage: string;
+    restartBtn: string;
+    returnHomeBtn: string;
+  };
 }

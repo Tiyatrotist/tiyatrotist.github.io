@@ -669,6 +669,26 @@ export class DotEngine {
     this.clearMouse();
   };
 
+  // ─── TOUCH EVENT HANDLERS ─────────────────────────────────────
+
+  private handleTouchStart = (e: TouchEvent): void => {
+    if (e.touches.length > 0) {
+      const touch = e.touches[0];
+      this.updateMouse(touch.clientX, touch.clientY);
+    }
+  };
+
+  private handleTouchMove = (e: TouchEvent): void => {
+    if (e.touches.length > 0) {
+      const touch = e.touches[0];
+      this.updateMouse(touch.clientX, touch.clientY);
+    }
+  };
+
+  private handleTouchEnd = (): void => {
+    this.clearMouse();
+  };
+
   private handleResize = (): void => {
     this.resize();
   };
@@ -685,6 +705,12 @@ export class DotEngine {
       document.addEventListener('mouseover', this.handleMouseOver);
       document.addEventListener('mouseout', this.handleMouseOut);
     }
+
+    // Touch events — canvas-scoped, passive for performance
+    this.canvas.addEventListener('touchstart', this.handleTouchStart, { passive: true });
+    this.canvas.addEventListener('touchmove', this.handleTouchMove, { passive: true });
+    this.canvas.addEventListener('touchend', this.handleTouchEnd, { passive: true });
+
     window.addEventListener('resize', this.handleResize);
   }
 
@@ -700,6 +726,12 @@ export class DotEngine {
       document.removeEventListener('mouseover', this.handleMouseOver);
       document.removeEventListener('mouseout', this.handleMouseOut);
     }
+
+    // Touch event cleanup
+    this.canvas.removeEventListener('touchstart', this.handleTouchStart);
+    this.canvas.removeEventListener('touchmove', this.handleTouchMove);
+    this.canvas.removeEventListener('touchend', this.handleTouchEnd);
+
     window.removeEventListener('resize', this.handleResize);
   }
 

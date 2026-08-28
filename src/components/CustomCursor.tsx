@@ -66,28 +66,37 @@ export default function CustomCursor() {
     };
 
     // Etkileşimli elemanları izle
+    const isInteractive = (el: HTMLElement | null): boolean => {
+      if (!el) return false;
+      const tag = el.tagName;
+      if (
+        tag === 'A' ||
+        tag === 'BUTTON' ||
+        tag === 'INPUT' ||
+        tag === 'TEXTAREA' ||
+        tag === 'SELECT' ||
+        el.getAttribute('role') === 'button' ||
+        el.dataset?.cursor === 'expand' ||
+        el.closest('a') ||
+        el.closest('button') ||
+        el.closest('[role="button"]') ||
+        el.closest('[data-cursor="expand"]')
+      ) {
+        return true;
+      }
+      return false;
+    };
+
     const handleMouseOver = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (
-        target.tagName === 'A' ||
-        target.tagName === 'BUTTON' ||
-        target.closest('a') ||
-        target.closest('button') ||
-        target.dataset.cursor === 'expand'
-      ) {
+      if (isInteractive(target)) {
         setIsHovering(true);
       }
     };
 
     const handleMouseOut = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (
-        target.tagName === 'A' ||
-        target.tagName === 'BUTTON' ||
-        target.closest('a') ||
-        target.closest('button') ||
-        target.dataset.cursor === 'expand'
-      ) {
+      if (!isInteractive(e.relatedTarget as HTMLElement)) {
         setIsHovering(false);
       }
     };

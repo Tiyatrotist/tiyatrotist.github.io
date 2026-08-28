@@ -134,4 +134,16 @@ export const en: Dictionary = {
     downloadSubtitle: 'Download verified static binaries for your platform or explore source code.',
     downloadNotice: 'Download triggers are functional placeholders prepared for GitHub Releases API integration.',
   },
+  maintenance: {
+    title: 'MAINTENANCE',
+    tagline: 'System under maintenance. We\'ll be back shortly.',
+    status: '[ SYSTEM MAINTENANCE ]',
+  },
+  notFound: {
+    tag: '[ ERROR // 404 ]',
+    survivedMessage: 'THE PAGE SURVIVED.',
+    completedMessage: 'YOU FOUND NOTHING.',
+    restartBtn: 'TRY AGAIN',
+    returnHomeBtn: 'RETURN HOME',
+  },
 };

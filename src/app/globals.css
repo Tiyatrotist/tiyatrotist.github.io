@@ -47,7 +47,25 @@ button {
   border: none;
   color: inherit;
   font: inherit;
-  cursor: pointer;
+}
+
+/* ─── GLOBAL CURSOR HIDE (DESKTOP) ───────────────────────────── */
+@media (hover: hover) and (pointer: fine) {
+  html,
+  body,
+  *,
+  *::before,
+  *::after,
+  a,
+  button,
+  input,
+  textarea,
+  select,
+  summary,
+  [role="button"],
+  [data-cursor] {
+    cursor: none !important;
+  }
 }
 
 /* ─── GLOBAL DOT CANVAS ───────────────────────────────────────── */
@@ -550,42 +568,311 @@ button {
   color: rgba(255, 255, 255, 0.5);
 }
 
-/* ─── RESPONSIVE BREAKPOINTS ─────────────────────────────────── */
+/* ─── HAMBURGER BUTTON ───────────────────────────────────────── */
+.site-header__hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 110;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.site-header__hamburger-line {
+  display: block;
+  width: 22px;
+  height: 1px;
+  background-color: #ffffff;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+}
+
+.site-header__hamburger--active .site-header__hamburger-line:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.site-header__hamburger--active .site-header__hamburger-line:nth-child(2) {
+  opacity: 0;
+}
+
+.site-header__hamburger--active .site-header__hamburger-line:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+/* ─── MOBILE MENU OVERLAY ────────────────────────────────────── */
+.mobile-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.97);
+  z-index: 99;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.4s;
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+}
+
+.mobile-menu-overlay--open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.mobile-menu-overlay__nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+.mobile-menu-overlay__link {
+  font-size: 1.5rem;
+  font-weight: 300;
+  letter-spacing: 0.25em;
+  color: rgba(255, 255, 255, 0.4);
+  transition: color 0.3s ease, letter-spacing 0.3s ease;
+  padding: 0.5rem 1rem;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.mobile-menu-overlay__link:hover,
+.mobile-menu-overlay__link--active {
+  color: #ffffff;
+  letter-spacing: 0.3em;
+}
+
+.mobile-menu-overlay__lang {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mobile-menu-overlay__lang-btn {
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  color: rgba(255, 255, 255, 0.3);
+  transition: color 0.3s ease;
+  padding: 0.5rem 0.75rem;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.mobile-menu-overlay__lang-btn:hover,
+.mobile-menu-overlay__lang-btn--active {
+  color: #ffffff;
+}
+
+.mobile-menu-overlay__lang-divider {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.15);
+}
+
+/* ─── RESPONSIVE: TABLET (max 768px) ────────────────────────── */
 @media (max-width: 768px) {
-  .site-header__nav {
-    gap: 1rem;
+  /* Header: hide desktop nav, show hamburger */
+  .site-header__nav--desktop {
+    display: none;
   }
 
-  .site-header__link {
-    font-size: 0.65rem;
-    letter-spacing: 0.15em;
+  .site-header__hamburger {
+    display: flex;
   }
 
-  .site-header__lang-switcher {
-    margin-left: 0.5rem;
-    padding-left: 0.75rem;
+  .site-header {
+    justify-content: flex-start;
+    padding: 0 1rem;
   }
 
-  .second-scene {
-    padding: 4rem 1.25rem;
-  }
-
-  .project-intro {
-    padding: 4rem 1.25rem;
-  }
-
+  /* Hero adjustments */
   .hero__overlay {
     bottom: 8vh;
+    gap: 1.75rem;
   }
 
+  .hero__role {
+    font-size: 0.95rem;
+    letter-spacing: 0.1em;
+  }
+
+  .hero__tagline {
+    font-size: 0.75rem;
+    padding: 0 1rem;
+  }
+
+  .hero__cta {
+    font-size: 0.7rem;
+    padding: 0.65rem 1.25rem;
+  }
+
+  /* SecondScene adjustments */
+  .second-scene {
+    min-height: 70vh;
+    padding: 4rem 1.25rem;
+  }
+
+  .second-scene__heading {
+    font-size: clamp(1.5rem, 5vw, 2.25rem);
+  }
+
+  .second-scene__body {
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+
+  .second-scene__subtext {
+    font-size: 0.85rem;
+  }
+
+  /* ProjectIntro adjustments */
+  .project-intro {
+    padding: 4rem 1.25rem;
+    min-height: 80vh;
+  }
+
+  .project-intro__canvas-container {
+    min-height: 280px;
+  }
+
+  .project-intro__canvas {
+    max-height: 350px;
+  }
+
+  .project-intro__desc {
+    font-size: 0.9rem;
+    padding: 0 0.5rem;
+  }
+
+  .project-intro__enter-btn {
+    font-size: 0.75rem;
+    padding: 0.75rem 1.5rem;
+  }
+
+  /* Footer adjustments */
+  .site-footer {
+    padding: 3rem 1.25rem 2rem;
+  }
+
+  .site-footer__nav {
+    gap: 1.25rem;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .site-footer__link {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  .site-footer__social {
+    gap: 1rem;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .site-footer__external-link {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  /* Subpage adjustments */
   .page-container {
     padding: 6rem 1.25rem 3rem;
+    gap: 2rem;
   }
 
+  .page-title {
+    font-size: clamp(2rem, 8vw, 3rem);
+  }
+
+  .page-subtitle {
+    font-size: 1rem;
+  }
+
+  /* Project cards */
   .project-card-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
+    padding-bottom: 1.5rem;
+  }
+
+  .project-card-title {
+    font-size: 1.25rem;
+  }
+}
+
+/* ─── RESPONSIVE: SMALL PHONE (max 480px) ────────────────────── */
+@media (max-width: 480px) {
+  .hero__overlay {
+    bottom: 6vh;
+    gap: 1.25rem;
+  }
+
+  .hero__role {
+    font-size: 0.85rem;
+  }
+
+  .hero__tagline {
+    font-size: 0.7rem;
+  }
+
+  .second-scene {
+    padding: 3rem 1rem;
+    min-height: 60vh;
+  }
+
+  .second-scene__heading {
+    font-size: clamp(1.25rem, 6vw, 1.75rem);
+  }
+
+  .second-scene__body {
+    font-size: 0.9rem;
+  }
+
+  .project-intro {
+    padding: 3rem 1rem;
+  }
+
+  .project-intro__canvas-container {
+    min-height: 220px;
+  }
+
+  .page-container {
+    padding: 5rem 1rem 2rem;
+  }
+
+  .page-title {
+    font-size: clamp(1.75rem, 10vw, 2.5rem);
+  }
+
+  .mobile-menu-overlay__link {
+    font-size: 1.25rem;
+    gap: 1.5rem;
   }
 }
 
