@@ -5,7 +5,7 @@ export const en: Dictionary = {
     home: 'HOME',
     projects: 'PROJECTS',
     about: 'ABOUT',
-    now: 'NOW',
+    blog: 'BLOG',
     contact: 'CONTACT',
   },
   hero: {

@@ -5,7 +5,7 @@ export const tr: Dictionary = {
     home: 'ANASAYFA',
     projects: 'PROJELER',
     about: 'HAKKINDA',
-    now: 'ŞİMDİ',
+    blog: 'BLOG',
     contact: 'İLETİŞİM',
   },
   hero: {

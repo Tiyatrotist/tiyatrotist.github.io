@@ -86,7 +86,7 @@ export default function Header({ lang, dict }: HeaderProps) {
     { label: dict.nav.home, path: `/${lang}` },
     { label: dict.nav.projects, path: `/${lang}/projects` },
     { label: dict.nav.about, path: `/${lang}/about` },
-    { label: dict.nav.now, path: `/${lang}/now` },
+    { label: dict.nav.blog, path: `/${lang}/blog` },
     { label: dict.nav.contact, path: `/${lang}/contact` },
   ];
 
