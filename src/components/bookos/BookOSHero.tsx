@@ -80,8 +80,8 @@ export default function BookOSHero({ dict }: BookOSHeroProps) {
             </p>
 
             <div className="bookos-code-snippet">
-              <span className="bookos-code-comment">// BookOS State Engine Init Routine</span><br />
-              <span className="bookos-code-keyword">const</span> kernel = <span className="bookos-code-keyword">await</span> BookOS.<span className="bookos-code-string">boot</span>(&#123; mode: <span className="bookos-code-string">'FOCUS_SURFACE'</span> &#125;);<br />
+              <span className="bookos-code-comment">{'// BookOS State Engine Init Routine'}</span><br />
+              <span className="bookos-code-keyword">const</span> kernel = <span className="bookos-code-keyword">await</span> BookOS.<span className="bookos-code-string">boot</span>(&#123; mode: <span className="bookos-code-string">&apos;FOCUS_SURFACE&apos;</span> &#125;);<br />
               kernel.<span className="bookos-code-string">mountLiteratureEngine</span>(&#123; biDirectional: <span className="bookos-code-keyword">true</span> &#125;);
             </div>
           </main>

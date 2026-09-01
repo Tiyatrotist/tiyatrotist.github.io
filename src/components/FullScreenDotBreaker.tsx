@@ -937,7 +937,7 @@ export default function FullScreenDotBreaker() {
       {gameState === 'WIN' && (
         <div className="fs-breaker-overlay">
           <h2 className="fs-breaker-overlay__secret">
-            “You found something that wasn't supposed to be here.”
+            “You found something that wasn&apos;t supposed to be here.”
           </h2>
           <div className="fs-breaker-btn-group">
             <button onClick={restartGame} className="fs-breaker-btn" data-cursor="expand">

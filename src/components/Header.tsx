@@ -64,7 +64,8 @@ export default function Header({ lang, dict }: HeaderProps) {
 
   // Close mobile menu on route change
   useEffect(() => {
-    setMobileMenuOpen(false);
+    const frame = requestAnimationFrame(() => setMobileMenuOpen(false));
+    return () => cancelAnimationFrame(frame);
   }, [pathname]);
 
   // Close mobile menu on Escape key
