@@ -35,7 +35,6 @@ export default function PingPongGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [playerScore, setPlayerScore] = useState(0);
   const [aiScore, setAiScore] = useState(0);
-  const [rallyCount, setRallyCount] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
   const [winner, setWinner] = useState<'PLAYER' | 'AI' | null>(null);
   const [secretToast, setSecretToast] = useState<string | null>(null);
@@ -44,7 +43,6 @@ export default function PingPongGame() {
   const upPressed = useRef(false);
   const downPressed = useRef(false);
   const touchY = useRef<number | null>(null);
-  const mouseControl = useRef(false);
 
   // Sound/Motion preference
   const reducedMotionRef = useRef(false);
@@ -180,7 +178,6 @@ export default function PingPongGame() {
     s.ball.vy = Math.sin(angle) * s.ball.speed;
 
     s.rally = 0;
-    setRallyCount(0);
   };
 
   // Start / Restart match
@@ -195,7 +192,6 @@ export default function PingPongGame() {
 
     setPlayerScore(0);
     setAiScore(0);
-    setRallyCount(0);
     setWinner(null);
     setHasStarted(true);
     setSecretToast(null);
@@ -366,7 +362,6 @@ export default function PingPongGame() {
           b.vy = Math.sin(angle) * b.speed;
 
           s.rally++;
-          setRallyCount(s.rally);
           spawnBurst(b.x, b.y, 10, 3.5);
 
           // Long rally easter egg
@@ -395,7 +390,6 @@ export default function PingPongGame() {
           b.vy = Math.sin(angle) * b.speed;
 
           s.rally++;
-          setRallyCount(s.rally);
           spawnBurst(b.x, b.y, 10, 3.5);
         }
 

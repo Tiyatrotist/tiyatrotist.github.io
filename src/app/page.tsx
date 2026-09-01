@@ -22,7 +22,7 @@ export default function RootPage() {
     }
 
     // 2. Check browser navigator language
-    const navLang = navigator.language || (navigator as any).userLanguage || '';
+    const navLang = navigator.language;
     if (navLang.toLowerCase().startsWith('tr')) {
       router.replace('/tr');
     } else {

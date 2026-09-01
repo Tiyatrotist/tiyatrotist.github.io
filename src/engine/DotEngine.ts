@@ -141,6 +141,7 @@ export class DotEngine {
     vy: 0,
     speed: 0,
     active: false,
+    lastUpdate: 0,
   };
 
   private isHoveringInteractive = false;
@@ -364,8 +365,8 @@ export class DotEngine {
 
   updateMouse(x: number, y: number): void {
     const now = performance.now();
-    const dt = Math.max((now - ((this.mouse as any).lastUpdate || now - 16)) / 1000, 0.001);
-    (this.mouse as any).lastUpdate = now;
+    const dt = Math.max((now - (this.mouse.lastUpdate || now - 16)) / 1000, 0.001);
+    this.mouse.lastUpdate = now;
 
     const dx = x - this.mouse.x;
     const dy = y - this.mouse.y;
@@ -768,5 +769,9 @@ export class DotEngine {
 
   getActiveCount(): number {
     return this.activeCount;
+  }
+
+  getActiveParticles(): Particle[] {
+    return this.particles.slice(0, this.activeCount);
   }
 }

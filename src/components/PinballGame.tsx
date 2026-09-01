@@ -47,7 +47,7 @@ export default function PinballGame() {
   const [combo, setCombo] = useState(1);
   const [lives, setLives] = useState(3);
   const [gameState, setGameState] = useState<'IDLE' | 'PLAYING' | 'GAMEOVER'>('IDLE');
-  const [secretUnlocked, setSecretUnlocked] = useState(false);
+  const secretUnlockedRef = useRef(false);
   const [secretMessage, setSecretMessage] = useState<string | null>(null);
 
   // Key states
@@ -108,18 +108,24 @@ export default function PinballGame() {
 
   // Load high score from localStorage
   useEffect(() => {
+    let frame: number | null = null;
     try {
       const saved = localStorage.getItem('tiyatrotist_pinball_hi');
       if (saved) {
         const val = parseInt(saved, 10);
         if (!isNaN(val)) {
-          setHighScore(val);
-          stateRef.current.highScore = val;
+          frame = requestAnimationFrame(() => {
+            setHighScore(val);
+            stateRef.current.highScore = val;
+          });
         }
       }
     } catch {
       // Ignore
     }
+    return () => {
+      if (frame !== null) cancelAnimationFrame(frame);
+    };
   }, []);
 
   // Initialize bumpers
@@ -500,14 +506,14 @@ export default function PinballGame() {
               s.hitSequence[1] === 2 &&
               s.hitSequence[2] === 3
             ) {
-              setSecretUnlocked(true);
+              secretUnlockedRef.current = true;
               setSecretMessage('SYSTEM OVERRIDE: 404 MATRIX ALIGNED');
               spawnParticles(w / 2, h / 2, 40, 7);
             }
 
             // High score secret check
-            if (s.score >= 500 && !secretUnlocked) {
-              setSecretUnlocked(true);
+            if (s.score >= 500 && !secretUnlockedRef.current) {
+              secretUnlockedRef.current = true;
               setSecretMessage('Not bad for a lost page.');
             }
           }
@@ -736,7 +742,7 @@ export default function PinballGame() {
       cancelAnimationFrame(animId);
       window.removeEventListener('resize', updateDimensions);
     };
-  }, [handleBallDrain]);
+  }, [handleBallDrain, initBumpers]);
 
   return (
     <div className="pinball-container">

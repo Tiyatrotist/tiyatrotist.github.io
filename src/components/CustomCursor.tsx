@@ -11,26 +11,31 @@
 
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+
+const subscribeToInputChanges = () => () => undefined;
+
+function getIsTouchDevice(): boolean {
+  return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+}
 
 export default function CustomCursor() {
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
   const posRef = useRef({ x: 0, y: 0 });
   const targetRef = useRef({ x: 0, y: 0 });
-  const [isTouch, setIsTouch] = useState(false);
+  const isTouch = useSyncExternalStore(
+    subscribeToInputChanges,
+    getIsTouchDevice,
+    () => false,
+  );
   const [isHovering, setIsHovering] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const rafRef = useRef<number | null>(null);
 
   // Dokunmatik cihaz tespiti
   useEffect(() => {
-    const isTouchDevice =
-      'ontouchstart' in window ||
-      navigator.maxTouchPoints > 0;
-
-    if (isTouchDevice) {
-      setIsTouch(true);
+    if (isTouch) {
       console.debug('[CustomCursor] Touch device detected — cursor disabled');
       return;
     }
@@ -45,7 +50,7 @@ export default function CustomCursor() {
       document.documentElement.style.cursor = '';
       document.body.style.cursor = '';
     };
-  }, []);
+  }, [isTouch]);
 
   // Fare takibi ve animasyon döngüsü
   useEffect(() => {
@@ -95,7 +100,6 @@ export default function CustomCursor() {
     };
 
     const handleMouseOut = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
       if (!isInteractive(e.relatedTarget as HTMLElement)) {
         setIsHovering(false);
       }

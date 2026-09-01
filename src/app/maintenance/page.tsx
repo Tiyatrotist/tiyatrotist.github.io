@@ -7,12 +7,12 @@
 
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { DotEngine } from '@/engine/DotEngine';
 import { textToDots } from '@/engine/DotTypography';
 import { tr } from '@/dictionaries/tr';
 import { en } from '@/dictionaries/en';
-import { Locale } from '@/dictionaries/types';
+import { usePreferredLocale } from '@/hooks/usePreferredLocale';
 import CustomCursor from '@/components/CustomCursor';
 import '../maintenance.css';
 
@@ -20,24 +20,10 @@ export default function MaintenancePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<DotEngine | null>(null);
   const initRef = useRef(false);
+  const assemblyIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [lang, setLang] = useState<Locale>('tr');
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('preferred_lang') as Locale;
-      if (stored === 'tr' || stored === 'en') {
-        setLang(stored);
-        return;
-      }
-      const navLang = navigator.language || (navigator as any).userLanguage || '';
-      if (navLang.toLowerCase().startsWith('tr')) {
-        setLang('tr');
-      } else {
-        setLang('en');
-      }
-    }
-  }, []);
+  const lang = usePreferredLocale();
 
   const dict = lang === 'tr' ? tr : en;
 
@@ -79,8 +65,8 @@ export default function MaintenancePage() {
     engine.setTargets(layout.dots, centerX, centerY, true);
 
     // Subtle organic missing dots assembly feeling (no explicit UI text/progress bar)
-    const particles = (engine as any).particles;
-    const activeCount = (engine as any).activeCount;
+    const particles = engine.getActiveParticles();
+    const activeCount = engine.getActiveCount();
 
     const indices: number[] = [];
     for (let i = 0; i < activeCount; i++) indices.push(i);
@@ -122,7 +108,8 @@ export default function MaintenancePage() {
         }
       } else {
         // Reset after 5 seconds to continuously maintain subtle organic feeling
-        setTimeout(() => {
+        if (resetTimeoutRef.current !== null) return;
+        resetTimeoutRef.current = setTimeout(() => {
           currentCount = initialVisibleCount;
           for (let i = initialVisibleCount; i < activeCount; i++) {
             const idx = indices[i];
@@ -131,11 +118,12 @@ export default function MaintenancePage() {
               p.targetOpacity = 0;
             }
           }
+          resetTimeoutRef.current = null;
         }, 5000);
       }
     }, 120);
 
-    (canvas as any).__assemblyInterval = interval;
+    assemblyIntervalRef.current = interval;
   }, [dict.maintenance.title]);
 
   useEffect(() => {
@@ -148,8 +136,13 @@ export default function MaintenancePage() {
     }
 
     return () => {
-      if (canvasRef.current && (canvasRef.current as any).__assemblyInterval) {
-        clearInterval((canvasRef.current as any).__assemblyInterval);
+      if (assemblyIntervalRef.current !== null) {
+        clearInterval(assemblyIntervalRef.current);
+        assemblyIntervalRef.current = null;
+      }
+      if (resetTimeoutRef.current !== null) {
+        clearTimeout(resetTimeoutRef.current);
+        resetTimeoutRef.current = null;
       }
       engineRef.current?.destroy();
       engineRef.current = null;

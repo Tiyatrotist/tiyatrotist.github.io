@@ -100,4 +100,5 @@ export interface MousePosition {
   vy: number;
   speed: number;
   active: boolean;
+  lastUpdate: number;
 }

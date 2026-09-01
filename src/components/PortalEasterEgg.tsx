@@ -57,7 +57,6 @@ export default function PortalEasterEgg() {
 
   // DevTools console Easter egg
   useEffect(() => {
-    /* eslint-disable no-console */
     console.log(
       '%c🍰 APERTURE SCIENCE ENRICHMENT CENTER 🍰',
       'color: #ff6a00; font-weight: bold; font-size: 16px; text-shadow: 0 0 5px rgba(255,106,0,0.5);'
@@ -70,7 +69,6 @@ export default function PortalEasterEgg() {
       '%cType "portal" anywhere on the page. Or don\'t. We\'re not your supervisors.',
       'color: #555; font-size: 10px;'
     );
-    /* eslint-enable no-console */
   }, []);
 
   const openTerminal = useCallback((reason: string) => {
