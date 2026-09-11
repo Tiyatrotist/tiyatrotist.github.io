@@ -84,6 +84,23 @@ export default function Footer({ lang, dict }: FooterProps) {
           >
             [ SYS_INIT ]
           </button>
+          <Link
+            href="/admin"
+            style={{
+              fontFamily: 'monospace',
+              fontSize: '0.65rem',
+              color: 'rgba(255, 255, 255, 0.25)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              padding: '0.15rem 0.4rem',
+              borderRadius: '3px',
+              textDecoration: 'none',
+              transition: 'all 0.25s ease',
+            }}
+            title="Admin Panel"
+            data-cursor="expand"
+          >
+            [ ADMIN ]
+          </Link>
         </div>
       </div>
     </footer>

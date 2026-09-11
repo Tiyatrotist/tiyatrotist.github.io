@@ -168,6 +168,24 @@ export default function Sidebar({ dict, open, onClose }: SidebarProps) {
               {icons.blog}
               <span>{dict.nav.blog}</span>
             </Link>
+            <Link
+              href="/admin/about"
+              className={`admin-nav-link ${isLinkActive('/admin/about') ? 'active' : ''}`}
+              onClick={onClose}
+              aria-current={isLinkActive('/admin/about') ? 'page' : undefined}
+            >
+              {icons.about}
+              <span>{dict.nav.about}</span>
+            </Link>
+            <Link
+              href="/admin/contact"
+              className={`admin-nav-link ${isLinkActive('/admin/contact') ? 'active' : ''}`}
+              onClick={onClose}
+              aria-current={isLinkActive('/admin/contact') ? 'page' : undefined}
+            >
+              {icons.contact}
+              <span>{dict.nav.contact}</span>
+            </Link>
           </div>
 
           {/* Media Group */}

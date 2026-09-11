@@ -21,6 +21,7 @@ interface DashboardMetrics {
   draftProjects: number;
   publishedPosts: number;
   draftPosts: number;
+  timelineCount: number;
   mediaCount: number;
   latestRelease: string | null;
   maintenanceMode: boolean;
@@ -67,6 +68,15 @@ export default function DashboardPage() {
         console.debug('[admin/dashboard] blog_posts fetch exception:', e);
       }
 
+      // Fetch timeline count safely
+      let timelineCount = 6;
+      try {
+        const { data: tData, error: tErr } = await supabase.from('about_timeline').select('id');
+        if (!tErr && tData && tData.length > 0) timelineCount = tData.length;
+      } catch {
+        // fallback
+      }
+
       // Fetch releases
       const { data: releases } = await supabase
         .from('releases')
@@ -95,6 +105,7 @@ export default function DashboardPage() {
         draftProjects: draftProj,
         publishedPosts: pubPosts,
         draftPosts,
+        timelineCount,
         mediaCount: mediaFiles?.length || 0,
         latestRelease,
         maintenanceMode: settings?.maintenance_mode || false,
@@ -128,12 +139,18 @@ export default function DashboardPage() {
         <section className="admin-overview-section">
           <div className="admin-overview-section-header">
             <h3>{dict.dashboard.contentGroup}</h3>
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
               <Link href="/admin/projects" className="admin-btn admin-btn-ghost admin-btn-sm">
                 {dict.nav.projects} →
               </Link>
               <Link href="/admin/blog" className="admin-btn admin-btn-ghost admin-btn-sm">
                 {dict.nav.blog} →
+              </Link>
+              <Link href="/admin/about" className="admin-btn admin-btn-secondary admin-btn-sm" style={{ borderColor: 'rgba(255,255,255,0.3)', color: '#ffffff' }}>
+                {dict.nav.about} →
+              </Link>
+              <Link href="/admin/contact" className="admin-btn admin-btn-ghost admin-btn-sm">
+                {dict.nav.contact} →
               </Link>
             </div>
           </div>
@@ -150,10 +167,14 @@ export default function DashboardPage() {
               <div className="admin-card-label">{dict.dashboard.publishedPosts}</div>
               <div className="admin-card-value">{metrics?.publishedPosts ?? 0}</div>
             </div>
-            <div className="admin-card">
-              <div className="admin-card-label">{dict.dashboard.draftPosts}</div>
-              <div className="admin-card-value">{metrics?.draftPosts ?? 0}</div>
-            </div>
+            <Link href="/admin/about" className="admin-card" style={{ textDecoration: 'none', cursor: 'pointer' }}>
+              <div className="admin-card-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>{dict.nav.about} & TİMELİNE</span>
+                <span style={{ color: '#ffffff' }}>➔</span>
+              </div>
+              <div className="admin-card-value">{metrics?.timelineCount ?? 6}</div>
+              <div className="admin-card-sub" style={{ color: 'rgba(255,255,255,0.5)' }}>Kilometre Taşı & Düzenleme</div>
+            </Link>
           </div>
         </section>
 

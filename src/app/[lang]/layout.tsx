@@ -3,6 +3,7 @@ import CustomCursor from '@/components/CustomCursor';
 import GlobalDotCanvas from '@/components/GlobalDotCanvas';
 import PortalEasterEgg from '@/components/PortalEasterEgg';
 import MaintenancePage from '@/app/maintenance/page';
+import MaintenanceGuard from '@/components/MaintenanceGuard';
 import { SITE_CONFIG } from '@/config/site';
 import { Locale, getDictionary } from '@/dictionaries';
 import '../globals.css';
@@ -52,7 +53,9 @@ export default async function LangLayout({ children, params }: LangLayoutProps) 
       <GlobalDotCanvas />
       <CustomCursor />
       <PortalEasterEgg />
-      {children}
+      <MaintenanceGuard lang={validLang}>
+        {children}
+      </MaintenanceGuard>
     </div>
   );
 }

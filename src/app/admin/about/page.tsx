@@ -9,6 +9,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, FormEvent } from 'react';
+import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { getAdminDict, AdminLocale } from '@/lib/admin-i18n';
 import FormField from '@/components/admin/FormField';
@@ -377,9 +378,20 @@ export default function AboutPage() {
 
   return (
     <>
-      <div className="admin-page-header">
-        <h1>{dict.about.title}</h1>
-        <p>{dict.about.breadcrumb}</p>
+      <div className="admin-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+        <div>
+          <h1>{dict.about.title}</h1>
+          <p>{dict.about.breadcrumb}</p>
+        </div>
+        <Link
+          href="/tr/about"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="admin-btn admin-btn-secondary admin-btn-sm"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', textDecoration: 'none' }}
+        >
+          <span>↗ Sitede Gör</span>
+        </Link>
       </div>
 
       {/* Tabs */}
