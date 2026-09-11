@@ -9,11 +9,16 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
+const DEFAULT_SUPABASE_URL = 'https://znsxdqzoojgauevifnel.supabase.co';
+const DEFAULT_SUPABASE_ANON_KEY = 'sb_publishable_AZIDRInTs7zlZCN0Ub3L7A_7U9pgUsD';
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('[supabase] Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY');
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || DEFAULT_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || DEFAULT_SUPABASE_ANON_KEY;
+
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) {
+  if (process.env.NODE_ENV !== 'production') {
+    console.warn('[supabase] NEXT_PUBLIC_SUPABASE env vars not explicitly set; using project defaults.');
+  }
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
