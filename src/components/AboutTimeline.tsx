@@ -6,119 +6,60 @@
  * circular node joints, and horizontal branch lines).
  * Enhanced with glowing pulse animations, glassmorphic cards,
  * and high-fidelity micro-interactions ("göz doygunluğu").
+ *
+ * Fetches dynamic milestones from Supabase with safe fallback to DEFAULT_MILESTONES.
  */
 
-import React from 'react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
 import { Locale } from '@/dictionaries';
-
-interface Milestone {
-  code: string;
-  year: string;
-  period_tr: string;
-  period_en: string;
-  title_tr: string;
-  title_en: string;
-  desc_tr: string;
-  desc_en: string;
-  status_tr: string;
-  status_en: string;
-  tag?: string;
-  side: 'right' | 'left';
-}
-
-const MILESTONES: Milestone[] = [
-  {
-    code: '01',
-    year: '2026',
-    period_tr: '2026 // AĞUSTOS',
-    period_en: '2026 // AUGUST',
-    title_tr: 'BookOS v1.2.0 Kararlı Sürümü',
-    title_en: 'BookOS v1.2.0 Stable Release',
-    desc_tr: 'Edebiyat, derin odaklanma ve dokunsal bilgi sentezi için bağımsız masaüstü çalışma alanı işletim sistemi mimarisi.',
-    desc_en: 'Independent desktop operating system environment engineered for deep focus, literature, and tactile knowledge synthesis.',
-    status_tr: 'YAYINLANDI',
-    status_en: 'RELEASED',
-    tag: 'SOFTWARE',
-    side: 'right',
-  },
-  {
-    code: '02',
-    year: '2026',
-    period_tr: '2026 // MAYIS',
-    period_en: '2026 // MAY',
-    title_tr: 'Tiyatrotist Parçacık Tipografi Motoru',
-    title_en: 'Tiyatrotist Particle Typography Engine',
-    desc_tr: 'Geleneksel piksel kutu modelini baypas eden, 60 FPS hızında çalışan sıfır bağımlılıklı canvas parçacık fiziği motoru.',
-    desc_en: 'Zero-dependency canvas particle engine rendering dynamic typography at 60 FPS, bypassing conventional DOM box models.',
-    status_tr: 'ÇALIŞIYOR',
-    status_en: 'ACTIVE',
-    tag: 'ARCHITECTURE',
-    side: 'left',
-  },
-  {
-    code: '03',
-    year: '2025',
-    period_tr: '2025 // KASIM',
-    period_en: '2025 // NOVEMBER',
-    title_tr: 'Sistem Mimarisi Hackathonu Birinciliği',
-    title_en: 'System Architecture Hackathon 1st Place',
-    desc_tr: '48 saatlik yarışmada geliştirilen düşük gecikmeli dağıtık veri akışı ve istemci senkronizasyon protokolü ile 1.lik ödülü.',
-    desc_en: 'Awarded 1st place for designing a low-latency distributed stream protocol and zero-cost client state synchronization.',
-    status_tr: '1.LİK ÖDÜLÜ',
-    status_en: '1ST PRIZE',
-    tag: 'ACHIEVEMENT',
-    side: 'right',
-  },
-  {
-    code: '04',
-    year: '2025',
-    period_tr: '2025 // TEMMUZ',
-    period_en: '2025 // JULY',
-    title_tr: 'Blok Tabanlı Headless CMS & Builder',
-    title_en: 'Block-Based Headless CMS & Builder',
-    desc_tr: 'Monokrom tasarım sistemine adanmış dinamik şablonlar ve yapay zeka destekli çift dilli çeviri motoru mimarisi.',
-    desc_en: 'Custom headless block builder tailored for monochrome digital environments with automated bilingual caching.',
-    status_tr: 'TAMAMLANDI',
-    status_en: 'VERIFIED',
-    tag: 'ENGINE',
-    side: 'left',
-  },
-  {
-    code: '05',
-    year: '2024',
-    period_tr: '2024 // EYLÜL',
-    period_en: '2024 // SEPTEMBER',
-    title_tr: 'Web Tabanlı Etkileşimli Terminal Emülatörü',
-    title_en: 'Web-Based Interactive Terminal Emulator',
-    desc_tr: 'Tarayıcıda Unix boru hatları, sanal dosya sistemi ve CLI komut çalıştırma kabiliyetine sahip ultra hafif terminal çekirdeği.',
-    desc_en: 'Ultra-lightweight browser terminal emulator featuring Unix-style pipes, filesystem navigation, and custom command evaluation.',
-    status_tr: 'AÇIK KAYNAK',
-    status_en: 'OPEN SOURCE',
-    tag: 'SOFTWARE',
-    side: 'right',
-  },
-  {
-    code: '06',
-    year: '2024',
-    period_tr: '2024 // OCAK',
-    period_en: '2024 // JANUARY',
-    title_tr: 'TIYATROTIST Stüdyosu & Manifestosu',
-    title_en: 'TIYATROTIST Studio & Manifesto Founded',
-    desc_tr: '“Kod ve sahne arasında” mottosuyla; saf tipografi, mantık ve mekanın tek bir sessiz monokrom ortamda buluştuğu atölye.',
-    desc_en: 'Experimental digital studio established under the ethos "between code & stage" — uniting pure logic and monochrome space.',
-    status_tr: 'TEMEL TAŞI',
-    status_en: 'FOUNDATION',
-    tag: 'FOUNDING',
-    side: 'left',
-  },
-];
+import { supabase } from '@/lib/supabase';
+import { TimelineMilestone, DEFAULT_MILESTONES } from '@/types/timeline';
 
 interface AboutTimelineProps {
   lang: Locale;
+  initialMilestones?: TimelineMilestone[];
 }
 
-export default function AboutTimeline({ lang }: AboutTimelineProps) {
+export default function AboutTimeline({ lang, initialMilestones }: AboutTimelineProps) {
   const isTr = lang === 'tr';
+  const [milestones, setMilestones] = useState<TimelineMilestone[]>(
+    initialMilestones && initialMilestones.length > 0 ? initialMilestones : DEFAULT_MILESTONES
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadDynamicMilestones() {
+      console.debug('[AboutTimeline] Fetching live milestones from Supabase…');
+      try {
+        const { data, error } = await supabase
+          .from('about_timeline')
+          .select('*')
+          .eq('enabled', true)
+          .order('sort_order', { ascending: true });
+
+        if (error) {
+          console.debug('[AboutTimeline] Notice querying about_timeline (using defaults):', error.message);
+          return;
+        }
+
+        if (isMounted && data && data.length > 0) {
+          console.debug(`[AboutTimeline] Successfully loaded ${data.length} live milestones.`);
+          setMilestones(data);
+        }
+      } catch (err) {
+        console.debug('[AboutTimeline] Exception loading milestones:', err);
+      }
+    }
+
+    loadDynamicMilestones();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <div className="about-timeline-wrapper" style={{ marginTop: '6rem', position: 'relative' }}>
@@ -175,7 +116,7 @@ export default function AboutTimeline({ lang }: AboutTimelineProps) {
 
         {/* Milestone Rows */}
         <div className="schematic-timeline__rows">
-          {MILESTONES.map((item, index) => {
+          {milestones.map((item, index) => {
             const isRight = item.side === 'right';
             const period = isTr ? item.period_tr : item.period_en;
             const title = isTr ? item.title_tr : item.title_en;
@@ -184,7 +125,7 @@ export default function AboutTimeline({ lang }: AboutTimelineProps) {
 
             return (
               <div
-                key={item.code}
+                key={item.id || item.code || index}
                 className={`schematic-timeline__row ${isRight ? 'schematic-timeline__row--right' : 'schematic-timeline__row--left'}`}
                 style={{ '--i': index } as React.CSSProperties}
               >

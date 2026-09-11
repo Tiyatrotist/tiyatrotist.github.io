@@ -202,6 +202,33 @@ export interface AdminDict {
     contentEn: string;
     save: string;
     saving: string;
+    tabGeneral: string;
+    tabTimeline: string;
+    newMilestone: string;
+    editMilestone: string;
+    code: string;
+    year: string;
+    periodTr: string;
+    periodEn: string;
+    milestoneTitleTr: string;
+    milestoneTitleEn: string;
+    descTr: string;
+    descEn: string;
+    statusTr: string;
+    statusEn: string;
+    tag: string;
+    side: string;
+    sideRight: string;
+    sideLeft: string;
+    sortOrder: string;
+    enabled: string;
+    deleteMilestoneConfirm: string;
+    noMilestones: string;
+    noMilestonesDesc: string;
+    sqlNoticeTitle: string;
+    sqlNoticeDesc: string;
+    copySqlBtn: string;
+    copiedSqlBtn: string;
   };
   contact: {
     title: string;
@@ -465,6 +492,33 @@ export const adminTr: AdminDict = {
     contentEn: 'Hakkında İçeriği (EN — Markdown)',
     save: 'İçeriği Kaydet',
     saving: 'Kaydediliyor…',
+    tabGeneral: 'Genel Bilgiler',
+    tabTimeline: 'Zaman Çizelgesi & Başarılar',
+    newMilestone: 'Yeni Kilometre Taşı',
+    editMilestone: 'Kilometre Taşını Düzenle',
+    code: 'Eksen Kodu (Örn: 01)',
+    year: 'Yıl (Örn: 2026)',
+    periodTr: 'Dönem (TR — Örn: 2026 // AĞUSTOS)',
+    periodEn: 'Dönem (EN — Örn: 2026 // AUGUST)',
+    milestoneTitleTr: 'Başlık (TR)',
+    milestoneTitleEn: 'Başlık (EN)',
+    descTr: 'Açıklama (TR)',
+    descEn: 'Açıklama (EN)',
+    statusTr: 'Durum Rozeti (TR — Örn: YAYINLANDI)',
+    statusEn: 'Durum Rozeti (EN — Örn: RELEASED)',
+    tag: 'Etiket / Kategori (Örn: SOFTWARE)',
+    side: 'Şematik Dal Yönü',
+    sideRight: 'Sağ (Right)',
+    sideLeft: 'Sol (Left)',
+    sortOrder: 'Sıralama',
+    enabled: 'Aktif / Görünür',
+    deleteMilestoneConfirm: 'Bu kilometre taşını zaman çizelgesinden silmek istediğinizden emin misiniz?',
+    noMilestones: 'Henüz zaman çizelgesi kaydı bulunmuyor.',
+    noMilestonesDesc: 'Yeni bir başarı veya kilometre taşı ekleyerek zaman çizelgenizi oluşturun.',
+    sqlNoticeTitle: 'Supabase Tablosu Kurulumu Gerekebilir',
+    sqlNoticeDesc: 'Zaman çizelgesi verilerinin veritabanında saklanabilmesi için aşağıdaki SQL kodunu Supabase Dashboard > SQL Editor alanında bir defa çalıştırmanız önerilir.',
+    copySqlBtn: 'SQL Kodunu Kopyala',
+    copiedSqlBtn: 'SQL Kopyalandı!',
   },
   contact: {
     title: 'İletişim Bağlantıları',
@@ -728,6 +782,33 @@ export const adminEn: AdminDict = {
     contentEn: 'About Content (EN — Markdown)',
     save: 'Save Content',
     saving: 'Saving…',
+    tabGeneral: 'General Info',
+    tabTimeline: 'Timeline & Milestones',
+    newMilestone: 'New Milestone',
+    editMilestone: 'Edit Milestone',
+    code: 'Axis Code (e.g. 01)',
+    year: 'Year (e.g. 2026)',
+    periodTr: 'Period (TR — e.g. 2026 // AĞUSTOS)',
+    periodEn: 'Period (EN — e.g. 2026 // AUGUST)',
+    milestoneTitleTr: 'Title (TR)',
+    milestoneTitleEn: 'Title (EN)',
+    descTr: 'Description (TR)',
+    descEn: 'Description (EN)',
+    statusTr: 'Status Badge (TR — e.g. YAYINLANDI)',
+    statusEn: 'Status Badge (EN — e.g. RELEASED)',
+    tag: 'Tag / Category (e.g. SOFTWARE)',
+    side: 'Branch Direction',
+    sideRight: 'Right',
+    sideLeft: 'Left',
+    sortOrder: 'Sort Order',
+    enabled: 'Active / Visible',
+    deleteMilestoneConfirm: 'Are you sure you want to delete this milestone from the timeline?',
+    noMilestones: 'No timeline milestones found yet.',
+    noMilestonesDesc: 'Create your first milestone or achievement to populate the timeline.',
+    sqlNoticeTitle: 'Supabase Table Setup May Be Required',
+    sqlNoticeDesc: 'To persist timeline items in the database, run the SQL migration script once in Supabase Dashboard > SQL Editor.',
+    copySqlBtn: 'Copy SQL Script',
+    copiedSqlBtn: 'SQL Copied!',
   },
   contact: {
     title: 'Contact Links',
