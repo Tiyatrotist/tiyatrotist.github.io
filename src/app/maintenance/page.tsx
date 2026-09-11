@@ -1,8 +1,8 @@
 /**
  * TIYATROTIST — Maintenance Page
  * Uses DotEngine + DotTypography to render massive particle-based maintenance title.
- * Subtle organic dot assembly: missing dots silently fade and settle in over time.
- * No explicit progress bars or percentages — pure subtle visual feeling.
+ * Fully responsive: dynamically calculates optimal font size and grid spacing to fit any screen without clipping.
+ * Complete dot rendering: 100% of dots are rendered with organic assembly and interactive physics.
  */
 
 'use client';
@@ -16,180 +16,230 @@ import { Locale } from '@/dictionaries/types';
 import CustomCursor from '@/components/CustomCursor';
 import '../maintenance.css';
 
-export default function MaintenancePage() {
+interface MaintenancePageProps {
+  initialLang?: Locale;
+}
+
+/**
+ * Calculates optimal font size and grid spacing to ensure the text fits perfectly
+ * within viewport bounds without horizontal overflow or overlay collisions.
+ */
+function computeMaintenanceTypography(
+  text: string,
+  viewportWidth: number,
+  viewportHeight: number
+): { fontSize: number; gridSpacing: number } {
+  const isMobile = viewportWidth < 768;
+  const isSmallMobile = viewportWidth < 480;
+
+  // Horizontal target bounds (leave comfortable margins on left and right)
+  const targetMaxWidth = isSmallMobile
+    ? viewportWidth * 0.90
+    : isMobile
+    ? viewportWidth * 0.86
+    : Math.min(viewportWidth * 0.82, 1380);
+
+  // Vertical target bounds (avoid crowding top or bottom overlay)
+  const targetMaxHeight = viewportHeight * (isMobile ? 0.26 : 0.32);
+
+  let fontSize = 160;
+
+  if (typeof document !== 'undefined') {
+    const offscreen = document.createElement('canvas');
+    const ctx = offscreen.getContext('2d');
+    if (ctx) {
+      ctx.font = '900 100px Inter, Arial, sans-serif';
+      const measured = ctx.measureText(text);
+      const testWidth = measured.width || 600;
+
+      const scaleW = targetMaxWidth / testWidth;
+      const scaleH = targetMaxHeight / 100;
+      const scale = Math.min(scaleW, scaleH);
+
+      const maxCap = isSmallMobile ? 76 : isMobile ? 115 : 250;
+      fontSize = Math.max(36, Math.min(maxCap, Math.floor(100 * scale)));
+    }
+  }
+
+  // Adjust grid spacing according to font size to maintain crisp character definition
+  const gridSpacing = fontSize > 180 ? 6 : fontSize > 110 ? 5 : fontSize > 65 ? 4 : 3;
+
+  return { fontSize, gridSpacing };
+}
+
+export default function MaintenancePage({ initialLang }: MaintenancePageProps = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<DotEngine | null>(null);
-  const initRef = useRef(false);
 
-  const [lang, setLang] = useState<Locale>('tr');
-
-  useEffect(() => {
+  const [lang, setLang] = useState<Locale>(() => {
+    if (initialLang === 'tr' || initialLang === 'en') return initialLang;
     if (typeof window !== 'undefined') {
+      const pathname = window.location.pathname;
+      if (pathname.startsWith('/en')) return 'en';
+      if (pathname.startsWith('/tr')) return 'tr';
       const stored = localStorage.getItem('preferred_lang') as Locale;
-      if (stored === 'tr' || stored === 'en') {
-        setLang(stored);
-        return;
-      }
-      const navLang = navigator.language || (navigator as any).userLanguage || '';
-      if (navLang.toLowerCase().startsWith('tr')) {
-        setLang('tr');
-      } else {
+      if (stored === 'tr' || stored === 'en') return stored;
+      const navLang = navigator.language || '';
+      if (navLang.toLowerCase().startsWith('tr')) return 'tr';
+    }
+    return 'tr';
+  });
+
+  // Keep state synced if initialLang or URL changes
+  useEffect(() => {
+    if (initialLang && (initialLang === 'tr' || initialLang === 'en') && initialLang !== lang) {
+      setLang(initialLang);
+      return;
+    }
+    if (typeof window !== 'undefined') {
+      const pathname = window.location.pathname;
+      if (pathname.startsWith('/en') && lang !== 'en') {
         setLang('en');
+      } else if (pathname.startsWith('/tr') && lang !== 'tr') {
+        setLang('tr');
       }
     }
-  }, []);
+  }, [initialLang, lang]);
 
   const dict = lang === 'tr' ? tr : en;
 
-  const initEngine = useCallback(() => {
-    if (initRef.current) return;
+  const toggleLanguage = () => {
+    const nextLang: Locale = lang === 'tr' ? 'en' : 'tr';
+    setLang(nextLang);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('preferred_lang', nextLang);
+      // If we are on localized route like /tr/maintenance, update URL smoothly
+      if (window.location.pathname.includes('/maintenance')) {
+        window.history.replaceState(null, '', `/${nextLang}/maintenance`);
+      }
+    }
+  };
+
+  const setupEngine = useCallback(() => {
     if (!canvasRef.current) return;
-    initRef.current = true;
-
     const canvas = canvasRef.current;
-    const isMobile = window.innerWidth < 768;
-    const isSmallMobile = window.innerWidth < 480;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const isMobile = width < 768;
 
-    // MASSIVE FONT SIZE (At least 2x larger: 320px desktop, 180px mobile, 100px small mobile)
-    const gridSpacing = isSmallMobile ? 6 : isMobile ? 5 : 5;
-    const fontSize = isSmallMobile ? 100 : isMobile ? 180 : 320;
-    const maxParticles = isSmallMobile ? 1500 : isMobile ? 3000 : 6000;
+    const titleText = dict.maintenance.title;
+    const { fontSize, gridSpacing } = computeMaintenanceTypography(titleText, width, height);
 
-    const engine = new DotEngine({
-      canvas,
-      maxParticles,
-      baseSize: isMobile ? 1.4 : 1.8,
-      enableMouseInteraction: true,
-      useGlobalMouse: true,
-      sectionMode: 'hero',
-    });
+    console.debug(`[MaintenancePage] Rendering title "${titleText}" at ${fontSize}px (grid: ${gridSpacing})`);
 
-    engineRef.current = engine;
-
-    const layout = textToDots(dict.maintenance.title, {
+    const layout = textToDots(titleText, {
       fontSize,
       fontWeight: '900',
       gridSpacing,
       alphaThreshold: 80,
     });
 
-    const centerX = engine.getWidth() / 2;
-    const centerY = engine.getHeight() * 0.42;
+    // Ensure particle capacity is always large enough to render 100% of dots
+    const capacity = Math.max(layout.dots.length + 500, 8000);
 
-    engine.setTargets(layout.dots, centerX, centerY, true);
+    if (!engineRef.current) {
+      const engine = new DotEngine({
+        canvas,
+        maxParticles: capacity,
+        baseSize: isMobile ? 1.5 : 1.9,
+        enableMouseInteraction: true,
+        useGlobalMouse: true,
+        sectionMode: 'hero',
+      });
+      engineRef.current = engine;
 
-    // Subtle organic missing dots assembly feeling (no explicit UI text/progress bar)
-    const particles = (engine as any).particles;
-    const activeCount = (engine as any).activeCount;
+      const centerX = engine.getWidth() / 2;
+      const centerY = engine.getHeight() * (isMobile ? 0.38 : 0.40);
 
-    const indices: number[] = [];
-    for (let i = 0; i < activeCount; i++) indices.push(i);
-    indices.sort((a, b) => Math.sin(a * 777) - Math.sin(b * 777));
+      // Assemble all dots with initial organic scatter
+      engine.setTargets(layout.dots, centerX, centerY, true);
 
-    const initialVisibleCount = Math.floor(activeCount * 0.4);
-
-    // Hide 60% of dots initially
-    for (let i = 0; i < activeCount; i++) {
-      const idx = indices[i];
-      const p = particles[idx];
-      if (p) {
-        if (i >= initialVisibleCount) {
-          p.targetOpacity = 0;
-          p.opacity = 0;
-        }
-      }
+      const ambientCount = isMobile ? 40 : 80;
+      engine.addAmbientParticles(ambientCount);
+      engine.start();
+    } else {
+      const engine = engineRef.current;
+      engine.resize();
+      const centerX = engine.getWidth() / 2;
+      const centerY = engine.getHeight() * (isMobile ? 0.38 : 0.40);
+      // Morph particles smoothly into new layout coordinates
+      engine.setTargets(layout.dots, centerX, centerY, false);
     }
-
-    const ambientCount = isSmallMobile ? 30 : isMobile ? 60 : 120;
-    engine.addAmbientParticles(ambientCount);
-    engine.start();
-
-    // Silent organic assembly loop: missing dots silently & gently breathe in
-    let currentCount = initialVisibleCount;
-    const interval = setInterval(() => {
-      if (currentCount < activeCount) {
-        const chunkSize = Math.max(1, Math.floor(activeCount * 0.012));
-        for (let k = 0; k < chunkSize && currentCount < activeCount; k++) {
-          const idx = indices[currentCount];
-          const p = particles[idx];
-          if (p) {
-            p.targetOpacity = Math.random() * 0.4 + 0.6; // Organic opacity variation
-            p.x = p.targetX + (Math.random() - 0.5) * 20;
-            p.y = p.targetY + (Math.random() - 0.5) * 20;
-            p.state = 'RETURNING';
-          }
-          currentCount++;
-        }
-      } else {
-        // Reset after 5 seconds to continuously maintain subtle organic feeling
-        setTimeout(() => {
-          currentCount = initialVisibleCount;
-          for (let i = initialVisibleCount; i < activeCount; i++) {
-            const idx = indices[i];
-            const p = particles[idx];
-            if (p) {
-              p.targetOpacity = 0;
-            }
-          }
-        }, 5000);
-      }
-    }, 120);
-
-    (canvas as any).__assemblyInterval = interval;
   }, [dict.maintenance.title]);
 
   useEffect(() => {
     if (document.fonts) {
       document.fonts.ready.then(() => {
-        initEngine();
+        setupEngine();
       });
     } else {
-      setTimeout(initEngine, 100);
+      setTimeout(setupEngine, 100);
     }
 
     return () => {
-      if (canvasRef.current && (canvasRef.current as any).__assemblyInterval) {
-        clearInterval((canvasRef.current as any).__assemblyInterval);
-      }
       engineRef.current?.destroy();
       engineRef.current = null;
-      initRef.current = false;
     };
-  }, [initEngine]);
+  }, [setupEngine]);
 
   useEffect(() => {
+    let resizeTimer: ReturnType<typeof setTimeout>;
+
     const handleResize = () => {
-      if (!engineRef.current || !canvasRef.current) return;
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        if (!engineRef.current || !canvasRef.current) return;
 
-      const engine = engineRef.current;
-      engine.resize();
+        const engine = engineRef.current;
+        engine.resize();
 
-      const isMobile = window.innerWidth < 768;
-      const isSmallMobile = window.innerWidth < 480;
-      const gridSpacing = isSmallMobile ? 6 : isMobile ? 5 : 5;
-      const fontSize = isSmallMobile ? 100 : isMobile ? 180 : 320;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        const isMobile = width < 768;
 
-      const layout = textToDots(dict.maintenance.title, {
-        fontSize,
-        fontWeight: '900',
-        gridSpacing,
-        alphaThreshold: 80,
-      });
+        const { fontSize, gridSpacing } = computeMaintenanceTypography(
+          dict.maintenance.title,
+          width,
+          height
+        );
 
-      const centerX = engine.getWidth() / 2;
-      const centerY = engine.getHeight() * 0.42;
+        const layout = textToDots(dict.maintenance.title, {
+          fontSize,
+          fontWeight: '900',
+          gridSpacing,
+          alphaThreshold: 80,
+        });
 
-      engine.setTargets(layout.dots, centerX, centerY, false);
+        const centerX = engine.getWidth() / 2;
+        const centerY = engine.getHeight() * (isMobile ? 0.38 : 0.40);
+
+        engine.setTargets(layout.dots, centerX, centerY, false);
+      }, 60);
     };
 
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(resizeTimer);
+      window.removeEventListener('resize', handleResize);
+    };
   }, [dict.maintenance.title]);
 
   return (
     <main className="maintenance">
       <CustomCursor />
       <canvas ref={canvasRef} className="maintenance__canvas" />
+
+      {/* Sleek top navigation for language toggle */}
+      <header className="maintenance__top-bar">
+        <button
+          type="button"
+          onClick={toggleLanguage}
+          className="maintenance__lang-btn"
+          aria-label="Toggle language"
+        >
+          [ {lang.toUpperCase()} ]
+        </button>
+      </header>
 
       <div className="maintenance__overlay">
         <span className="maintenance__status">{dict.maintenance.status}</span>

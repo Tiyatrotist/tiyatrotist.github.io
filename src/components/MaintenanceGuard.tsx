@@ -70,7 +70,7 @@ export default function MaintenanceGuard({ children, lang }: MaintenanceGuardPro
 
   // If maintenance is ON and user is NOT an authorized admin, block with MaintenancePage
   if (isMaintenance && !isAdmin) {
-    return <MaintenancePage />;
+    return <MaintenancePage initialLang={lang} />;
   }
 
   return (

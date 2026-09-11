@@ -14,6 +14,8 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
   };
 }
 
-export default function LocalizedMaintenancePage() {
-  return <MaintenancePage />;
+export default async function LocalizedMaintenancePage({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = await params;
+  const currentLang = (lang === 'tr' ? 'tr' : 'en') as Locale;
+  return <MaintenancePage initialLang={currentLang} />;
 }

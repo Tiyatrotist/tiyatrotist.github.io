@@ -26,6 +26,33 @@
   z-index: 1;
 }
 
+/* ─── MAINTENANCE TOP BAR ────────────────────────────────────── */
+.maintenance__top-bar {
+  position: absolute;
+  top: 1.75rem;
+  right: 2rem;
+  z-index: 10;
+}
+
+.maintenance__lang-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.55);
+  font-family: 'Geist Mono', 'Fira Code', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  padding: 0.35rem 0.75rem;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.maintenance__lang-btn:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
 /* ─── MAINTENANCE INFO OVERLAY ───────────────────────────────── */
 .maintenance__overlay {
   position: absolute;
