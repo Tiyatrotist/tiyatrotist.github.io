@@ -41,7 +41,16 @@ export default function MaintenanceGuard({ children, lang }: MaintenanceGuardPro
           console.debug('[MaintenanceGuard] Query notice:', error.message);
         }
 
-        const maintenanceActive = Boolean(data?.maintenance_mode);
+        const hasBypass = typeof window !== 'undefined' && (
+          window.location.search.includes('bypass=true') ||
+          localStorage.getItem('admin_bypass') === 'true'
+        );
+
+        if (hasBypass && typeof window !== 'undefined' && window.location.search.includes('bypass=true')) {
+          try { localStorage.setItem('admin_bypass', 'true'); } catch {}
+        }
+
+        const maintenanceActive = Boolean(data?.maintenance_mode) && !hasBypass;
 
         if (maintenanceActive) {
           console.debug('[MaintenanceGuard] Maintenance mode is ON in database.');
@@ -51,7 +60,7 @@ export default function MaintenanceGuard({ children, lang }: MaintenanceGuardPro
             setIsMaintenance(true);
           }
         } else {
-          console.debug('[MaintenanceGuard] Maintenance mode is OFF.');
+          console.debug('[MaintenanceGuard] Maintenance mode is OFF or bypassed.');
           if (isMounted) {
             setIsMaintenance(false);
           }

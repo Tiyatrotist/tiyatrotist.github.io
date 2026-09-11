@@ -162,4 +162,11 @@ export const en: Dictionary = {
     restartBtn: 'TRY AGAIN',
     returnHomeBtn: 'RETURN HOME',
   },
+  typeflow: {
+    tagline: 'Next-gen tactile typing laboratory featuring procedural mechanical audio synthesis, 5 cyberpunk themes, and 3 distinct modes (Words, Stories, PowerShell & CLI).',
+    description: 'Bespoke speed-typing environment engineered with zero-latency Web Audio mechanical switches, smooth lerp caret, and deep timeline analytics.',
+    wordsMode: 'Common Words Flow',
+    storyMode: 'Narrative Story Mode',
+    devMode: 'Dev & CLI Commands',
+  },
 };

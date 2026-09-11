@@ -1,0 +1,1456 @@
+/**
+ * TYPEFLOW — Master Microsite Orchestrator
+ * Full Duolingo-Grade Speed Typing SaaS Platform:
+ * - 6 SaaS Tabs: Learn Path (Akademi), Practice (Serbest Yazım), Leagues (Ligler), Quests (Görevler), Shop (Mağaza), Profile (İstatistik & Isı Haritası)
+ * - Duolingo Gamification: Hearts (Canlar ❤️), Gems (Elmaslar 💎), Daily Streak (🔥), XP Levels (⚡), Star Ratings (⭐)
+ * - Strict Zero-Hydration-Mismatch Architecture (Deterministic defaults + Client-only hydration)
+ * - Normal theme-appropriate cursor & responsive typing engine.
+ */
+
+'use client';
+
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { Locale, Dictionary } from '@/dictionaries';
+import {
+  TypeFlowMode,
+  TypeFlowTheme,
+  SoundType,
+  WordCountOption,
+  TimeOption,
+  TestStatus,
+  WordState,
+  SecondMetric,
+  TestResult,
+  KeyHeatmapData,
+  SaaSTab,
+  UserProfile,
+  Lesson,
+  ShopItem,
+} from './types';
+import {
+  generateCommonWords,
+  getDevSnippet,
+} from './typeflowData';
+import { generateDynamicStory, getTheatricalSnippet } from './StoryGenerator';
+import { soundEngine } from './TypeFlowSoundEngine';
+import TypeFlowHeader from './TypeFlowHeader';
+import TypeFlowControls from './TypeFlowControls';
+import TypeFlowTypingArea from './TypeFlowTypingArea';
+import TypeFlowResults from './TypeFlowResults';
+import TypeFlowProfileView from './TypeFlowProfileView';
+import TypeFlowAuthModal from './TypeFlowAuthModal';
+import TypeFlowLearnPath from './TypeFlowLearnPath';
+import TypeFlowLeagues from './TypeFlowLeagues';
+import TypeFlowQuests from './TypeFlowQuests';
+import TypeFlowShop from './TypeFlowShop';
+import TypeFlowSettingsModal from './TypeFlowSettingsModal';
+import TypeFlowProfileDrawer from './TypeFlowProfileDrawer';
+import { TypeFlowSuperModal } from './TypeFlowSuperModal';
+import { TypeFlowAdBreakModal } from './TypeFlowAdBreakModal';
+import { TypeFlowPracticeHub, PracticeDrillConfig } from './TypeFlowPracticeHub';
+import { TypeFlowGoogleAd } from './TypeFlowGoogleAd';
+import TypeFlowCheckoutPage, { CheckoutPackage } from './TypeFlowCheckoutPage';
+import { getTechAds, getUnitsForLang } from './duolingoData';
+import '@/styles/typeflow.css';
+
+interface TypeFlowMicrositeProps {
+  lang: Locale;
+  dict: Dictionary;
+}
+
+const DEFAULT_PROFILE: UserProfile = {
+  id: 'bugra_tiyatrotist',
+  username: 'BugraTiyatrotist',
+  bio: 'Tiyatrotist kurucusu Buğra. Sahnede tirad atan, kod başında daktilo tuşlayan tiyatro ve yazılım aşığı.',
+  isGuest: true,
+  avatar: '🎭',
+  level: 3,
+  xp: 450,
+  streakDays: 4,
+  lastActiveDate: '2026-01-01',
+  dailyTestsCompleted: 2,
+  dailyGoal: 3,
+  totalTests: 18,
+  avgWpm: 78,
+  topWpm: 96,
+  keyStats: {},
+
+  // Odak Enerjisi (Focus Battery 🔋) & Super TypeFlow
+  energy: 5,
+  maxEnergy: 5,
+  isPremium: false,
+
+  // Duolingo Gamification
+  hearts: 5,
+  maxHearts: 5,
+  gems: 150,
+  streakFreezes: 0,
+  league: 'bronze',
+  weeklyXp: 280,
+  completedLessons: {},
+  unlockedThemes: ['carbon', 'amber', 'emerald', 'slate', 'violet', 'rose', 'cyber'],
+  unlockedSounds: ['thock', 'clicky', 'tactile', 'synth'],
+  claimedQuests: [],
+  unlockedAchievements: ['first-step'],
+};
+
+export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrositeProps) {
+  const router = useRouter();
+  const [lang, setLang] = useState<Locale>(initialLang);
+
+  // ─── SaaS Navigation State ─────────────────────────────────────────────────
+  const [activeTab, setActiveTab] = useState<SaaSTab>('path');
+  const [selectedCheckoutPkgId, setSelectedCheckoutPkgId] = useState<string>('super_yearly');
+  const [practiceSubView, setPracticeSubView] = useState<'hub' | 'typing'>('hub');
+  const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
+  const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState<boolean>(false);
+  const [isSuperModalOpen, setIsSuperModalOpen] = useState<boolean>(false);
+  const [isAdBreakModalOpen, setIsAdBreakModalOpen] = useState<boolean>(false);
+  const [currentAdIndex, setCurrentAdIndex] = useState<number>(0);
+  const [activeLessonStage, setActiveLessonStage] = useState<number>(1);
+
+  // ─── User Preferences State ────────────────────────────────────────────────
+  const [theme, setTheme] = useState<TypeFlowTheme>('carbon');
+  const [sound, setSound] = useState<SoundType>('thock');
+  const [volume, setVolume] = useState<number>(0.6);
+
+  // ─── Mode & Configuration State (Simplified) ───────────────────────────────
+  const [mode, setMode] = useState<TypeFlowMode>('words');
+  const [wordModeType, setWordModeType] = useState<'words' | 'time'>('time');
+  const [wordCount, setWordCount] = useState<WordCountOption>(25);
+  const [timeLimit, setTimeLimit] = useState<TimeOption>(60);
+
+  // Active Lesson Metadata
+  const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
+
+  // Practice Lenient Casing & Punctuation Settings (Optional in practice mode)
+  const [caseSensitive, setCaseSensitive] = useState<boolean>(false);
+  const [includePunctuation, setIncludePunctuation] = useState<boolean>(false);
+
+  // Lesson Mistake Tracking (3 Mistakes Limit)
+  const [lessonMistakes, setLessonMistakes] = useState<number>(0);
+  const [isLessonFailed, setIsLessonFailed] = useState<boolean>(false);
+
+  // Normalization helper for lenient practice typing
+  const normalizeWord = (text: string, isStrictCase: boolean, isStrictPunct: boolean): string => {
+    let res = text;
+    if (!isStrictCase) {
+      res = res.toLowerCase();
+    }
+    if (!isStrictPunct) {
+      res = res.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"'’]/g, '');
+    }
+    return res;
+  };
+
+  // Metadata for current Story or Dev snippet
+  const [activeSnippetTitle, setActiveSnippetTitle] = useState<string>('');
+  const [activeSnippetSub, setActiveSnippetSub] = useState<string>('');
+
+  // ─── Engine State ──────────────────────────────────────────────────────────
+  const [testStatus, setTestStatus] = useState<TestStatus>('idle');
+  const [words, setWords] = useState<WordState[]>([]);
+  const [currentWordIndex, setCurrentWordIndex] = useState<number>(0);
+  const [currentInput, setCurrentInput] = useState<string>('');
+  const [isMismatch, setIsMismatch] = useState<boolean>(false);
+  const [correctWordsCount, setCorrectWordsCount] = useState<number>(0);
+  const [incorrectWordsCount, setIncorrectWordsCount] = useState<number>(0);
+  const [capsLockActive, setCapsLockActive] = useState<boolean>(false);
+
+  // Live Metrics
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
+  const [timeLeft, setTimeLeft] = useState<number>(60);
+  const [liveWpm, setLiveWpm] = useState<number>(0);
+  const [liveAccuracy, setLiveAccuracy] = useState<number>(100);
+  const [liveStreak, setLiveStreak] = useState<number>(0);
+  const [history, setHistory] = useState<SecondMetric[]>([]);
+  const [testResult, setTestResult] = useState<TestResult | null>(null);
+
+  // Key heatmap tracking for current session
+  const sessionKeyStats = useRef<KeyHeatmapData>({});
+  const currentSecondErrors = useRef<number>(0);
+  const totalCorrectCharsRef = useRef<number>(0);
+  const totalIncorrectCharsRef = useRef<number>(0);
+
+  // ─── 1. Load Stored Preferences & Profile on Mount ──────────────────────────
+  useEffect(() => {
+    try {
+      const savedTheme = localStorage.getItem('tf_theme') as TypeFlowTheme | null;
+      if (savedTheme) setTheme(savedTheme);
+
+      const savedSound = localStorage.getItem('tf_sound') as SoundType | null;
+      if (savedSound) {
+        setSound(savedSound);
+        soundEngine.setSoundType(savedSound);
+      }
+
+      const savedVol = localStorage.getItem('tf_volume');
+      if (savedVol) {
+        const v = parseFloat(savedVol);
+        setVolume(v);
+        soundEngine.setVolume(v);
+      }
+
+      // Load Profile or create first-time client guest profile
+      const savedProfile = localStorage.getItem('tf_user_profile');
+      if (savedProfile) {
+        const parsed: UserProfile = JSON.parse(savedProfile);
+        // Guarantee Duolingo & Focus Battery defaults if missing in older schema
+        parsed.energy = Math.max(0, Math.min(5, parsed.energy ?? (parsed.hearts ?? 5)));
+        parsed.maxEnergy = 5;
+        parsed.isPremium = Boolean(parsed.isPremium);
+        parsed.hearts = parsed.energy;
+        parsed.maxHearts = 5;
+        parsed.gems = Math.max(0, parsed.gems ?? 150);
+        parsed.league = parsed.league || 'bronze';
+        parsed.weeklyXp = parsed.weeklyXp ?? 120;
+        parsed.completedLessons = parsed.completedLessons || {};
+        parsed.streakFreezes = parsed.streakFreezes ?? 0;
+        parsed.unlockedThemes = parsed.unlockedThemes || ['carbon', 'amber', 'emerald', 'slate', 'violet', 'rose', 'cyber'];
+        parsed.unlockedSounds = parsed.unlockedSounds || ['thock', 'clicky', 'tactile', 'synth'];
+        parsed.claimedQuests = parsed.claimedQuests || [];
+        parsed.unlockedAchievements = parsed.unlockedAchievements || ['first-step'];
+
+        // Check streak maintenance
+        const today = new Date().toISOString().split('T')[0];
+        const lastDate = parsed.lastActiveDate || today;
+
+        const diffDays = Math.round(
+          (new Date(today).getTime() - new Date(lastDate).getTime()) / (1000 * 60 * 60 * 24)
+        );
+
+        if (diffDays === 1) {
+          console.debug('[TypeFlow:Streak] Maintained streak of:', parsed.streakDays);
+        } else if (diffDays > 1) {
+          // Check if user had a Streak Freeze
+          if (parsed.streakFreezes > 0) {
+            parsed.streakFreezes -= 1;
+            parsed.lastActiveDate = today;
+            console.debug('[TypeFlow:Streak] Streak Freeze consumed! Streak preserved:', parsed.streakDays);
+          } else {
+            parsed.streakDays = 1;
+            parsed.dailyTestsCompleted = 0;
+            parsed.lastActiveDate = today;
+            console.debug('[TypeFlow:Streak] Streak reset to 1 day');
+          }
+        }
+
+        setProfile(parsed);
+      } else {
+        const initialGuest: UserProfile = {
+          ...DEFAULT_PROFILE,
+          id: 'guest_' + Math.random().toString(36).substring(2, 9),
+          username: 'Typist_' + Math.floor(Math.random() * 900 + 100),
+          lastActiveDate: new Date().toISOString().split('T')[0],
+        };
+        setProfile(initialGuest);
+        try {
+          localStorage.setItem('tf_user_profile', JSON.stringify(initialGuest));
+        } catch {}
+      }
+
+      console.debug('[TypeFlow:Microsite] Preferences & Duolingo SaaS profile initialized');
+    } catch (e) {
+      console.warn('[TypeFlow:Microsite] Error loading state from localStorage:', e);
+    }
+  }, []);
+
+  // Save Preferences
+  const handleThemeChange = (newTheme: TypeFlowTheme) => {
+    setTheme(newTheme);
+    try { localStorage.setItem('tf_theme', newTheme); } catch {}
+  };
+
+  const handleSoundChange = (newSound: SoundType) => {
+    setSound(newSound);
+    soundEngine.setSoundType(newSound);
+    try { localStorage.setItem('tf_sound', newSound); } catch {}
+  };
+
+  const handleVolumeChange = (newVol: number) => {
+    setVolume(newVol);
+    soundEngine.setVolume(newVol);
+    try { localStorage.setItem('tf_volume', String(newVol)); } catch {}
+  };
+
+  const handleLangChange = (newLang: Locale) => {
+    setLang(newLang);
+    router.replace(`/${newLang}/projects/typeflow`);
+  };
+
+  const handleProfileUpdate = (updated: UserProfile) => {
+    setProfile(updated);
+    try {
+      localStorage.setItem('tf_user_profile', JSON.stringify(updated));
+    } catch {}
+    console.debug('[TypeFlow:Microsite] User profile saved:', updated.username);
+  };
+
+  // ─── 2. Word & Dynamic Story Preparation ───────────────────────────────────
+  const buildWordStates = (rawWords: string[]): WordState[] => {
+    return rawWords.map((w, idx) => ({
+      original: w,
+      letters: w.split('').map((char) => ({ char, status: 'untyped' })),
+      isCurrent: idx === 0,
+      isComplete: false,
+      hasError: false,
+    }));
+  };
+
+  const initializeTest = useCallback(() => {
+    console.debug('[TypeFlow:Microsite] Initializing test', { mode, wordModeType, wordCount, timeLimit, lang });
+
+    let wordList: string[] = [];
+
+    if (mode === 'lesson' && activeLesson) {
+      wordList = activeLesson.words;
+      setActiveSnippetTitle(activeLesson.title);
+      setActiveSnippetSub(activeLesson.description);
+    } else if (mode === 'words') {
+      const count = wordModeType === 'words' ? wordCount : 250;
+      wordList = generateCommonWords(lang, count, false, false);
+      setActiveSnippetTitle('');
+      setActiveSnippetSub('');
+    } else if (mode === 'story') {
+      const story = generateDynamicStory(lang);
+      wordList = story.words;
+      setActiveSnippetTitle(story.title);
+      setActiveSnippetSub(lang === 'tr' ? 'Algoritmik Dinamik Anlatı' : 'Algorithmic Narrative Stream');
+    } else if (mode === 'dev') {
+      const snippet = getDevSnippet('all');
+      wordList = snippet.code.split(' ');
+      setActiveSnippetTitle(snippet.title);
+      setActiveSnippetSub(snippet.explanation);
+    }
+
+    setWords(buildWordStates(wordList));
+    setCurrentWordIndex(0);
+    setCurrentInput('');
+    setIsMismatch(false);
+    setCorrectWordsCount(0);
+    setIncorrectWordsCount(0);
+    setTestStatus('idle');
+    setStartTime(null);
+    setElapsedSeconds(0);
+    setTimeLeft(mode === 'lesson' ? 120 : timeLimit);
+    setLiveWpm(0);
+    setLiveAccuracy(100);
+    setLiveStreak(0);
+    setLessonMistakes(0);
+    setIsLessonFailed(false);
+    setHistory([]);
+    setTestResult(null);
+
+    sessionKeyStats.current = {};
+    currentSecondErrors.current = 0;
+    totalCorrectCharsRef.current = 0;
+    totalIncorrectCharsRef.current = 0;
+  }, [mode, wordModeType, wordCount, timeLimit, lang, activeLesson]);
+
+  // Reinitialize when settings change
+  useEffect(() => {
+    initializeTest();
+  }, [initializeTest]);
+
+  // ─── 3. Launch Academy Lesson with Multi-Stage Progression ──────────────────
+  const handleStartLesson = (lesson: Lesson, stageIdx: number = 1) => {
+    console.debug('[TypeFlow:Microsite] Launching lesson:', lesson.id, 'Stage:', stageIdx);
+    setActiveLesson(lesson);
+    setActiveLessonStage(stageIdx);
+    setMode('lesson');
+
+    const stages = lesson.stages || [];
+    const currentStage = stages[stageIdx - 1];
+    const stageWords = currentStage ? currentStage.words : lesson.words;
+
+    setActiveSnippetTitle(lesson.title);
+    setActiveSnippetSub(currentStage ? `${currentStage.title} — ${currentStage.description}` : lesson.description);
+    setWords(buildWordStates(stageWords));
+    setCurrentWordIndex(0);
+    setCurrentInput('');
+    setIsMismatch(false);
+    setCorrectWordsCount(0);
+    setIncorrectWordsCount(0);
+    setTestStatus('idle');
+    setStartTime(null);
+    setElapsedSeconds(0);
+    setTimeLeft(120);
+    setLiveWpm(0);
+    setLiveAccuracy(100);
+    setLiveStreak(0);
+    setLessonMistakes(0);
+    setIsLessonFailed(false);
+    setHistory([]);
+    setTestResult(null);
+
+    sessionKeyStats.current = {};
+    currentSecondErrors.current = 0;
+    totalCorrectCharsRef.current = 0;
+    totalIncorrectCharsRef.current = 0;
+
+    setActiveTab('test');
+  };
+
+  // ─── SaaS Monetization & Focus Battery Handlers ───────────────────────────
+  const handleUpgradeToSuper = (isFreeTrial: boolean = false) => {
+    setProfile((prev) => {
+      const remainingGems = isFreeTrial ? (prev.gems || 0) : Math.max(0, (prev.gems || 0) - 400);
+      const updated: UserProfile = {
+        ...prev,
+        gems: remainingGems,
+        isPremium: true,
+        energy: 5,
+        maxEnergy: 5,
+        hearts: 5,
+      };
+      try { localStorage.setItem('tf_user_profile', JSON.stringify(updated)); } catch {}
+      console.debug('[TypeFlow:Microsite] Upgraded to Super TypeFlow Pro! Free trial:', isFreeTrial);
+      return updated;
+    });
+    setIsSuperModalOpen(false);
+  };
+
+  const handleGoToCheckout = (packageId: string = 'super_yearly') => {
+    setSelectedCheckoutPkgId(packageId);
+    setActiveTab('checkout');
+    setIsSuperModalOpen(false);
+  };
+
+  const handleCheckoutPaymentSuccess = (pkg: CheckoutPackage) => {
+    console.debug('[TypeFlow:Microsite] Checkout payment verified for:', pkg.id);
+    setProfile((prev) => {
+      const updated: UserProfile = {
+        ...prev,
+        gems: Math.max(0, (prev.gems || 0) + (pkg.gemsReward || 0)),
+        streakFreezes: (prev.streakFreezes || 0) + (pkg.freezesReward || 0),
+        energy: pkg.energyReward || pkg.isSuper ? 5 : (prev.energy ?? 5),
+        hearts: pkg.energyReward || pkg.isSuper ? 5 : (prev.hearts ?? 5),
+        isPremium: pkg.isSuper ? true : prev.isPremium,
+      };
+      try { localStorage.setItem('tf_user_profile', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+    setActiveTab('shop');
+  };
+
+  const handleClaimEnergyReward = () => {
+    setProfile((prev) => {
+      const currentEnergy = prev.energy ?? prev.hearts ?? 0;
+      const newEnergy = Math.min(5, currentEnergy + 2);
+      const updated: UserProfile = {
+        ...prev,
+        energy: newEnergy,
+        hearts: newEnergy,
+        gems: (prev.gems || 0) + 15,
+      };
+      try { localStorage.setItem('tf_user_profile', JSON.stringify(updated)); } catch {}
+      console.debug('[TypeFlow:Microsite] Recharged +2 Focus Energy & +15 Gems via Tech Sponsor');
+      return updated;
+    });
+    setIsAdBreakModalOpen(false);
+  };
+
+  const handleClaimGoogleAdReward = (energyAmount: number, gemAmount: number) => {
+    setProfile((prev) => {
+      const currentEnergy = prev.energy ?? prev.hearts ?? 0;
+      const newEnergy = Math.min(5, currentEnergy + energyAmount);
+      const updated: UserProfile = {
+        ...prev,
+        energy: newEnergy,
+        hearts: newEnergy,
+        gems: (prev.gems || 0) + gemAmount,
+      };
+      try { localStorage.setItem('tf_user_profile', JSON.stringify(updated)); } catch {}
+      console.debug('[TypeFlow:GoogleAd] Claimed ad reward:', { energy: newEnergy, gems: updated.gems });
+      return updated;
+    });
+  };
+
+  const handleTriggerAdBreak = () => {
+    if (profile.isPremium) return;
+    const ads = getTechAds(lang);
+    setCurrentAdIndex((prev) => (prev + 1) % ads.length);
+    setIsAdBreakModalOpen(true);
+  };
+
+  // ─── 4. Finish Test & Duolingo Progression (XP, Gems, Energy, Heatmap) ─────
+  const finishTest = useCallback((finalElapsedSeconds: number) => {
+    console.debug('[TypeFlow:Microsite] Finishing test, elapsed:', finalElapsedSeconds);
+
+    const seconds = Math.max(finalElapsedSeconds, 1);
+    const minutes = seconds / 60;
+    const correctChars = totalCorrectCharsRef.current;
+    const incorrectChars = totalIncorrectCharsRef.current;
+    const totalTyped = correctChars + incorrectChars;
+
+    const finalWpm = Math.round((correctChars / 5) / minutes);
+    const finalRaw = Math.round((totalTyped / 5) / minutes);
+    const finalAcc = totalTyped > 0 ? Math.round((correctChars / totalTyped) * 1000) / 10 : 100;
+    const finalCpm = Math.round(correctChars / minutes);
+
+    let consistency = 100;
+    if (history.length > 2) {
+      const wpms = history.map((h) => h.wpm);
+      const avg = wpms.reduce((a, b) => a + b, 0) / wpms.length;
+      const variance = wpms.reduce((a, b) => a + Math.pow(b - avg, 2), 0) / wpms.length;
+      const stdDev = Math.sqrt(variance);
+      consistency = Math.max(0, Math.min(100, Math.round(100 - (stdDev / (avg || 1)) * 50)));
+    }
+
+    // Duolingo Progression & Gems Calculation
+    const isLesson = mode === 'lesson' && Boolean(activeLesson);
+    let earnedXp = Math.round(finalWpm * 1.5 + (finalAcc >= 95 ? 40 : 20));
+    let earnedGems = 8; // Base gems for completing any drill
+    let stars = 0;
+
+    // High accuracy bonus gems
+    if (finalAcc >= 98) {
+      earnedGems += 15;
+    } else if (finalAcc >= 95) {
+      earnedGems += 8;
+    }
+
+    // Personal Best bonus gems
+    const isPb = finalWpm > profile.topWpm && profile.topWpm > 0;
+    if (isPb) {
+      earnedGems += 25;
+    }
+
+    if (isLesson && activeLesson) {
+      const currentStage = activeLesson.stages?.[activeLessonStage - 1];
+      const targetMinWpm = currentStage ? currentStage.minWpm : activeLesson.minWpm;
+      const targetMinAcc = currentStage ? currentStage.minAccuracy : activeLesson.minAccuracy;
+      const passed = finalWpm >= targetMinWpm && finalAcc >= targetMinAcc;
+
+      if (passed) {
+        if (activeLessonStage < (activeLesson.stages?.length || 3)) {
+          // Intermediate stage completed!
+          stars = 1;
+          earnedXp = Math.round((activeLesson.xpReward / 3) * (profile.isPremium ? 2 : 1));
+          earnedGems += 10;
+        } else {
+          // Final stage 3 passed: award mastery stars!
+          stars = 1;
+          if (finalWpm >= targetMinWpm + 5 && finalAcc >= 94) stars = 2;
+          if (finalWpm >= targetMinWpm + 10 && finalAcc >= 97) stars = 3;
+          earnedXp = activeLesson.xpReward * (profile.isPremium ? 2 : 1);
+          earnedGems += activeLesson.gemReward;
+        }
+      } else {
+        // Failed stage/test: deduct 1 Focus Battery cell if not premium
+        if (!profile.isPremium) {
+          setProfile((prev) => {
+            const curEnergy = prev.energy ?? prev.hearts ?? 5;
+            const newEnergy = Math.max(0, curEnergy - 1);
+            const updated = { ...prev, energy: newEnergy, hearts: newEnergy };
+            try { localStorage.setItem('tf_user_profile', JSON.stringify(updated)); } catch {}
+            console.debug('[TypeFlow:Energy] Deducted 1 Focus Battery. Remaining:', newEnergy);
+            if (newEnergy === 0) {
+              setIsAdBreakModalOpen(true);
+            }
+            return updated;
+          });
+        }
+      }
+    } else {
+      if (profile.isPremium) {
+        earnedXp *= 2; // Super TypeFlow 2X XP boost on all tests
+      }
+    }
+
+    const newTotalTests = profile.totalTests + 1;
+    const newTopWpm = Math.max(profile.topWpm, finalWpm);
+    const newAvgWpm = Math.round((profile.avgWpm * profile.totalTests + finalWpm) / newTotalTests);
+
+    const today = new Date().toISOString().split('T')[0];
+    let newStreak = profile.streakDays;
+    let newDailyTests = profile.dailyTestsCompleted;
+
+    if (profile.lastActiveDate !== today) {
+      newDailyTests = 1;
+      newStreak += 1;
+    } else {
+      newDailyTests += 1;
+    }
+
+    const newXp = profile.xp + earnedXp;
+    const xpForNextLevel = profile.level * 200;
+    const newLevel = newXp >= xpForNextLevel ? profile.level + 1 : profile.level;
+    const newGems = (profile.gems || 0) + earnedGems;
+    const newWeeklyXp = (profile.weeklyXp || 0) + earnedXp;
+
+    // Record lesson completion when final stage passed
+    const newCompletedLessons = { ...(profile.completedLessons || {}) };
+    if (isLesson && activeLesson && stars > 0) {
+      const isFinalStage = activeLessonStage >= (activeLesson.stages?.length || 1);
+      if (isFinalStage) {
+        newCompletedLessons[activeLesson.id] = Math.max(newCompletedLessons[activeLesson.id] || 0, stars);
+      }
+    }
+
+    // Merge session keyStats into lifetime heatmap
+    const mergedKeyStats = { ...profile.keyStats };
+    for (const [k, v] of Object.entries(sessionKeyStats.current)) {
+      if (!mergedKeyStats[k]) {
+        mergedKeyStats[k] = { count: v.count, errors: v.errors };
+      } else {
+        mergedKeyStats[k] = {
+          count: mergedKeyStats[k].count + v.count,
+          errors: mergedKeyStats[k].errors + v.errors,
+        };
+      }
+    }
+
+    const updatedProfile: UserProfile = {
+      ...profile,
+      level: newLevel,
+      xp: newXp,
+      weeklyXp: newWeeklyXp,
+      gems: newGems,
+      streakDays: newStreak,
+      lastActiveDate: today,
+      dailyTestsCompleted: newDailyTests,
+      totalTests: newTotalTests,
+      avgWpm: newAvgWpm,
+      topWpm: newTopWpm,
+      keyStats: mergedKeyStats,
+      completedLessons: newCompletedLessons,
+    };
+
+    handleProfileUpdate(updatedProfile);
+
+    const resultObj: TestResult = {
+      wpm: finalWpm,
+      rawWpm: finalRaw,
+      accuracy: finalAcc,
+      cpm: finalCpm,
+      consistency,
+      elapsedSeconds: Math.round(seconds),
+      totalChars: totalTyped,
+      correctChars,
+      incorrectChars,
+      extraChars: 0,
+      missedChars: 0,
+      correctWords: correctWordsCount,
+      incorrectWords: incorrectWordsCount,
+      mode,
+      modeConfig: mode === 'words' ? `${wordModeType}:${wordCount || timeLimit}` : mode,
+      theme,
+      history,
+      keyStats: sessionKeyStats.current,
+      isPersonalBest: finalWpm > profile.topWpm && profile.topWpm > 0,
+      timestamp: Date.now(),
+      lessonId: activeLesson?.id,
+      earnedXp,
+      earnedGems,
+      stars,
+    };
+
+    setTestResult(resultObj);
+    setTestStatus('completed');
+  }, [
+    currentWordIndex,
+    words,
+    history,
+    profile,
+    correctWordsCount,
+    incorrectWordsCount,
+    mode,
+    wordModeType,
+    wordCount,
+    timeLimit,
+    theme,
+    activeLesson,
+    activeLessonStage,
+    handleProfileUpdate,
+  ]);
+
+  // ─── 5. Live Timer & Metric Interval ─────────────────────────────────────────
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+
+    if (testStatus === 'running') {
+      interval = setInterval(() => {
+        if (!startTime) return;
+        const now = Date.now();
+        const currentElapsed = (now - startTime) / 1000;
+        const roundedElapsed = Math.floor(currentElapsed);
+
+        setElapsedSeconds(roundedElapsed);
+
+        if (mode === 'words' && wordModeType === 'time') {
+          const remaining = Math.max(0, timeLimit - roundedElapsed);
+          setTimeLeft(remaining);
+          if (remaining <= 0) {
+            finishTest(currentElapsed);
+            return;
+          }
+        }
+
+        const mins = currentElapsed / 60;
+        const currentCorrectChars = totalCorrectCharsRef.current;
+        const currentTotalTyped = currentCorrectChars + totalIncorrectCharsRef.current;
+
+        const liveWpmVal = mins > 0 ? Math.round((currentCorrectChars / 5) / mins) : 0;
+        const rawWpmVal = mins > 0 ? Math.round((currentTotalTyped / 5) / mins) : 0;
+        const liveAccVal = currentTotalTyped > 0 ? Math.round((currentCorrectChars / currentTotalTyped) * 1000) / 10 : 100;
+
+        setLiveWpm(liveWpmVal);
+        setLiveAccuracy(liveAccVal);
+
+        setHistory((prev) => [
+          ...prev,
+          {
+            second: roundedElapsed,
+            wpm: liveWpmVal,
+            rawWpm: rawWpmVal,
+            errors: currentSecondErrors.current,
+          },
+        ]);
+        currentSecondErrors.current = 0;
+      }, 1000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [testStatus, startTime, mode, wordModeType, timeLimit, finishTest]);
+
+  // ─── 6. Real-Time Typing Input Handling ────────────────────────────────────
+  const handleInputChange = (val: string) => {
+    if (testStatus === 'completed') return;
+
+    if (testStatus === 'idle') {
+      setTestStatus('running');
+      setStartTime(Date.now());
+      console.debug('[TypeFlow:Microsite] Test started');
+    }
+
+    if (val.endsWith(' ')) {
+      handleSpaceSubmit(val.slice(0, -1));
+      return;
+    }
+
+    setCurrentInput(val);
+
+    const currentWord = words[currentWordIndex];
+    if (!currentWord) return;
+
+    const target = currentWord.original;
+    // In practice modes, casing and punctuation are optional/lenient by default
+    const isLenient = mode !== 'lesson';
+    const normVal = isLenient ? normalizeWord(val, caseSensitive, includePunctuation) : val;
+    const normTarget = isLenient ? normalizeWord(target, caseSensitive, includePunctuation) : target;
+    const isPrefixMismatch = !normTarget.startsWith(normVal);
+    setIsMismatch(isPrefixMismatch);
+
+    // Record character hit in heatmap
+    if (val.length > 0) {
+      const lastChar = val[val.length - 1].toLowerCase();
+      const targetChar = target[val.length - 1]?.toLowerCase();
+      const isCharError = lastChar !== targetChar;
+
+      const stat = sessionKeyStats.current[lastChar] || { count: 0, errors: 0 };
+      sessionKeyStats.current[lastChar] = {
+        count: stat.count + 1,
+        errors: stat.errors + (isCharError ? 1 : 0),
+      };
+
+      soundEngine.playKey(false, isCharError);
+    }
+  };
+
+  const handleSpaceSubmit = (submittedVal?: string) => {
+    if (testStatus === 'completed' || words.length === 0) return;
+
+    const val = (submittedVal ?? currentInput).trim();
+    if (!val) return;
+
+    const currentWord = words[currentWordIndex];
+    const target = currentWord.original;
+    const isLenient = mode !== 'lesson';
+    const normVal = isLenient ? normalizeWord(val, caseSensitive, includePunctuation) : val;
+    const normTarget = isLenient ? normalizeWord(target, caseSensitive, includePunctuation) : target;
+    const isCorrect = normVal === normTarget;
+
+    const newWords = [...words];
+    const updatedWord: WordState = {
+      ...currentWord,
+      isComplete: true,
+      isCurrent: false,
+      hasError: !isCorrect,
+      isCorrect,
+      typedValue: val,
+    };
+    newWords[currentWordIndex] = updatedWord;
+
+    const spaceStat = sessionKeyStats.current['space'] || { count: 0, errors: 0 };
+    sessionKeyStats.current['space'] = {
+      count: spaceStat.count + 1,
+      errors: spaceStat.errors + (isCorrect ? 0 : 1),
+    };
+
+    if (isCorrect) {
+      setCorrectWordsCount((c) => c + 1);
+      totalCorrectCharsRef.current += target.length + 1;
+      setLiveStreak((s) => s + 1);
+      soundEngine.playKey(true, false);
+    } else {
+      setIncorrectWordsCount((c) => c + 1);
+      totalIncorrectCharsRef.current += Math.max(val.length, target.length) + 1;
+      currentSecondErrors.current += 1;
+      setLiveStreak(0);
+      soundEngine.playKey(true, true);
+
+      // Lesson 3-Mistakes Limit (Item 15)
+      if (mode === 'lesson') {
+        const nextMistakes = lessonMistakes + 1;
+        setLessonMistakes(nextMistakes);
+        if (nextMistakes >= 3) {
+          console.debug('[TypeFlow:Lesson] 3 mistakes reached! Failing lesson.');
+          if (!profile.isPremium) {
+            setProfile((prev) => {
+              const curEnergy = prev.energy ?? prev.hearts ?? 5;
+              const newEnergy = Math.max(0, curEnergy - 1);
+              const updated = { ...prev, energy: newEnergy, hearts: newEnergy };
+              try { localStorage.setItem('tf_user_profile', JSON.stringify(updated)); } catch {}
+              if (newEnergy === 0) {
+                setIsAdBreakModalOpen(true);
+              }
+              return updated;
+            });
+          }
+          setIsLessonFailed(true);
+          setTestStatus('completed');
+          return;
+        }
+      }
+    }
+
+    setCurrentInput('');
+    setIsMismatch(false);
+
+    const nextIndex = currentWordIndex + 1;
+    if (nextIndex >= words.length) {
+      setWords(newWords);
+      const seconds = startTime ? (Date.now() - startTime) / 1000 : 1;
+      finishTest(seconds);
+    } else {
+      newWords[nextIndex] = { ...newWords[nextIndex], isCurrent: true };
+      setWords(newWords);
+      setCurrentWordIndex(nextIndex);
+    }
+  };
+
+  const handleBackspaceEmpty = () => {
+    if (testStatus === 'completed' || currentWordIndex === 0) return;
+
+    const prevIndex = currentWordIndex - 1;
+    const prevWord = words[prevIndex];
+    if (!prevWord) return;
+
+    const newWords = [...words];
+    newWords[currentWordIndex] = { ...words[currentWordIndex], isCurrent: false };
+    newWords[prevIndex] = {
+      ...prevWord,
+      isCurrent: true,
+      isComplete: false,
+    };
+
+    if (prevWord.isCorrect) {
+      setCorrectWordsCount((c) => Math.max(0, c - 1));
+      totalCorrectCharsRef.current = Math.max(0, totalCorrectCharsRef.current - (prevWord.original.length + 1));
+    } else {
+      setIncorrectWordsCount((c) => Math.max(0, c - 1));
+      totalIncorrectCharsRef.current = Math.max(0, totalIncorrectCharsRef.current - ((prevWord.typedValue?.length || prevWord.original.length) + 1));
+    }
+
+    setWords(newWords);
+    setCurrentWordIndex(prevIndex);
+    setCurrentInput(prevWord.typedValue || '');
+    setIsMismatch(false);
+  };
+
+  // ─── 7. Shop & Quests Actions ──────────────────────────────────────────────
+  const handleBuyItem = (item: ShopItem) => {
+    setProfile((prev) => {
+      const currentGems = Math.max(0, prev.gems || 0);
+      if (currentGems < item.cost) {
+        console.debug('[TypeFlow:Shop] Purchase blocked: insufficient gems', { currentGems, cost: item.cost });
+        return prev;
+      }
+      const remainingGems = Math.max(0, currentGems - item.cost);
+      let updated = { ...prev, gems: remainingGems };
+
+      if (item.id === 'streak-freeze') {
+        updated.streakFreezes = (prev.streakFreezes || 0) + 1;
+      } else if (item.id === 'refill-energy' || item.id === 'refill-hearts') {
+        updated.energy = 5;
+        updated.hearts = 5;
+      } else if (item.id === 'super-typeflow') {
+        updated.isPremium = true;
+        updated.energy = 5;
+        updated.hearts = 5;
+      } else if (item.category === 'theme' && item.value) {
+        updated.unlockedThemes = Array.from(new Set([...(prev.unlockedThemes || []), item.value]));
+        setTheme(item.value as TypeFlowTheme);
+      } else if (item.category === 'sound' && item.value) {
+        updated.unlockedSounds = Array.from(new Set([...(prev.unlockedSounds || []), item.value]));
+        setSound(item.value as SoundType);
+      }
+
+      try { localStorage.setItem('tf_user_profile', JSON.stringify(updated)); } catch {}
+      console.debug('[TypeFlow:Shop] Item purchased:', item.id);
+      return updated;
+    });
+  };
+
+  const handleClaimQuest = (questId: string, xpReward: number, gemReward: number) => {
+    setProfile((prev) => {
+      const updated: UserProfile = {
+        ...prev,
+        xp: prev.xp + xpReward,
+        weeklyXp: (prev.weeklyXp || 0) + xpReward,
+        gems: (prev.gems || 0) + gemReward,
+        claimedQuests: Array.from(new Set([...(prev.claimedQuests || []), questId])),
+      };
+      try { localStorage.setItem('tf_user_profile', JSON.stringify(updated)); } catch {}
+      console.debug('[TypeFlow:Quests] Quest claimed:', questId);
+      return updated;
+    });
+  };
+
+  const isTr = lang === 'tr';
+
+  const modeLabel = mode === 'lesson'
+    ? (activeLesson?.title || (isTr ? 'Akademi Dersi' : 'Academy Lesson'))
+    : (mode === 'words'
+        ? (wordModeType === 'words' ? (isTr ? `Sık Kullanılan ${wordCount} Kelime` : `Common ${wordCount} Words`) : (isTr ? `Sık Kullanılan Kelimeler (${timeLimit}s)` : `Common Words (${timeLimit}s)`))
+        : (mode === 'story'
+            ? (activeSnippetTitle || (isTr ? 'Dinamik Hikaye Modu' : 'Dynamic Story Mode'))
+            : (activeSnippetTitle || (isTr ? 'PowerShell & Terminal Kodları' : 'PowerShell & CLI Code'))));
+
+  return (
+    <div className={`typeflow-microsite theme-${theme}`}>
+      {/* 1. Duolingo SaaS Streamlined Header Bar */}
+      <TypeFlowHeader
+        lang={lang}
+        theme={theme}
+        sound={sound}
+        activeTab={activeTab}
+        profile={profile}
+        onThemeChange={handleThemeChange}
+        onSoundChange={handleSoundChange}
+        onTabChange={(tab) => {
+          if (tab === 'test' && (mode === 'lesson' || testStatus === 'completed')) {
+            setActiveLesson(null);
+            setMode('words');
+            setPracticeSubView('hub');
+            setTestStatus('idle');
+            setIsLessonFailed(false);
+          } else if (tab === 'path' && testStatus === 'completed') {
+            setActiveLesson(null);
+            setMode('words');
+            setTestStatus('idle');
+            setIsLessonFailed(false);
+          }
+          setActiveTab(tab);
+        }}
+        onOpenAuth={() => setIsProfileDrawerOpen(true)}
+        onOpenSettings={() => setIsProfileDrawerOpen(true)}
+        onOpenProfileDrawer={() => setIsProfileDrawerOpen(true)}
+        onLangChange={handleLangChange}
+        onOpenSuperModal={() => setIsSuperModalOpen(true)}
+        onOpenAdModal={handleTriggerAdBreak}
+      />
+
+      {/* 2. TAB: Daktilo Akademisi (Learn Path) */}
+      {activeTab === 'path' && (
+        <main className="tf-main-wrapper">
+          <TypeFlowLearnPath
+            lang={lang}
+            profile={profile}
+            onStartLesson={handleStartLesson}
+            onOpenShop={() => setActiveTab('shop')}
+            onOpenSuperModal={() => setIsSuperModalOpen(true)}
+            onOpenAdModal={handleTriggerAdBreak}
+          />
+          <TypeFlowGoogleAd
+            lang={lang}
+            profile={profile}
+            onRewardClaim={handleClaimGoogleAdReward}
+            onOpenSuperModal={() => setIsSuperModalOpen(true)}
+          />
+        </main>
+      )}
+
+      {/* 3. TAB: Duolingo Ligleri (Leagues) */}
+      {activeTab === 'leagues' && (
+        <main className="tf-main-wrapper">
+          <TypeFlowLeagues
+            lang={lang}
+            profile={profile}
+            onBackToTest={() => setActiveTab('test')}
+          />
+          <TypeFlowGoogleAd
+            lang={lang}
+            profile={profile}
+            onRewardClaim={handleClaimGoogleAdReward}
+            onOpenSuperModal={() => setIsSuperModalOpen(true)}
+          />
+        </main>
+      )}
+
+      {/* 4. TAB: Günlük Görevler & Başarımlar (Quests) */}
+      {activeTab === 'quests' && (
+        <main className="tf-main-wrapper">
+          <TypeFlowQuests
+            lang={lang}
+            profile={profile}
+            onClaimQuest={handleClaimQuest}
+            onOpenSuperModal={() => setIsSuperModalOpen(true)}
+          />
+        </main>
+      )}
+
+      {/* 5. TAB: Duolingo Mağazası (Shop) */}
+      {activeTab === 'shop' && (
+        <main className="tf-main-wrapper">
+          <TypeFlowShop
+            lang={lang}
+            profile={profile}
+            onBuyItem={handleBuyItem}
+            onSelectTheme={handleThemeChange}
+            onSelectSound={handleSoundChange}
+            onProfileUpdate={handleProfileUpdate}
+            onOpenSuperModal={() => setIsSuperModalOpen(true)}
+            onOpenAdModal={handleTriggerAdBreak}
+            onGoToCheckout={handleGoToCheckout}
+          />
+        </main>
+      )}
+
+      {/* 5.5 TAB: Güvenli Ödeme & Checkout Sayfası (Dedicated SaaS Gateway) */}
+      {activeTab === 'checkout' && (
+        <main className="tf-main-wrapper" style={{ maxWidth: '1120px' }}>
+          <TypeFlowCheckoutPage
+            lang={lang}
+            profile={profile}
+            initialPackageId={selectedCheckoutPkgId}
+            onPaymentSuccess={handleCheckoutPaymentSuccess}
+            onReturnToShop={() => setActiveTab('shop')}
+          />
+        </main>
+      )}
+
+      {/* 6. TAB: Profil & Klavye Isı Haritası */}
+      {activeTab === 'profile' && (
+        <main className="tf-main-wrapper">
+          <TypeFlowProfileView
+            lang={lang}
+            profile={profile}
+            onOpenAuth={() => setIsAuthModalOpen(true)}
+            onBackToTest={() => setActiveTab('test')}
+          />
+          <TypeFlowGoogleAd
+            lang={lang}
+            profile={profile}
+            onRewardClaim={handleClaimGoogleAdReward}
+            onOpenSuperModal={() => setIsSuperModalOpen(true)}
+          />
+        </main>
+      )}
+
+      {/* 7. TAB: Serbest Yazı & Akademi Dersi Ekranı (Practice / Test) */}
+      {activeTab === 'test' && (() => {
+        const allUnits = getUnitsForLang(lang);
+        const allLessons = allUnits.flatMap((u) => u.lessons);
+        const currentLessonIndex = activeLesson ? allLessons.findIndex((l) => l.id === activeLesson.id) : -1;
+        const prevLesson = currentLessonIndex > 0 ? allLessons[currentLessonIndex - 1] : null;
+        const nextLesson = currentLessonIndex >= 0 && currentLessonIndex < allLessons.length - 1 ? allLessons[currentLessonIndex + 1] : null;
+
+        // When in free practice and user is on the Hub view
+        if (mode !== 'lesson' && practiceSubView === 'hub' && testStatus !== 'running') {
+          return (
+            <main className="tf-main-wrapper">
+              <TypeFlowPracticeHub
+                lang={lang}
+                profile={profile}
+                onLaunchDrill={(config: PracticeDrillConfig) => {
+                  setMode(config.mode);
+                  if (config.timeLimit) {
+                    setWordModeType('time');
+                    setTimeLimit(config.timeLimit as TimeOption);
+                  } else if (config.wordCount) {
+                    setWordModeType('words');
+                    setWordCount(config.wordCount as WordCountOption);
+                  }
+                  if (config.caseSensitive !== undefined) {
+                    setCaseSensitive(config.caseSensitive);
+                  }
+                  if (config.includePunctuation !== undefined) {
+                    setIncludePunctuation(config.includePunctuation);
+                  }
+                  if (config.generatedWords && config.generatedWords.length > 0) {
+                    setWords(buildWordStates(config.generatedWords));
+                    setActiveSnippetTitle(config.title);
+                    setActiveSnippetSub(
+                      isTr
+                        ? `⚡ Antrenman Arenası: +${config.xpReward} XP, +${config.gemReward} 💎`
+                        : `⚡ Training Dojo: +${config.xpReward} XP, +${config.gemReward} 💎`
+                    );
+                  }
+                  setPracticeSubView('typing');
+                  initializeTest();
+                }}
+                onOpenAdModal={handleTriggerAdBreak}
+              />
+              <TypeFlowGoogleAd
+                lang={lang}
+                profile={profile}
+                onRewardClaim={handleClaimGoogleAdReward}
+                onOpenSuperModal={() => setIsSuperModalOpen(true)}
+              />
+            </main>
+          );
+        }
+
+        return (
+          <>
+            {/* Mode Controls Bar (Visible only in free practice, not in active lesson) */}
+            {testStatus !== 'completed' && mode !== 'lesson' && (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.85rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="tf-ctrl-btn tf-btn-pushable"
+                  onClick={() => setPracticeSubView('hub')}
+                  style={{ background: 'var(--tf-surface-elevated)', borderColor: 'var(--tf-accent)', color: 'var(--tf-accent)', fontWeight: 700 }}
+                  title={isTr ? "Pratik Arenası Menüsüne Dön" : "Back to Practice Hub"}
+                >
+                  ⚡ {isTr ? 'Pratik Menüsü' : 'Practice Hub'}
+                </button>
+                <TypeFlowControls
+                  lang={lang}
+                  mode={mode}
+                  wordCount={wordCount}
+                  timeLimit={timeLimit}
+                  wordModeType={wordModeType}
+                  caseSensitive={caseSensitive}
+                  includePunctuation={includePunctuation}
+                  onModeChange={(m) => setMode(m)}
+                  onWordCountChange={setWordCount}
+                  onTimeLimitChange={setTimeLimit}
+                  onWordModeTypeChange={setWordModeType}
+                  onToggleCaseSensitive={() => setCaseSensitive((c) => !c)}
+                  onTogglePunctuation={() => setIncludePunctuation((p) => !p)}
+                />
+              </div>
+            )}
+
+            <main className="tf-main-wrapper">
+              {testStatus === 'completed' && isLessonFailed ? (
+                <>
+                  <div className="tf-lesson-failed-card" style={{ maxWidth: '560px', margin: '2rem auto', background: 'var(--tf-surface)', border: '1.5px solid #ef4444', borderRadius: '16px', padding: '2rem', textAlign: 'center', boxShadow: '0 15px 40px rgba(239, 68, 68, 0.2)' }}>
+                    <div style={{ fontSize: '3.5rem', marginBottom: '0.5rem' }}>💔</div>
+                    <h3 style={{ fontSize: '1.6rem', fontWeight: 900, color: '#ef4444', margin: '0 0 0.5rem 0' }}>
+                      {isTr ? 'DERS BAŞARISIZ OLDU' : 'LESSON FAILED'}
+                    </h3>
+                    <p style={{ color: 'var(--tf-text-secondary)', fontSize: '0.92rem', margin: '0 0 1.5rem 0' }}>
+                      {isTr
+                        ? '3 hata sınırına ulaştınız! Kas hafızanızı pekiştirmek için dersi tekrar deneyebilir veya mağazadan enerji yenileyebilirsiniz.'
+                        : 'You reached the 3-mistake limit! Practice again to build muscle memory or recharge in shop.'}
+                    </p>
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+                      <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '0.75rem 1.25rem', borderRadius: '10px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                        <span style={{ fontSize: '0.72rem', color: '#ef4444', fontWeight: 800, fontFamily: 'var(--tf-font-mono)' }}>{isTr ? 'HATA SAYISI' : 'MISTAKES'}</span>
+                        <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#ef4444' }}>3 / 3 ✗</div>
+                      </div>
+                      <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '0.75rem 1.25rem', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                        <span style={{ fontSize: '0.72rem', color: 'var(--tf-text-secondary)', fontWeight: 800, fontFamily: 'var(--tf-font-mono)' }}>{isTr ? 'KALAN ENERJİ' : 'FOCUS ENERGY'}</span>
+                        <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#10b981' }}>
+                          {profile.isPremium ? '♾️' : `${profile.energy ?? profile.hearts ?? 0}/5 🔋`}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        className="tf-btn-primary tf-btn-pushable"
+                        onClick={() => {
+                          if (activeLesson) handleStartLesson(activeLesson, activeLessonStage);
+                        }}
+                        style={{ padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                      >
+                        ↺ {isTr ? 'Dersi Tekrar Dene' : 'Try Again'}
+                      </button>
+                      <button
+                        type="button"
+                        className="tf-ctrl-btn tf-btn-pushable"
+                        onClick={() => {
+                          setActiveLesson(null);
+                          setTestStatus('idle');
+                          setMode('words');
+                          setIsLessonFailed(false);
+                          setActiveTab('path');
+                        }}
+                        style={{ padding: '0.75rem 1.5rem', fontSize: '0.9rem' }}
+                      >
+                        🗺️ {isTr ? 'Akademiye Dön' : 'Back to Academy'}
+                      </button>
+                      {(profile.energy ?? profile.hearts ?? 5) <= 1 && !profile.isPremium && (
+                        <button
+                          type="button"
+                          className="tf-btn-pushable"
+                          onClick={() => setActiveTab('shop')}
+                          style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#000', border: 'none', padding: '0.75rem 1.5rem', borderRadius: '8px', fontWeight: 800, cursor: 'pointer' }}
+                        >
+                          ⚡ {isTr ? 'Enerji Doldur' : 'Refill Energy'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <TypeFlowGoogleAd
+                    lang={lang}
+                    profile={profile}
+                    onRewardClaim={handleClaimGoogleAdReward}
+                    onOpenSuperModal={() => setIsSuperModalOpen(true)}
+                  />
+                </>
+              ) : testStatus === 'completed' && testResult ? (
+                <>
+                  <TypeFlowResults
+                    lang={lang}
+                    result={testResult}
+                    onRestart={initializeTest}
+                    onReturnToProjects={() => router.push(`/${lang}/projects`)}
+                    onViewLeaderboard={() => setActiveTab('leagues')}
+                    onReturnToPath={() => setActiveTab('path')}
+                    onPrevLesson={prevLesson ? () => handleStartLesson(prevLesson) : undefined}
+                    onNextLesson={nextLesson ? () => handleStartLesson(nextLesson) : undefined}
+                  />
+                  <TypeFlowGoogleAd
+                    lang={lang}
+                    profile={profile}
+                    onRewardClaim={handleClaimGoogleAdReward}
+                    onOpenSuperModal={() => setIsSuperModalOpen(true)}
+                  />
+                </>
+              ) : (
+                <>
+                  {/* Live Stats: WPM, Accuracy, Streak, Focus Energy */}
+                  <div className="tf-live-stats">
+                    <div className="tf-stat-item">
+                      <span className="tf-stat-val">{liveWpm}</span>
+                      <span className="tf-stat-lbl">WPM</span>
+                    </div>
+
+                    <div className="tf-stat-item">
+                      <span className="tf-stat-val">%{liveAccuracy}</span>
+                      <span className="tf-stat-lbl">{isTr ? 'Doğruluk' : 'Accuracy'}</span>
+                    </div>
+
+                    {liveStreak >= 5 && (
+                      <div className="tf-streak-badge">
+                        <span>🔥</span>
+                        <span>{liveStreak} {isTr ? 'KOMBO' : 'STREAK'}</span>
+                      </div>
+                    )}
+
+                    {mode === 'lesson' && (
+                      <div
+                        className="tf-streak-badge"
+                        style={{
+                          background: 'rgba(16, 185, 129, 0.12)',
+                          borderColor: '#10b981',
+                          color: '#10b981',
+                        }}
+                      >
+                        <span>🔋</span>
+                        <span>
+                          {profile.isPremium
+                            ? '♾️ ENERJİ'
+                            : `${profile.energy ?? profile.hearts ?? 5}/5 ${isTr ? 'ENERJİ' : 'ENERGY'}`}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Subtitle / Explanation */}
+                  {activeSnippetSub && (
+                    <div style={{ marginBottom: '0.75rem', textAlign: 'center' }}>
+                      <p style={{ fontFamily: 'var(--tf-font-mono)', fontSize: '0.82rem', color: 'var(--tf-text-secondary)' }}>
+                        {activeSnippetSub}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Dual-Box Typing Interface with Persistent Auto-Focus */}
+                  <TypeFlowTypingArea
+                    lang={lang}
+                    words={words}
+                    currentWordIndex={currentWordIndex}
+                    currentInput={currentInput}
+                    isMismatch={isMismatch}
+                    correctWordsCount={correctWordsCount}
+                    incorrectWordsCount={incorrectWordsCount}
+                    timeLeft={timeLeft}
+                    totalTime={timeLimit}
+                    wordProgress={`${currentWordIndex + 1}/${words.length}`}
+                    mode={mode}
+                    wordModeType={wordModeType}
+                    modeLabel={modeLabel}
+                    testStatus={testStatus}
+                    capsLockActive={capsLockActive}
+                    liveStreak={liveStreak}
+                    lessonMistakes={lessonMistakes}
+                    maxMistakes={3}
+                    caseSensitive={caseSensitive}
+                    includePunctuation={includePunctuation}
+                    activeStage={
+                      mode === 'lesson' && activeLesson?.stages
+                        ? {
+                            current: activeLessonStage,
+                            total: activeLesson.stages.length,
+                            title: activeLesson.stages[activeLessonStage - 1]?.title || activeLesson.title,
+                            minWpm: activeLesson.stages[activeLessonStage - 1]?.minWpm || activeLesson.minWpm,
+                            minAccuracy: activeLesson.stages[activeLessonStage - 1]?.minAccuracy || activeLesson.minAccuracy,
+                          }
+                        : undefined
+                    }
+                    onInputChange={handleInputChange}
+                    onSpaceSubmit={() => handleSpaceSubmit()}
+                    onBackspaceEmpty={handleBackspaceEmpty}
+                    onRestart={initializeTest}
+                  />
+                </>
+              )}
+            </main>
+          </>
+        );
+      })()}
+
+      {/* 8. Slide-Over Profile & Settings Drawer (Yan Bar) */}
+      <TypeFlowProfileDrawer
+        isOpen={isProfileDrawerOpen}
+        lang={lang}
+        theme={theme}
+        sound={sound}
+        volume={volume}
+        profile={profile}
+        onClose={() => setIsProfileDrawerOpen(false)}
+        onThemeChange={handleThemeChange}
+        onSoundChange={handleSoundChange}
+        onVolumeChange={handleVolumeChange}
+        onLangChange={handleLangChange}
+        onProfileUpdate={handleProfileUpdate}
+        onNavigateTab={(tab) => {
+          setIsProfileDrawerOpen(false);
+          setActiveTab(tab);
+        }}
+        onOpenShop={() => {
+          setIsProfileDrawerOpen(false);
+          setActiveTab('shop');
+        }}
+        onOpenSuperModal={() => {
+          setIsProfileDrawerOpen(false);
+          setIsSuperModalOpen(true);
+        }}
+        onOpenAdModal={handleTriggerAdBreak}
+      />
+
+      {/* 9. User Auth & Profile Customization Modal */}
+      <TypeFlowAuthModal
+        isOpen={isAuthModalOpen}
+        lang={lang}
+        profile={profile}
+        onClose={() => setIsAuthModalOpen(false)}
+        onProfileUpdate={handleProfileUpdate}
+      />
+
+      {/* 10. Advanced SaaS Settings Modal */}
+      <TypeFlowSettingsModal
+        isOpen={isSettingsModalOpen}
+        lang={lang}
+        theme={theme}
+        sound={sound}
+        volume={volume}
+        profile={profile}
+        onClose={() => setIsSettingsModalOpen(false)}
+        onThemeChange={handleThemeChange}
+        onSoundChange={handleSoundChange}
+        onVolumeChange={handleVolumeChange}
+        onProfileUpdate={handleProfileUpdate}
+        onOpenShop={() => {
+          setIsSettingsModalOpen(false);
+          setActiveTab('shop');
+        }}
+      />
+
+      {/* 11. Super TypeFlow Pro SaaS Modal */}
+      <TypeFlowSuperModal
+        isOpen={isSuperModalOpen}
+        onClose={() => setIsSuperModalOpen(false)}
+        profile={profile}
+        onUpgradeToSuper={handleUpgradeToSuper}
+        onNavigateToCheckout={handleGoToCheckout}
+        lang={lang}
+      />
+
+      {/* 12. Sponsorlu Teknoloji Reklam Molası Modal */}
+      <TypeFlowAdBreakModal
+        isOpen={isAdBreakModalOpen}
+        onClose={() => setIsAdBreakModalOpen(false)}
+        ad={getTechAds(lang)[currentAdIndex] || getTechAds(lang)[0]}
+        onClaimEnergyReward={handleClaimEnergyReward}
+        onOpenSuperModal={() => {
+          setIsAdBreakModalOpen(false);
+          setIsSuperModalOpen(true);
+        }}
+        lang={lang}
+      />
+
+      {/* 9. SaaS Footer */}
+      <footer className="tf-footer">
+        <div>
+          <span>TIYATROTIST LABS // TYPEFLOW v2.0 DUOLINGO SAAS</span>
+        </div>
+        <div className="tf-footer-links">
+          <button
+            onClick={() => setActiveTab('path')}
+            style={{ background: 'none', border: 'none', color: 'inherit', font: 'inherit', cursor: 'pointer' }}
+          >
+            {isTr ? '🗺️ Akademi' : '🗺️ Academy'}
+          </button>
+          <button
+            onClick={() => setActiveTab('leagues')}
+            style={{ background: 'none', border: 'none', color: 'inherit', font: 'inherit', cursor: 'pointer' }}
+          >
+            {isTr ? '🏆 Ligler' : '🏆 Leagues'}
+          </button>
+          <button
+            onClick={() => setActiveTab('quests')}
+            style={{ background: 'none', border: 'none', color: 'inherit', font: 'inherit', cursor: 'pointer' }}
+          >
+            {isTr ? '🎯 Görevler' : '🎯 Quests'}
+          </button>
+          <button
+            onClick={() => setActiveTab('shop')}
+            style={{ background: 'none', border: 'none', color: 'inherit', font: 'inherit', cursor: 'pointer' }}
+          >
+            {isTr ? '🛍️ Mağaza' : '🛍️ Shop'}
+          </button>
+          <button
+            onClick={() => router.push(`/${lang}/projects`)}
+            style={{ background: 'none', border: 'none', color: 'inherit', font: 'inherit', cursor: 'pointer' }}
+          >
+            {isTr ? 'Projeler' : 'Projects'}
+          </button>
+        </div>
+      </footer>
+    </div>
+  );
+}

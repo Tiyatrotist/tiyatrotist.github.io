@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# TODO reference images
+image.png
+image-1.png
+
+# auto-generated agent files
+AGENTS.md

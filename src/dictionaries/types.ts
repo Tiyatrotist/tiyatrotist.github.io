@@ -159,4 +159,11 @@ export interface Dictionary {
     restartBtn: string;
     returnHomeBtn: string;
   };
+  typeflow: {
+    tagline: string;
+    description: string;
+    wordsMode: string;
+    storyMode: string;
+    devMode: string;
+  };
 }

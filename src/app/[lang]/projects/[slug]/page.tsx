@@ -13,6 +13,7 @@ import { supabase } from '@/lib/supabase';
 import { PROJECT_TEMPLATES } from '@/lib/builder/templates';
 import { ProjectTemplateKey, SectionBlock } from '@/types/builder';
 import BookOSMicrosite from '@/components/bookos/BookOSMicrosite';
+import TypeFlowMicrosite from '@/components/typeflow/TypeFlowMicrosite';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PageBuilderRenderer from '@/components/builder/PageBuilderRenderer';
@@ -26,6 +27,8 @@ export async function generateStaticParams() {
   const staticParams = [
     { lang: 'tr', slug: 'bookos' },
     { lang: 'en', slug: 'bookos' },
+    { lang: 'tr', slug: 'typeflow' },
+    { lang: 'en', slug: 'typeflow' },
   ];
 
   try {
@@ -36,7 +39,7 @@ export async function generateStaticParams() {
 
     if (projects && projects.length > 0) {
       for (const p of projects) {
-        if (p.slug && p.slug !== 'bookos') {
+        if (p.slug && p.slug !== 'bookos' && p.slug !== 'typeflow') {
           staticParams.push({ lang: 'tr', slug: p.slug });
           staticParams.push({ lang: 'en', slug: p.slug });
         }
@@ -52,9 +55,13 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
   const currentLang = (lang === 'tr' ? 'tr' : 'en') as Locale;
   const dict = getDictionary(currentLang);
 
-  // 1. BookOS has an approved independent microsite design
+  // 1. Independent microsite designs
   if (slug === 'bookos') {
     return <BookOSMicrosite lang={currentLang} dict={dict} />;
+  }
+
+  if (slug === 'typeflow') {
+    return <TypeFlowMicrosite lang={currentLang} dict={dict} />;
   }
 
   // 2. Fetch project details from database

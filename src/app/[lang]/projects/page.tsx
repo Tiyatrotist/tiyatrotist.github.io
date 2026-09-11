@@ -19,6 +19,12 @@ export default async function ProjectsPage({ params }: ProjectsPageProps) {
       description: dict.projectIntro.description,
       year: '2026',
     },
+    {
+      slug: 'typeflow',
+      title: 'TypeFlow',
+      description: dict.typeflow.tagline,
+      year: '2026',
+    },
   ];
 
   return (

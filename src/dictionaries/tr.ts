@@ -162,4 +162,11 @@ export const tr: Dictionary = {
     restartBtn: 'TEKRAR DENE',
     returnHomeBtn: 'ANA SAYFAYA DÖN',
   },
+  typeflow: {
+    tagline: 'Dokunsal mekanik klavye sesleri, 5 siberpunk tema ve 3 özel mod (Kelimeler, Hikayeler, PowerShell & CLI) içeren yeni nesil hızlı yazı laboratuvarı.',
+    description: 'Sıfır gecikmeli Web Audio mekanik klavye sentezleyicisi, akıcı imleç ve derinlemesine hız analitiği ile geliştirilmiş bağımsız hızlı yazım deneyimi.',
+    wordsMode: 'Sık Kullanılan Kelimeler',
+    storyMode: 'Hikaye & Anlatı Modu',
+    devMode: 'Geliştirici & CLI Komutları',
+  },
 };
