@@ -66,6 +66,22 @@ export interface Dictionary {
     locationLabel: string;
     locationDesc: string;
   };
+  blogPage: {
+    tag: string;
+    title: string;
+    subtitle: string;
+    searchPlaceholder: string;
+    filterAll: string;
+    readTime: string;
+    featured: string;
+    emptyText: string;
+    backBtn: string;
+    notFoundTitle: string;
+    notFoundSubtitle: string;
+    shareBtn: string;
+    copiedText: string;
+    relatedTitle: string;
+  };
   contactPage: {
     tag: string;
     title: string;

@@ -40,6 +40,8 @@ export default function BlogListPage() {
   const [search, setSearch] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<BlogPost | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [tableMissing, setTableMissing] = useState(false);
+  const [copiedSql, setCopiedSql] = useState(false);
   const [locale] = useState<AdminLocale>(() => {
     if (typeof window !== 'undefined') return (localStorage.getItem('admin_locale') as AdminLocale) || 'tr';
     return 'tr';
@@ -49,6 +51,7 @@ export default function BlogListPage() {
 
   const fetchPosts = useCallback(async () => {
     setLoading(true);
+    setTableMissing(false);
     try {
       console.debug('[admin/blog] Fetching blog posts…');
       const { data, error } = await supabase
@@ -58,6 +61,13 @@ export default function BlogListPage() {
 
       if (error) {
         console.debug('[admin/blog] Query error (table may not exist yet or empty):', error);
+        if (
+          error.code === 'PGRST202' ||
+          error.message.includes('Could not find the table') ||
+          error.message.includes('does not exist')
+        ) {
+          setTableMissing(true);
+        }
       }
       setPosts(data || []);
     } catch (err) {
@@ -143,12 +153,78 @@ export default function BlogListPage() {
     return <LoadingSpinner text={dict.common.loading} large />;
   }
 
+  const BLOG_MIGRATION_SQL = `CREATE TABLE IF NOT EXISTS public.blog_posts (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  slug TEXT NOT NULL UNIQUE,
+  title_tr TEXT,
+  title_en TEXT,
+  excerpt_tr TEXT,
+  excerpt_en TEXT,
+  content_tr TEXT,
+  content_en TEXT,
+  cover_image TEXT,
+  category TEXT DEFAULT 'Engineering',
+  tags TEXT[] DEFAULT ARRAY['Tech'],
+  published BOOLEAN DEFAULT false NOT NULL,
+  featured BOOLEAN DEFAULT false NOT NULL,
+  published_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT now() NOT NULL
+);
+ALTER TABLE public.blog_posts ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public can view published blog posts" ON public.blog_posts FOR SELECT USING (published = true);
+CREATE POLICY "Authenticated users full access to blog posts" ON public.blog_posts FOR ALL TO authenticated USING (true) WITH CHECK (true);`;
+
+  const handleCopyMigration = async () => {
+    try {
+      await navigator.clipboard.writeText(BLOG_MIGRATION_SQL);
+      setCopiedSql(true);
+      setTimeout(() => setCopiedSql(false), 3000);
+    } catch {
+      // ignore
+    }
+  };
+
   return (
     <>
       {/* Page Header */}
       <div className="admin-page-header">
         <h1>{dict.blog.title}</h1>
       </div>
+
+      {/* Missing table banner */}
+      {tableMissing && (
+        <div
+          style={{
+            background: 'rgba(255, 255, 255, 0.03)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '6px',
+            padding: '1.25rem',
+            marginBottom: '1.5rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.75rem',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff', fontWeight: 500, fontSize: '0.9rem' }}>
+            <span>⚡</span>
+            <span>Supabase Veritabanı Bildirimi: blog_posts Tablosu Bulunamadı</span>
+          </div>
+          <p style={{ color: 'rgba(255, 255, 255, 0.65)', fontSize: '0.82rem', lineHeight: 1.5, margin: 0 }}>
+            Admin panelinden yeni blog yazısı kaydedip yayınlamak için Supabase projenizde blog_posts tablosunun oluşturulması gerekir. Hazırlanan SQL migration kodunu kopyalayarak Supabase Dashboard &gt; SQL Editor alanında çalıştırabilirsiniz.
+          </p>
+          <div>
+            <button
+              type="button"
+              className="admin-btn admin-btn-ghost admin-btn-sm"
+              onClick={handleCopyMigration}
+              style={{ border: '1px solid rgba(255,255,255,0.3)' }}
+            >
+              {copiedSql ? '✓ SQL Kopyalandı' : '📋 SQL Migration Kodunu Kopyala'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Toolbar with Single Primary Action */}
       <div className="admin-toolbar">

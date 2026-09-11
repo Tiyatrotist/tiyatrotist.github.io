@@ -893,3 +893,316 @@ button {
     transform: none !important;
   }
 }
+
+/* ─── SCHEMATIC VERTICAL TIMELINE (ABOUT PAGE) ───────────────── */
+.schematic-timeline {
+  position: relative;
+  padding: 3rem 0;
+  width: 100%;
+}
+
+/* Continuous Vertical Stem Line */
+.schematic-timeline__spine {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.4);
+  transform: translateX(-50%);
+  z-index: 1;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+}
+
+/* Animated Pulse Beam traveling down the spine */
+.schematic-timeline__spine-pulse {
+  position: absolute;
+  top: -100px;
+  left: 0;
+  width: 100%;
+  height: 120px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 50%, rgba(255, 255, 255, 0) 100%);
+  box-shadow: 0 0 14px #ffffff;
+  animation: spineTravel 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes spineTravel {
+  0% {
+    top: -120px;
+  }
+  100% {
+    top: 100%;
+  }
+}
+
+.schematic-timeline__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4.5rem;
+  position: relative;
+  z-index: 2;
+}
+
+.schematic-timeline__row {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-height: 80px;
+  animation: rowReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: calc(var(--i) * 0.12s);
+}
+
+@keyframes rowReveal {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Junction Node Circle (White circle on spine) */
+.schematic-timeline__node {
+  position: absolute;
+  left: 50%;
+  top: 28px;
+  width: 12px;
+  height: 12px;
+  transform: translate(-50%, -50%);
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.schematic-timeline__node-core {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+.schematic-timeline__node-ring {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  animation: nodePulseRing 3s ease-out infinite;
+  animation-delay: calc(var(--i) * 0.4s);
+}
+
+@keyframes nodePulseRing {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.2;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+.schematic-timeline__row:hover .schematic-timeline__node-core {
+  transform: scale(1.5);
+  box-shadow: 0 0 16px #ffffff, 0 0 24px rgba(255, 255, 255, 0.6);
+}
+
+/* Horizontal Branch Line */
+.schematic-timeline__branch {
+  position: absolute;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.6);
+  top: 28px;
+  transform: translateY(-50%);
+  z-index: 2;
+  transition: all 0.35s ease;
+}
+
+/* Right-Branching Row */
+.schematic-timeline__row--right {
+  justify-content: flex-end;
+}
+
+.schematic-timeline__row--right .schematic-timeline__branch {
+  left: 50%;
+  width: 56px;
+}
+
+.schematic-timeline__row--right .schematic-timeline__card {
+  width: calc(50% - 72px);
+  margin-left: auto;
+  text-align: left;
+}
+
+.schematic-timeline__row--right:hover .schematic-timeline__branch {
+  width: 64px;
+  background: #ffffff;
+  box-shadow: 0 0 10px #ffffff;
+}
+
+.schematic-timeline__row--right:hover .schematic-timeline__card {
+  transform: translateX(6px);
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 255, 255, 0.06);
+}
+
+/* Left-Branching Row */
+.schematic-timeline__row--left {
+  justify-content: flex-start;
+}
+
+.schematic-timeline__row--left .schematic-timeline__branch {
+  right: 50%;
+  width: 56px;
+}
+
+.schematic-timeline__row--left .schematic-timeline__card {
+  width: calc(50% - 72px);
+  margin-right: auto;
+  text-align: left;
+}
+
+.schematic-timeline__row--left:hover .schematic-timeline__branch {
+  width: 64px;
+  background: #ffffff;
+  box-shadow: 0 0 10px #ffffff;
+}
+
+.schematic-timeline__row--left:hover .schematic-timeline__card {
+  transform: translateX(-6px);
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 255, 255, 0.06);
+}
+
+/* Milestone Card Box */
+.schematic-timeline__card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 1.4rem 1.6rem;
+  backdrop-filter: blur(12px);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.schematic-timeline__card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+
+.schematic-timeline__card-period {
+  font-size: 0.72rem;
+  font-family: monospace;
+  letter-spacing: 0.15em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.schematic-timeline__badge {
+  font-size: 0.6rem;
+  font-family: monospace;
+  letter-spacing: 0.1em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 2px;
+}
+
+.schematic-timeline__badge--tag {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.schematic-timeline__badge--status {
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  font-weight: 500;
+}
+
+.schematic-timeline__card-title {
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: #ffffff;
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+.schematic-timeline__card-desc {
+  font-size: 0.85rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0 0 1rem 0;
+}
+
+.schematic-timeline__card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.65rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: monospace;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.35);
+  letter-spacing: 0.1em;
+}
+
+.schematic-timeline__node-code {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.schematic-timeline__year-tag {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Responsive Mobile Layout (Rail on left, all branches to right) */
+@media (max-width: 768px) {
+  .schematic-timeline__spine {
+    left: 18px;
+    transform: none;
+  }
+
+  .schematic-timeline__node {
+    left: 19px !important;
+    transform: translate(-50%, -50%) !important;
+  }
+
+  .schematic-timeline__row {
+    justify-content: flex-start !important;
+    margin-bottom: 0.5rem;
+  }
+
+  .schematic-timeline__branch {
+    left: 19px !important;
+    right: auto !important;
+    width: 28px !important;
+  }
+
+  .schematic-timeline__card {
+    width: calc(100% - 64px) !important;
+    margin-left: 64px !important;
+    margin-right: 0 !important;
+    text-align: left !important;
+  }
+
+  .schematic-timeline__row--left:hover .schematic-timeline__card,
+  .schematic-timeline__row--right:hover .schematic-timeline__card {
+    transform: translateX(4px) !important;
+  }
+}

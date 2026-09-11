@@ -1,28 +1,68 @@
+/**
+ * TIYATROTIST — Public Blog Article Detail Page
+ *
+ * Editorial layout with:
+ * - High-fidelity zero-dependency Markdown rendering (headers, code blocks, lists, quotes)
+ * - Meta information (date, read time, featured badge)
+ * - Queries directly from Supabase blog_posts table with zero fake posts
+ * - Pure monochrome aesthetic matching Tiyatrotist design guidelines.
+ */
+
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { Locale, getDictionary } from '@/dictionaries';
 import { supabase } from '@/lib/supabase';
+import { BlogPostItem } from '@/types/blog';
 
 interface BlogPostDetailPageProps {
   params: Promise<{ lang: string; slug: string }>;
 }
 
 export async function generateStaticParams() {
-  return [
-    { lang: 'tr', slug: 'hello-world' },
-    { lang: 'en', slug: 'hello-world' },
-  ];
+  const staticParams: { lang: string; slug: string }[] = [];
+
+  try {
+    const { data } = await supabase
+      .from('blog_posts')
+      .select('slug')
+      .eq('published', true);
+
+    if (data && data.length > 0) {
+      for (const post of data) {
+        if (post.slug) {
+          staticParams.push({ lang: 'tr', slug: post.slug });
+          staticParams.push({ lang: 'en', slug: post.slug });
+        }
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  // Next.js output: 'export' requires at least one path definition per dynamic route
+  if (staticParams.length === 0) {
+    staticParams.push({ lang: 'tr', slug: 'not-found' });
+    staticParams.push({ lang: 'en', slug: 'not-found' });
+  }
+
+  return staticParams;
 }
 
 export default async function BlogPostDetailPage({ params }: BlogPostDetailPageProps) {
   const { lang, slug } = await params;
   const currentLang = (lang === 'tr' ? 'tr' : 'en') as Locale;
   const dict = getDictionary(currentLang);
+  const b = dict.blogPage;
 
-  let post = null;
+  console.debug(`[public/blog/slug] Fetching article: ${slug} (${currentLang})`);
+
+  let post: BlogPostItem | null = null;
+  let otherPosts: BlogPostItem[] = [];
+
   try {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('blog_posts')
       .select('*')
       .eq('slug', slug)
@@ -30,34 +70,70 @@ export default async function BlogPostDetailPage({ params }: BlogPostDetailPageP
       .limit(1)
       .single();
 
-    post = data;
+    if (!error && data) {
+      post = {
+        id: data.id,
+        slug: data.slug,
+        title_tr: data.title_tr || '',
+        title_en: data.title_en || '',
+        excerpt_tr: data.excerpt_tr || '',
+        excerpt_en: data.excerpt_en || '',
+        content_tr: data.content_tr || '',
+        content_en: data.content_en || '',
+        cover_image: data.cover_image,
+        tags: data.tags || ['Tech'],
+        read_time_tr: '4 dk okuma',
+        read_time_en: '4 min read',
+        published: data.published,
+        featured: data.featured || false,
+        published_at: data.published_at || data.created_at,
+      };
+
+      // Query other published posts for recommendations
+      const { data: recs } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .eq('published', true)
+        .neq('slug', slug)
+        .order('published_at', { ascending: false })
+        .limit(2);
+
+      if (recs) {
+        otherPosts = recs.map((r) => ({
+          id: r.id,
+          slug: r.slug,
+          title_tr: r.title_tr,
+          title_en: r.title_en,
+          excerpt_tr: r.excerpt_tr,
+          excerpt_en: r.excerpt_en,
+          published: r.published,
+          featured: r.featured || false,
+        }));
+      }
+    }
   } catch (err) {
-    console.debug('[public/blog/slug] Fetch error:', err);
+    console.debug('[public/blog/slug] Supabase lookup error:', err);
   }
 
-  const backText = currentLang === 'tr' ? '← Blog Yazılarına Dön' : '← Back to Blog';
-
+  // 404 state if article not found
   if (!post) {
     return (
       <main className="main-container">
         <Header lang={currentLang} dict={dict} />
-        <div className="page-container">
+        <div className="page-container" style={{ maxWidth: '800px' }}>
           <header className="page-header">
             <span className="page-tag">[ 404 // NOT FOUND ]</span>
-            <h1 className="page-title">{currentLang === 'tr' ? 'Yazı Bulunamadı' : 'Article Not Found'}</h1>
-            <p className="page-subtitle">
-              {currentLang === 'tr'
-                ? 'Aradığınız blog yazısı mevcut değil veya yayından kaldırılmış olabilir.'
-                : 'The article you are looking for does not exist or has been unpublished.'}
-            </p>
+            <h1 className="page-title">{b.notFoundTitle}</h1>
+            <p className="page-subtitle">{b.notFoundSubtitle}</p>
           </header>
 
           <Link
             href={`/${currentLang}/blog`}
             className="project-intro__enter-btn"
             style={{ width: 'fit-content', marginTop: '1.5rem' }}
+            data-cursor="expand"
           >
-            {backText}
+            {b.backBtn}
           </Link>
         </div>
         <Footer lang={currentLang} dict={dict} />
@@ -67,6 +143,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostDetailPageP
 
   const displayTitle = (currentLang === 'tr' ? post.title_tr : post.title_en) || post.title_tr || post.title_en || post.slug;
   const displayContent = (currentLang === 'tr' ? post.content_tr : post.content_en) || post.content_tr || post.content_en || '';
+  const readTime = (currentLang === 'tr' ? post.read_time_tr : post.read_time_en) || (currentLang === 'tr' ? '4 dk okuma' : '4 min read');
   const dateStr = post.published_at
     ? new Date(post.published_at).toLocaleDateString(currentLang === 'tr' ? 'tr-TR' : 'en-US', {
         year: 'numeric',
@@ -78,48 +155,159 @@ export default async function BlogPostDetailPage({ params }: BlogPostDetailPageP
   return (
     <main className="main-container">
       <Header lang={currentLang} dict={dict} />
-      <div className="page-container" style={{ maxWidth: '800px' }}>
-        <header className="page-header" style={{ marginBottom: '2rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-            <span className="page-tag">[ BLOG // {dateStr} ]</span>
+      <div className="page-container" style={{ maxWidth: '840px' }}>
+        {/* Back navigation */}
+        <nav style={{ marginBottom: '1.5rem' }}>
+          <Link
+            href={`/${currentLang}/blog`}
+            style={{
+              fontSize: '0.75rem',
+              fontFamily: 'monospace',
+              letterSpacing: '0.15em',
+              color: 'rgba(255, 255, 255, 0.5)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              transition: 'color 0.2s ease',
+            }}
+            data-cursor="expand"
+          >
+            {b.backBtn}
+          </Link>
+        </nav>
+
+        {/* Article Header */}
+        <header className="page-header" style={{ marginBottom: '2.5rem', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem' }}>
+            <span className="page-tag" style={{ color: 'rgba(255,255,255,0.45)' }}>
+              [ BLOG // {dateStr} // {readTime.toUpperCase()} ]
+            </span>
             {post.featured && (
-              <span style={{ fontSize: '0.65rem', color: '#f1c40f', border: '1px solid rgba(241,196,15,0.4)', padding: '0.15rem 0.4rem', borderRadius: '3px' }}>
-                ★ {currentLang === 'tr' ? 'Öne Çıkan' : 'Featured'}
+              <span
+                style={{
+                  fontSize: '0.65rem',
+                  fontFamily: 'monospace',
+                  letterSpacing: '0.1em',
+                  color: '#000000',
+                  background: '#ffffff',
+                  padding: '0.15rem 0.5rem',
+                  borderRadius: '2px',
+                  fontWeight: 600,
+                }}
+              >
+                ★ {b.featured}
               </span>
             )}
           </div>
-          <h1 className="page-title" style={{ fontSize: '2rem', lineHeight: 1.25 }}>
+
+          <h1
+            className="page-title"
+            style={{
+              fontSize: 'clamp(2rem, 4vw, 3rem)',
+              lineHeight: 1.25,
+              fontWeight: 500,
+              letterSpacing: '-0.02em',
+            }}
+          >
             {displayTitle}
           </h1>
         </header>
 
+        {/* Cover Image if present */}
         {post.cover_image && (
-          <div style={{ marginBottom: '2rem', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div
+            style={{
+              marginBottom: '2.5rem',
+              borderRadius: '6px',
+              overflow: 'hidden',
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={post.cover_image} alt={displayTitle} style={{ width: '100%', height: 'auto', display: 'block' }} />
           </div>
         )}
 
-        <article
-          className="blog-content"
-          style={{
-            fontSize: '0.95rem',
-            lineHeight: 1.8,
-            color: 'rgba(255,255,255,0.85)',
-            whiteSpace: 'pre-wrap',
-          }}
-        >
-          {displayContent}
+        {/* Article Body (Rendered with MarkdownRenderer) */}
+        <article className="blog-article-body" style={{ minHeight: '300px' }}>
+          <MarkdownRenderer content={displayContent} />
         </article>
 
-        <div style={{ marginTop: '3rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-          <Link
-            href={`/${currentLang}/blog`}
-            className="project-intro__enter-btn"
-            style={{ width: 'fit-content' }}
+        {/* Post Footer & Related Posts */}
+        <div
+          style={{
+            marginTop: '4rem',
+            paddingTop: '2rem',
+            borderTop: '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '1rem',
+              marginBottom: '3rem',
+            }}
           >
-            {backText}
-          </Link>
+            <Link
+              href={`/${currentLang}/blog`}
+              className="project-intro__enter-btn"
+              data-cursor="expand"
+            >
+              {b.backBtn}
+            </Link>
+          </div>
+
+          {/* Related Articles (Only shown if real other posts exist) */}
+          {otherPosts.length > 0 && (
+            <div>
+              <div
+                style={{
+                  fontSize: '0.75rem',
+                  fontFamily: 'monospace',
+                  letterSpacing: '0.2em',
+                  color: 'rgba(255,255,255,0.4)',
+                  marginBottom: '1.25rem',
+                }}
+              >
+                [ {b.relatedTitle} ]
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+                {otherPosts.map((rPost) => {
+                  const rTitle = (currentLang === 'tr' ? rPost.title_tr : rPost.title_en) || rPost.title_tr;
+                  const rExcerpt = (currentLang === 'tr' ? rPost.excerpt_tr : rPost.excerpt_en) || '';
+                  return (
+                    <Link
+                      key={rPost.slug}
+                      href={`/${currentLang}/blog/${rPost.slug}`}
+                      style={{
+                        display: 'block',
+                        textDecoration: 'none',
+                        padding: '1.25rem',
+                        background: 'rgba(255,255,255,0.02)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        borderRadius: '4px',
+                        transition: 'border-color 0.2s ease',
+                      }}
+                      data-cursor="expand"
+                    >
+                      <h3 style={{ fontSize: '1rem', fontWeight: 500, color: '#fff', marginBottom: '0.5rem' }}>
+                        {rTitle}
+                      </h3>
+                      {rExcerpt && (
+                        <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', margin: 0, lineHeight: 1.5 }}>
+                          {rExcerpt.slice(0, 100)}...
+                        </p>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
       <Footer lang={currentLang} dict={dict} />

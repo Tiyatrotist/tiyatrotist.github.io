@@ -1,5 +1,6 @@
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import AboutTimeline from '@/components/AboutTimeline';
 import { Locale, getDictionary } from '@/dictionaries';
 
 interface AboutPageProps {
@@ -15,7 +16,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
   return (
     <main className="main-container">
       <Header lang={currentLang} dict={dict} />
-      <div className="page-container">
+      <div className="page-container" style={{ maxWidth: '960px' }}>
         <header className="page-header">
           <span className="page-tag">{a.tag}</span>
           <h1 className="page-title">{a.title}</h1>
@@ -31,6 +32,9 @@ export default async function AboutPage({ params }: AboutPageProps) {
             ))}
           </ul>
         </section>
+
+        {/* Vertical Schematic Timeline (Achievements & Journey) */}
+        <AboutTimeline lang={currentLang} />
       </div>
       <Footer lang={currentLang} dict={dict} />
     </main>

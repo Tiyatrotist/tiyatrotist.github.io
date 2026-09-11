@@ -49,14 +49,23 @@ export default function DashboardPage() {
       const pubProj = allProjects.filter((p: { published: boolean }) => p.published).length;
       const draftProj = allProjects.filter((p: { published: boolean }) => !p.published).length;
 
-      // Fetch blog posts
-      const { data: posts } = await supabase
-        .from('blog_posts')
-        .select('id, published');
+      // Fetch blog posts safely
+      let pubPosts = 0;
+      let draftPosts = 0;
+      try {
+        const { data: posts, error: postErr } = await supabase
+          .from('blog_posts')
+          .select('id, published');
 
-      const allPosts = posts || [];
-      const pubPosts = allPosts.filter((p: { published: boolean }) => p.published).length;
-      const draftPosts = allPosts.filter((p: { published: boolean }) => !p.published).length;
+        if (!postErr && posts) {
+          pubPosts = posts.filter((p: { published: boolean }) => p.published).length;
+          draftPosts = posts.filter((p: { published: boolean }) => !p.published).length;
+        } else if (postErr) {
+          console.debug('[admin/dashboard] blog_posts notice:', postErr.message);
+        }
+      } catch (e) {
+        console.debug('[admin/dashboard] blog_posts fetch exception:', e);
+      }
 
       // Fetch releases
       const { data: releases } = await supabase
