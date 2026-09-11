@@ -192,7 +192,7 @@ export default function ContactPage() {
               value={form.url}
               onChange={(v) => setForm((p) => ({ ...p, url: v }))}
               required
-              placeholder="https://github.com/..."
+              placeholder="https://github.com/Tiyatrotist"
             />
           </div>
 

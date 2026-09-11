@@ -14,10 +14,10 @@ interface FooterProps {
 }
 
 const EXTERNAL_LINKS = [
-  { label: 'GitHub', url: 'https://github.com' },
-  { label: 'X', url: 'https://x.com' },
-  { label: 'Instagram', url: 'https://instagram.com' },
-  { label: 'YouTube', url: 'https://youtube.com' },
+  { label: 'GitHub', url: 'https://github.com/Tiyatrotist' },
+  { label: 'X', url: 'https://x.com/Tiyatrotist' },
+  { label: 'Instagram', url: 'https://instagram.com/Tiyatrotist' },
+  { label: 'YouTube', url: 'https://youtube.com/@Tiyatrotist' },
 ];
 
 export default function Footer({ lang, dict }: FooterProps) {

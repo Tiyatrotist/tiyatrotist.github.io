@@ -25,7 +25,7 @@ export default function BookOSHero({ dict }: BookOSHeroProps) {
           <span>↓</span> {b.downloadBtn}
         </a>
         <a
-          href="https://github.com"
+          href="https://github.com/Tiyatrotist"
           target="_blank"
           rel="noopener noreferrer"
           className="bookos-btn bookos-btn--secondary"

@@ -67,7 +67,7 @@ export default function BookOSDownload({ dict }: BookOSDownloadProps) {
           </button>
 
           <a
-            href="https://github.com"
+            href="https://github.com/Tiyatrotist"
             target="_blank"
             rel="noopener noreferrer"
             className="bookos-btn bookos-btn--secondary"

@@ -28,7 +28,7 @@ export default function BookOSFooter({ lang, dict }: BookOSFooterProps) {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
           <a
-            href="https://github.com"
+            href="https://github.com/Tiyatrotist"
             target="_blank"
             rel="noopener noreferrer"
             className="bookos-header__link"

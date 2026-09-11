@@ -17,9 +17,10 @@ export default function ContactSection({ section, locale }: SectionProps) {
   const title = locale === 'tr' ? content.title_tr : content.title_en;
   const email = content.contact_email || 'contact@tiyatrotist.com';
   const links = content.contact_links || [
-    { label: 'GitHub', url: 'https://github.com' },
-    { label: 'X / Twitter', url: 'https://x.com' },
-    { label: 'Instagram', url: 'https://instagram.com' },
+    { label: 'GitHub', url: 'https://github.com/Tiyatrotist' },
+    { label: 'X / Twitter', url: 'https://x.com/Tiyatrotist' },
+    { label: 'Instagram', url: 'https://instagram.com/Tiyatrotist' },
+    { label: 'YouTube', url: 'https://youtube.com/@Tiyatrotist' },
   ];
 
   return (

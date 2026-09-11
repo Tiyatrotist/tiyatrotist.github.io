@@ -205,7 +205,7 @@ export const PROJECT_TEMPLATES: Record<ProjectTemplateKey, ProjectTemplateDef> =
           title_tr: 'Doğrudan Terminalden Başlatın',
           title_en: 'Launch Directly From Terminal',
           code_language: 'bash',
-          code_snippet: 'git clone https://github.com/tiyatrotist/bookos.git\ncd bookos\nnpm install\nnpm run start',
+          code_snippet: 'git clone https://github.com/Tiyatrotist/bookos.git\ncd bookos\nnpm install\nnpm run start',
         },
       },
       {
