@@ -95,6 +95,7 @@ export default function TypeFlowProfileDrawer({
   const [typoGlow, setTypoGlow] = useState(true);
   const [capsLockAlert, setCapsLockAlert] = useState(true);
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false); // Audit Fix #14
 
   // Reset to main view whenever drawer opens
   useEffect(() => {
@@ -219,22 +220,21 @@ export default function TypeFlowProfileDrawer({
     }
   };
 
-  // Delete account & Wipe local data
+  // Delete account & Wipe local data (Audit Fix #14: requires 2-step inline confirmation)
   const handleResetData = () => {
-    const confirmText = isTr
-      ? 'DİKKAT: Hesabınız ve tüm yerel ilerlemeniz, klavye ısı haritanız ve elmaslarınız silinsin mi? Bu işlem geri alınamaz.'
-      : 'WARNING: Delete your account, local stats, heatmap, and gems? This action cannot be undone.';
-    if (window.confirm(confirmText)) {
-      try {
-        localStorage.removeItem('tf_user_profile');
-        localStorage.removeItem('tf_theme');
-        localStorage.removeItem('tf_sound');
-        localStorage.removeItem('tf_volume');
-        localStorage.removeItem('tf_local_scores');
-        window.location.reload();
-      } catch (e) {
-        console.error('Reset error:', e);
-      }
+    try {
+      localStorage.removeItem('tf_user_profile');
+      localStorage.removeItem('tf_theme');
+      localStorage.removeItem('tf_sound');
+      localStorage.removeItem('tf_volume');
+      localStorage.removeItem('tf_local_scores');
+      localStorage.removeItem('tf_drill_attempts');
+      localStorage.removeItem('tf_last_energy_time');
+      localStorage.removeItem('tf_week_reset');
+      console.debug('[TypeFlow:Drawer] All local data wiped. Reloading...');
+      window.location.reload();
+    } catch (e) {
+      console.error('[TypeFlow:Drawer] Reset error:', e);
     }
   };
 
@@ -1012,9 +1012,55 @@ export default function TypeFlowProfileDrawer({
                     : 'Permanently deletes all cached stats, streaks, gems, and profile settings from this browser.'}
                 </p>
 
-                <button className="tf-account-delete-btn" onClick={handleResetData}>
-                  🗑️ {isTr ? 'Hesabı ve Tüm Verileri Sil' : 'Delete Account & Reset Data'}
-                </button>
+                {/* Audit Fix #14: Two-step inline confirmation for account deletion */}
+                {!showDeleteConfirm ? (
+                  <button
+                    className="tf-account-delete-btn"
+                    onClick={() => setShowDeleteConfirm(true)}
+                  >
+                    🗑️ {isTr ? 'Hesabı ve Tüm Verileri Sil' : 'Delete Account & Reset Data'}
+                  </button>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem' }}>
+                    <div style={{
+                      background: 'rgba(239, 68, 68, 0.12)',
+                      border: '1.5px solid #ef4444',
+                      borderRadius: '10px',
+                      padding: '0.75rem 1rem',
+                      textAlign: 'center',
+                    }}>
+                      <p style={{ color: '#fca5a5', fontSize: '0.82rem', fontWeight: 700, margin: '0 0 0.25rem 0' }}>
+                        {isTr ? '⚠️ Bu işlem GERİ ALINAMAZ!' : '⚠️ This action is IRREVERSIBLE!'}
+                      </p>
+                      <p style={{ color: '#ef4444', fontSize: '0.75rem', margin: 0, fontFamily: 'var(--tf-font-mono)' }}>
+                        {isTr
+                          ? 'Tüm XP, elmas, seri günleri, ısı haritası ve ayarlar silinecek.'
+                          : 'All XP, gems, streaks, heatmap data, and settings will be permanently deleted.'}
+                      </p>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button
+                        className="tf-account-delete-btn"
+                        style={{ flex: 1, background: '#dc2626', fontWeight: 900 }}
+                        onClick={handleResetData}
+                      >
+                        {isTr ? '🗑️ EVET, SİL' : '🗑️ YES, DELETE'}
+                      </button>
+                      <button
+                        className="tf-account-delete-btn"
+                        style={{
+                          flex: 1,
+                          background: 'var(--tf-surface-elevated)',
+                          color: 'var(--tf-text-secondary)',
+                          border: '1px solid var(--tf-border)',
+                        }}
+                        onClick={() => setShowDeleteConfirm(false)}
+                      >
+                        {isTr ? '← Vazgeç' : '← Cancel'}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

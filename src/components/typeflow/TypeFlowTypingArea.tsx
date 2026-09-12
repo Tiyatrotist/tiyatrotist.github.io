@@ -316,6 +316,16 @@ export default function TypeFlowTypingArea({
         </div>
       )}
 
+      {/* Audit Fix #11: Word-Level Lesson Progress Bar */}
+      {mode === 'lesson' && words.length > 0 && (
+        <div className="tf-lesson-progress-bar-wrapper">
+          <div
+            className="tf-lesson-progress-bar-fill"
+            style={{ width: `${Math.min(100, (currentWordIndex / words.length) * 100)}%` }}
+          />
+        </div>
+      )}
+
       {/* 2. Upper Reading Card (Word Display Box) */}
       <div className="tf-reading-card">
         <div ref={wordsScrollRef} className="tf-words-scroll">

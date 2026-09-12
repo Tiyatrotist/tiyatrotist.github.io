@@ -143,6 +143,10 @@ export default function TypeFlowHeader({
             className="tf-duo-pill pill-gems"
             title={isTr ? `${profile.gems || 0} Elmas` : `${profile.gems || 0} Gems`}
             onClick={() => onTabChange('shop')}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTabChange('shop'); } }}
+            role="button"
+            tabIndex={0}
+            aria-label={isTr ? `${profile.gems || 0} Elmas — Mağazaya git` : `${profile.gems || 0} Gems — Go to shop`}
             style={{ cursor: 'pointer' }}
           >
             <span>💎</span>
@@ -167,10 +171,40 @@ export default function TypeFlowHeader({
                 if (onOpenSuperModal) onOpenSuperModal();
               }
             }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (profile.isPremium) { if (onOpenSuperModal) onOpenSuperModal(); }
+                else if ((profile.energy ?? profile.hearts ?? 5) <= 1) { if (onOpenAdModal) onOpenAdModal(); else onTabChange('shop'); }
+                else { if (onOpenSuperModal) onOpenSuperModal(); }
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            aria-label={isTr ? 'Odak Enerjisi' : 'Focus Energy'}
             style={{ cursor: 'pointer' }}
           >
             <span>🔋</span>
             <span>{profile.isPremium ? '♾️' : (profile.energy ?? profile.hearts ?? 5)}</span>
+          </div>
+
+          {/* Audit Fix #9: Daily Goal Progress Pill */}
+          <div
+            className={`tf-daily-goal-pill ${profile.dailyTestsCompleted >= profile.dailyGoal ? 'goal-complete' : ''}`}
+            title={
+              isTr
+                ? `Günlük Hedef: ${profile.dailyTestsCompleted}/${profile.dailyGoal} test`
+                : `Daily Goal: ${profile.dailyTestsCompleted}/${profile.dailyGoal} tests`
+            }
+          >
+            <span>🎯</span>
+            <span>{profile.dailyTestsCompleted}/{profile.dailyGoal}</span>
+            <div className="tf-daily-goal-bar">
+              <div
+                className="tf-daily-goal-bar-fill"
+                style={{ width: `${Math.min(100, (profile.dailyTestsCompleted / Math.max(1, profile.dailyGoal)) * 100)}%` }}
+              />
+            </div>
           </div>
 
           {/* Super TypeFlow SaaS Pill / Button */}

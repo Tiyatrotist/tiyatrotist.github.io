@@ -112,6 +112,14 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
   const [currentAdIndex, setCurrentAdIndex] = useState<number>(0);
   const [activeLessonStage, setActiveLessonStage] = useState<number>(1);
 
+  // ─── Audit Fix States: Toast, Onboarding, Level-Up ──────────────────────────
+  const [toasts, setToasts] = useState<{ id: number; message: string; type: 'success' | 'info' | 'warning' | 'error' }[]>([]);
+  const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
+  const [showLevelUp, setShowLevelUp] = useState<{ from: number; to: number } | null>(null);
+  const [isHydrated, setIsHydrated] = useState<boolean>(false);
+  const [activeDrillConfig, setActiveDrillConfig] = useState<PracticeDrillConfig | null>(null);
+  const toastIdRef = useRef<number>(0);
+
   // ─── User Preferences State ────────────────────────────────────────────────
   const [theme, setTheme] = useState<TypeFlowTheme>('carbon');
   const [sound, setSound] = useState<SoundType>('thock');
@@ -177,6 +185,16 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
   const totalIncorrectCharsRef = useRef<number>(0);
 
   // ─── 1. Load Stored Preferences & Profile on Mount ──────────────────────────
+  // ─── Toast System (Audit Fix #8) ──────────────────────────────────────────
+  const addToast = useCallback((message: string, type: 'success' | 'info' | 'warning' | 'error' = 'success') => {
+    const id = ++toastIdRef.current;
+    setToasts((prev) => [...prev.slice(-4), { id, message, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3500);
+    console.debug('[TypeFlow:Toast]', type, message);
+  }, []);
+
   useEffect(() => {
     try {
       const savedTheme = localStorage.getItem('tf_theme') as TypeFlowTheme | null;
@@ -215,6 +233,49 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
         parsed.claimedQuests = parsed.claimedQuests || [];
         parsed.unlockedAchievements = parsed.unlockedAchievements || ['first-step'];
 
+        // ─── Audit Fix #6: Time-Based Energy Recharge (3 hours = +1 energy) ────
+        if (!parsed.isPremium && (parsed.energy ?? 5) < 5) {
+          const lastRechargeStr = localStorage.getItem('tf_last_energy_time');
+          const lastRecharge = lastRechargeStr ? parseInt(lastRechargeStr, 10) : Date.now();
+          const hoursSince = (Date.now() - lastRecharge) / (1000 * 60 * 60);
+          const rechargeUnits = Math.floor(hoursSince / 3);
+          if (rechargeUnits > 0) {
+            const oldEnergy = parsed.energy ?? 0;
+            parsed.energy = Math.min(5, oldEnergy + rechargeUnits);
+            parsed.hearts = parsed.energy;
+            localStorage.setItem('tf_last_energy_time', String(Date.now()));
+            console.debug('[TypeFlow:Energy] Passive recharge:', { oldEnergy, recharged: rechargeUnits, newEnergy: parsed.energy });
+          }
+        }
+
+        // ─── Audit Fix #7: Weekly League XP Reset (Monday 00:00) ────
+        const now = new Date();
+        const lastWeekResetStr = localStorage.getItem('tf_week_reset');
+        const lastWeekReset = lastWeekResetStr ? new Date(lastWeekResetStr) : new Date(0);
+        const isSameWeek = (a: Date, b: Date): boolean => {
+          const getWeekStart = (d: Date) => {
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            return new Date(d.getFullYear(), d.getMonth(), diff).toISOString().split('T')[0];
+          };
+          return getWeekStart(a) === getWeekStart(b);
+        };
+        if (!isSameWeek(now, lastWeekReset)) {
+          // Determine league promotion/demotion based on weeklyXp
+          const tiers: Array<'bronze' | 'silver' | 'gold' | 'sapphire' | 'diamond'> = ['bronze', 'silver', 'gold', 'sapphire', 'diamond'];
+          const currentTierIdx = tiers.indexOf(parsed.league || 'bronze');
+          if ((parsed.weeklyXp || 0) >= 500 && currentTierIdx < tiers.length - 1) {
+            parsed.league = tiers[currentTierIdx + 1];
+            console.debug('[TypeFlow:League] Promoted to:', parsed.league);
+          } else if ((parsed.weeklyXp || 0) < 100 && currentTierIdx > 0) {
+            parsed.league = tiers[currentTierIdx - 1];
+            console.debug('[TypeFlow:League] Demoted to:', parsed.league);
+          }
+          parsed.weeklyXp = 0;
+          localStorage.setItem('tf_week_reset', now.toISOString());
+          console.debug('[TypeFlow:League] Weekly XP reset. New league:', parsed.league);
+        }
+
         // Check streak maintenance
         const today = new Date().toISOString().split('T')[0];
         const lastDate = parsed.lastActiveDate || today;
@@ -240,6 +301,7 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
         }
 
         setProfile(parsed);
+        try { localStorage.setItem('tf_user_profile', JSON.stringify(parsed)); } catch {}
       } else {
         const initialGuest: UserProfile = {
           ...DEFAULT_PROFILE,
@@ -248,14 +310,17 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
           lastActiveDate: new Date().toISOString().split('T')[0],
         };
         setProfile(initialGuest);
+        setShowOnboarding(true); // Audit Fix #4: Show onboarding for first-time users
         try {
           localStorage.setItem('tf_user_profile', JSON.stringify(initialGuest));
         } catch {}
       }
 
+      setIsHydrated(true); // Audit Fix #5: Mark hydration complete
       console.debug('[TypeFlow:Microsite] Preferences & Duolingo SaaS profile initialized');
     } catch (e) {
       console.warn('[TypeFlow:Microsite] Error loading state from localStorage:', e);
+      setIsHydrated(true);
     }
   }, []);
 
@@ -282,13 +347,14 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
     router.replace(`/${newLang}/projects/typeflow`);
   };
 
-  const handleProfileUpdate = (updated: UserProfile) => {
+  // Audit Fix #16: Memoize handleProfileUpdate to prevent unnecessary re-renders
+  const handleProfileUpdate = useCallback((updated: UserProfile) => {
     setProfile(updated);
     try {
       localStorage.setItem('tf_user_profile', JSON.stringify(updated));
     } catch {}
     console.debug('[TypeFlow:Microsite] User profile saved:', updated.username);
-  };
+  }, []);
 
   // ─── 2. Word & Dynamic Story Preparation ───────────────────────────────────
   const buildWordStates = (rawWords: string[]): WordState[] => {
@@ -528,10 +594,21 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
 
       if (passed) {
         if (activeLessonStage < (activeLesson.stages?.length || 3)) {
-          // Intermediate stage completed!
+          // Audit Fix #2: Intermediate stage completed — auto-advance to next stage
           stars = 1;
           earnedXp = Math.round((activeLesson.xpReward / 3) * (profile.isPremium ? 2 : 1));
           earnedGems += 10;
+          // Schedule auto-advance to next stage after result is shown briefly
+          const nextStage = activeLessonStage + 1;
+          setTimeout(() => {
+            addToast(
+              lang === 'tr'
+                ? `✅ Aşama ${activeLessonStage} tamamlandı! Aşama ${nextStage}'e geçiliyor...`
+                : `✅ Stage ${activeLessonStage} complete! Advancing to Stage ${nextStage}...`,
+              'success'
+            );
+            handleStartLesson(activeLesson!, nextStage);
+          }, 2500);
         } else {
           // Final stage 3 passed: award mastery stars!
           stars = 1;
@@ -549,6 +626,8 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
             const updated = { ...prev, energy: newEnergy, hearts: newEnergy };
             try { localStorage.setItem('tf_user_profile', JSON.stringify(updated)); } catch {}
             console.debug('[TypeFlow:Energy] Deducted 1 Focus Battery. Remaining:', newEnergy);
+            // Record energy deduction time for passive recharge
+            try { localStorage.setItem('tf_last_energy_time', String(Date.now())); } catch {}
             if (newEnergy === 0) {
               setIsAdBreakModalOpen(true);
             }
@@ -557,6 +636,12 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
         }
       }
     } else {
+      // Audit Fix #3: Add drill-specific rewards from activeDrillConfig
+      if (activeDrillConfig) {
+        earnedXp += (activeDrillConfig.xpReward || 0);
+        earnedGems += (activeDrillConfig.gemReward || 0);
+        console.debug('[TypeFlow:DrillReward] Drill bonus applied:', { xp: activeDrillConfig.xpReward, gems: activeDrillConfig.gemReward });
+      }
       if (profile.isPremium) {
         earnedXp *= 2; // Super TypeFlow 2X XP boost on all tests
       }
@@ -582,6 +667,17 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
     const newLevel = newXp >= xpForNextLevel ? profile.level + 1 : profile.level;
     const newGems = (profile.gems || 0) + earnedGems;
     const newWeeklyXp = (profile.weeklyXp || 0) + earnedXp;
+
+    // Audit Fix #10: Level-Up Celebration
+    if (newLevel > profile.level) {
+      setShowLevelUp({ from: profile.level, to: newLevel });
+      addToast(
+        lang === 'tr'
+          ? `🎉 SEVİYE ATLADIN! Seviye ${newLevel}'e yükseldin!`
+          : `🎉 LEVEL UP! You reached Level ${newLevel}!`,
+        'success'
+      );
+    }
 
     // Record lesson completion when final stage passed
     const newCompletedLessons = { ...(profile.completedLessons || {}) };
@@ -667,6 +763,9 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
     activeLesson,
     activeLessonStage,
     handleProfileUpdate,
+    addToast,
+    lang,
+    activeDrillConfig,
   ]);
 
   // ─── 5. Live Timer & Metric Interval ─────────────────────────────────────────
@@ -1081,6 +1180,9 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
                 lang={lang}
                 profile={profile}
                 onLaunchDrill={(config: PracticeDrillConfig) => {
+                  // Audit Fix #1 & #3: Store drill config, set mode/settings, then
+                  // let initializeTest generate words UNLESS drill provides custom words.
+                  setActiveDrillConfig(config); // Save for reward tracking in finishTest
                   setMode(config.mode);
                   if (config.timeLimit) {
                     setWordModeType('time');
@@ -1095,17 +1197,41 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
                   if (config.includePunctuation !== undefined) {
                     setIncludePunctuation(config.includePunctuation);
                   }
+                  setPracticeSubView('typing');
+                  // If drill provides custom words (e.g. thematic), use them directly
+                  // instead of calling initializeTest which would overwrite them
                   if (config.generatedWords && config.generatedWords.length > 0) {
-                    setWords(buildWordStates(config.generatedWords));
                     setActiveSnippetTitle(config.title);
                     setActiveSnippetSub(
                       isTr
                         ? `⚡ Antrenman Arenası: +${config.xpReward} XP, +${config.gemReward} 💎`
                         : `⚡ Training Dojo: +${config.xpReward} XP, +${config.gemReward} 💎`
                     );
+                    setWords(buildWordStates(config.generatedWords));
+                    setCurrentWordIndex(0);
+                    setCurrentInput('');
+                    setIsMismatch(false);
+                    setCorrectWordsCount(0);
+                    setIncorrectWordsCount(0);
+                    setTestStatus('idle');
+                    setStartTime(null);
+                    setElapsedSeconds(0);
+                    setTimeLeft(config.timeLimit || 60);
+                    setLiveWpm(0);
+                    setLiveAccuracy(100);
+                    setLiveStreak(0);
+                    setLessonMistakes(0);
+                    setIsLessonFailed(false);
+                    setHistory([]);
+                    setTestResult(null);
+                    sessionKeyStats.current = {};
+                    currentSecondErrors.current = 0;
+                    totalCorrectCharsRef.current = 0;
+                    totalIncorrectCharsRef.current = 0;
+                  } else {
+                    // No custom words — let initializeTest generate them
+                    initializeTest();
                   }
-                  setPracticeSubView('typing');
-                  initializeTest();
                 }}
                 onOpenAdModal={handleTriggerAdBreak}
               />
@@ -1413,10 +1539,94 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
         lang={lang}
       />
 
-      {/* 9. SaaS Footer */}
+      {/* 13. Toast Notification System (Audit Fix #8) */}
+      {toasts.length > 0 && (
+        <div className="tf-toast-container" aria-live="polite">
+          {toasts.map((toast) => (
+            <div key={toast.id} className={`tf-toast tf-toast-${toast.type}`}>
+              <span>{toast.message}</span>
+              <button
+                className="tf-toast-close"
+                onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
+                aria-label="Close notification"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 14. Onboarding Modal (Audit Fix #4) */}
+      {showOnboarding && (
+        <div className="tf-onboarding-overlay" onClick={() => setShowOnboarding(false)}>
+          <div className="tf-onboarding-card" onClick={(e) => e.stopPropagation()}>
+            <div style={{ fontSize: '4rem', marginBottom: '1rem', textAlign: 'center' }}>⌨️</div>
+            <h2 style={{ fontSize: '1.8rem', fontWeight: 900, margin: '0 0 0.5rem 0', textAlign: 'center', background: 'linear-gradient(135deg, var(--tf-accent), #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              {isTr ? "TypeFlow'a Hoş Geldin!" : 'Welcome to TypeFlow!'}
+            </h2>
+            <p style={{ color: 'var(--tf-text-secondary)', textAlign: 'center', margin: '0 0 1.5rem 0', lineHeight: 1.6 }}>
+              {isTr
+                ? 'Daktilo ustası olmak için Akademi\'den başla! 3 aşamalı derslerle kas hafızanı geliştir, elmas kazan, liglerde yarış.'
+                : 'Start from the Academy to become a typing master! Progress through 3-stage lessons, earn gems, and compete in leagues.'}
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button
+                className="tf-btn-primary tf-btn-pushable"
+                style={{ padding: '0.75rem 2rem', fontSize: '1rem' }}
+                onClick={() => {
+                  setShowOnboarding(false);
+                  setActiveTab('path');
+                }}
+              >
+                🗺️ {isTr ? 'Akademiye Başla' : 'Start Academy'}
+              </button>
+              <button
+                className="tf-ctrl-btn tf-btn-pushable"
+                style={{ padding: '0.75rem 1.5rem' }}
+                onClick={() => {
+                  setShowOnboarding(false);
+                  setActiveTab('test');
+                }}
+              >
+                ⚡ {isTr ? 'Serbest Pratik' : 'Free Practice'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 15. Level-Up Celebration (Audit Fix #10) */}
+      {showLevelUp && (
+        <div className="tf-levelup-overlay" onClick={() => setShowLevelUp(null)}>
+          <div className="tf-levelup-card" onClick={(e) => e.stopPropagation()}>
+            <div className="tf-levelup-stars">🌟✨🌟</div>
+            <h2 className="tf-levelup-title">
+              {isTr ? 'SEVİYE ATLADIN!' : 'LEVEL UP!'}
+            </h2>
+            <div className="tf-levelup-number">
+              <span className="tf-levelup-from">L{showLevelUp.from}</span>
+              <span className="tf-levelup-arrow">→</span>
+              <span className="tf-levelup-to">L{showLevelUp.to}</span>
+            </div>
+            <p style={{ color: 'var(--tf-text-secondary)', marginTop: '0.5rem' }}>
+              {isTr ? 'Yeni seviye, yeni hedefler! Pratik yapmaya devam et.' : 'New level, new goals! Keep practicing.'}
+            </p>
+            <button
+              className="tf-btn-primary tf-btn-pushable"
+              style={{ marginTop: '1.25rem', padding: '0.75rem 2rem' }}
+              onClick={() => setShowLevelUp(null)}
+            >
+              {isTr ? '🎯 Devam Et' : '🎯 Continue'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 16. SaaS Footer (Audit Fix #15: cleaned up text) */}
       <footer className="tf-footer">
         <div>
-          <span>TIYATROTIST LABS // TYPEFLOW v2.0 DUOLINGO SAAS</span>
+          <span>TIYATROTIST LABS // TYPEFLOW v2.0</span>
         </div>
         <div className="tf-footer-links">
           <button
@@ -1449,6 +1659,30 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
           >
             {isTr ? 'Projeler' : 'Projects'}
           </button>
+        </div>
+        {/* Audit Fix #13: Keyboard Shortcuts Guide */}
+        <div style={{
+          display: 'flex',
+          gap: '0.75rem',
+          justifyContent: 'center',
+          flexWrap: 'wrap',
+          marginTop: '0.5rem',
+          opacity: 0.5,
+          fontSize: '0.68rem',
+          fontFamily: 'var(--tf-font-mono)',
+          color: 'var(--tf-text-muted)',
+        }}>
+          <span title={isTr ? 'Yeniden başlat' : 'Restart test'}>
+            <kbd style={{ background: 'rgba(255,255,255,0.08)', padding: '1px 5px', borderRadius: '3px', fontSize: '0.65rem' }}>Tab</kbd> / <kbd style={{ background: 'rgba(255,255,255,0.08)', padding: '1px 5px', borderRadius: '3px', fontSize: '0.65rem' }}>Esc</kbd> {isTr ? 'Yeniden Başlat' : 'Restart'}
+          </span>
+          <span>·</span>
+          <span title={isTr ? 'Kelime gönder' : 'Submit word'}>
+            <kbd style={{ background: 'rgba(255,255,255,0.08)', padding: '1px 5px', borderRadius: '3px', fontSize: '0.65rem' }}>Space</kbd> {isTr ? 'Kelime Gönder' : 'Submit Word'}
+          </span>
+          <span>·</span>
+          <span title={isTr ? 'Menü/drawer kapat' : 'Close menu/drawer'}>
+            <kbd style={{ background: 'rgba(255,255,255,0.08)', padding: '1px 5px', borderRadius: '3px', fontSize: '0.65rem' }}>Esc</kbd> {isTr ? 'Menü Kapat' : 'Close Menu'}
+          </span>
         </div>
       </footer>
     </div>
