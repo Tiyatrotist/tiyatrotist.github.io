@@ -50,7 +50,7 @@ import { TypeFlowSuperModal } from './TypeFlowSuperModal';
 import { TypeFlowAdBreakModal } from './TypeFlowAdBreakModal';
 import { TypeFlowPracticeHub, PracticeDrillConfig } from './TypeFlowPracticeHub';
 import { TypeFlowGoogleAd } from './TypeFlowGoogleAd';
-import TypeFlowCheckoutPage, { CheckoutPackage, PaymentDetails } from './TypeFlowCheckoutPage';
+import TypeFlowCheckoutPage, { CheckoutPackage, PaymentDetails, CHECKOUT_PACKAGES } from './TypeFlowCheckoutPage';
 import { getTechAds, getUnitsForLang } from './duolingoData';
 import '@/styles/typeflow.css';
 
@@ -556,6 +556,30 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
     }
     setActiveTab('test');
   };
+
+  // Check return from Stripe Checkout / Hosted Gateway Callback
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paymentStatus = urlParams.get('payment_status');
+      const sessionId = urlParams.get('session_id');
+      const pkgId = urlParams.get('package_id') || 'super_yearly';
+
+      if (paymentStatus === 'success' || sessionId) {
+        console.debug('[TypeFlow:Payment] Detected return from Stripe Checkout session:', sessionId, 'package:', pkgId);
+        const matchedPkg = CHECKOUT_PACKAGES.find((p) => p.id === pkgId) || CHECKOUT_PACKAGES[1];
+        handleCheckoutPaymentSuccess(matchedPkg, {
+          brand: 'stripe',
+          last4: sessionId ? sessionId.slice(-4) : 'live',
+        });
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
+    } catch (err) {
+      console.error('[TypeFlow:Payment] Error parsing payment callback params:', err);
+    }
+  }, []);
 
   const handleCancelSubscription = () => {
     setProfile((prev) => {

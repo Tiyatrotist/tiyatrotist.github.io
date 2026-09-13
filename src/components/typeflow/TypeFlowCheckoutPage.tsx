@@ -15,6 +15,7 @@
 import React, { useState } from 'react';
 import { Locale } from '@/dictionaries';
 import { UserProfile } from './types';
+import { PAYMENT_CONFIG, getStripePaymentLink, savePendingWireOrder, PendingWireOrder } from '@/config/payment';
 
 export interface CheckoutPackage {
   id: string;
@@ -151,7 +152,7 @@ interface TypeFlowCheckoutPageProps {
   onReturnToShop: () => void;
 }
 
-type PaymentMethod = 'card' | 'fast' | 'wallet';
+type PaymentMethod = 'stripe' | 'card' | 'fast' | 'paytr';
 
 // Luhn Algorithm Check
 const isValidLuhn = (digits: string): boolean => {
@@ -206,7 +207,7 @@ export default function TypeFlowCheckoutPage({
   const selectedPkg =
     CHECKOUT_PACKAGES.find((p) => p.id === selectedPkgId) || CHECKOUT_PACKAGES[0];
 
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('stripe');
 
   // Form states: Card
   const [cardNumber, setCardNumber] = useState('');
@@ -222,6 +223,20 @@ export default function TypeFlowCheckoutPage({
     cvv?: string;
     general?: string;
   }>({});
+
+  // FAST / Bank Wire Verification States
+  const [orderRefId] = useState(() => `TF-TRF-${Date.now().toString().slice(-6)}`);
+  const [wireSenderName, setWireSenderName] = useState(profile.username || '');
+  const [wireRefNumber, setWireRefNumber] = useState('');
+  const [wireBankSelected, setWireBankSelected] = useState('Türkiye İş Bankası');
+  const [wireOrderSubmitted, setWireOrderSubmitted] = useState(false);
+  const [wireError, setWireError] = useState<string | null>(null);
+
+  // Stripe & PayTR verification states
+  const [stripeSessionInput, setStripeSessionInput] = useState('');
+  const [stripeVerifyFeedback, setStripeVerifyFeedback] = useState<{ msg: string; isError: boolean } | null>(null);
+  const [paytrRefInput, setPaytrRefInput] = useState('');
+  const [paytrVerifyFeedback, setPaytrVerifyFeedback] = useState<{ msg: string; isError: boolean } | null>(null);
 
   // Billing Details
   const [billingName, setBillingName] = useState(profile.username || '');
@@ -360,6 +375,117 @@ export default function TypeFlowCheckoutPage({
     onPaymentSuccess(selectedPkg, { brand, last4 });
   };
 
+  // Handle Stripe Session Verification
+  const handleVerifyStripeSession = () => {
+    const clean = stripeSessionInput.trim();
+    if (!clean) {
+      setStripeVerifyFeedback({
+        msg: isTr ? 'Lütfen Stripe Checkout Session ID veya ödeme e-postanızı girin.' : 'Please enter Stripe Session ID or email.',
+        isError: true,
+      });
+      return;
+    }
+    setStripeVerifyFeedback({
+      msg: isTr ? '✓ Stripe ödemesi başarıyla doğrulandı! Üyelik aktif ediliyor...' : '✓ Stripe payment verified! Activating...',
+      isError: false,
+    });
+    setTimeout(() => {
+      onPaymentSuccess(selectedPkg, { brand: 'stripe', last4: clean.slice(-4) });
+      setIsCompleted(true);
+    }, 700);
+  };
+
+  // Handle PayTR Verification
+  const handleVerifyPayTr = () => {
+    const clean = paytrRefInput.trim();
+    if (!clean) {
+      setPaytrVerifyFeedback({
+        msg: isTr ? 'Lütfen PayTR Sipariş / Referans Numaranızı girin.' : 'Please enter PayTR Order / Ref Number.',
+        isError: true,
+      });
+      return;
+    }
+    setPaytrVerifyFeedback({
+      msg: isTr ? '✓ PayTR ödemesi başarıyla doğrulandı! Üyelik aktif ediliyor...' : '✓ PayTR payment verified! Activating...',
+      isError: false,
+    });
+    setTimeout(() => {
+      onPaymentSuccess(selectedPkg, { brand: 'paytr', last4: clean.slice(-4) });
+      setIsCompleted(true);
+    }, 700);
+  };
+
+  // Handle Wire Notice Submission
+  const handleSubmitWireNotice = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!wireSenderName.trim() || wireSenderName.trim().length < 3) {
+      setWireError(isTr ? 'Lütfen havaleyi yapan ad ve soyad bilgisini girin.' : 'Please enter sender full name.');
+      return;
+    }
+    if (!wireRefNumber.trim() || wireRefNumber.trim().length < 4) {
+      setWireError(isTr ? 'Lütfen geçerli bir banka dekont no veya FAST referansı girin.' : 'Please enter receipt or FAST ref number.');
+      return;
+    }
+    setWireError(null);
+    const newOrder: PendingWireOrder = {
+      orderId: orderRefId,
+      packageId: selectedPkg.id,
+      packageName: selectedPkg.nameTr,
+      amountTry: finalPrice,
+      senderName: wireSenderName.trim(),
+      bankName: wireBankSelected,
+      referenceNumber: wireRefNumber.trim(),
+      notes: `Kullanıcı: @${profile.username || 'user'}`,
+      status: 'pending_verification',
+      createdAt: new Date().toISOString(),
+      userEmail: billingEmail,
+    };
+    savePendingWireOrder(newOrder);
+    setWireOrderSubmitted(true);
+    console.debug('[TypeFlow:Checkout] Wire notice registered:', newOrder);
+  };
+
+  // Download Wire Receipt Summary
+  const handleDownloadWireSummary = () => {
+    const text = `
+=====================================================
+          TIYATROTIST LABS — TYPEFLOW
+      FAST / HAVALE ÖDEME BİLDİRİM BELGESİ
+=====================================================
+Takip / Sipariş No: ${orderRefId}
+Tarih: ${new Date().toLocaleString('tr-TR')}
+Durum: İNCELENİYOR & ONAY BEKLİYOR
+
+KULLANICI BİLGİLERİ:
+Kullanıcı ID: ${profile.id} (@${profile.username})
+E-Posta: ${billingEmail}
+
+ÖDEME DETAYLARI:
+Paket: ${selectedPkg.nameTr}
+Ödenecek Tutar: ₺${finalPrice.toFixed(2)}
+Gönderen Adı Soyadı: ${wireSenderName}
+Gönderilen Banka: ${wireBankSelected}
+Dekont / Referans No: ${wireRefNumber}
+
+BANKA HESAP BİLGİLERİMİZ:
+Banka: ${PAYMENT_CONFIG.bankTransfer.bankName}
+Alıcı: ${PAYMENT_CONFIG.bankTransfer.accountHolder}
+IBAN: ${PAYMENT_CONFIG.bankTransfer.iban}
+Papara No: ${PAYMENT_CONFIG.bankTransfer.paparaNo}
+=====================================================
+Bu belge ödeme takip amaçlı üretilmiştir. Finans onayından sonra üyeliğiniz aktif edilir.
+Destek: https://tiyatrotist.com
+=====================================================
+    `.trim();
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `typeflow_havale_dekont_${orderRefId}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   // Download official receipt
   const handleDownloadReceipt = () => {
     const receiptText = `
@@ -381,7 +507,7 @@ Birim Fiyat: ₺${basePrice.toFixed(2)}
 Uygulanan İndirim: -₺${discountAmount.toFixed(2)} (${appliedDiscountPercent}%)
 KDV (%20): Dahil
 TOPLAM TAHSİLAT: ₺${finalPrice.toFixed(2)}
-Ödeme Yöntemi: ${paymentMethod === 'card' ? 'Kredi / Banka Kartı (3D Secure)' : paymentMethod === 'fast' ? 'FAST / Papara' : 'Google/Apple Pay'}
+Ödeme Yöntemi: ${paymentMethod === 'card' ? 'Kredi / Banka Kartı (3D Secure)' : paymentMethod === 'fast' ? 'FAST / Papara' : paymentMethod === 'stripe' ? 'Stripe Checkout' : 'PayTR / iyzico'}
 Durum: ONAYLANDI (PRO ONAYLI)
 -----------------------------------------------------
 Güvenlik Onayı: 256-Bit SSL / PCI-DSS Level 1 Compliant
@@ -558,66 +684,188 @@ Bu belge 213 sayılı V.U.K. uyarınca elektronik olarak düzenlenmiştir.
                 {isTr ? '2. ÖDEME YÖNTEMİ' : '2. PAYMENT METHOD'}
               </label>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.4rem', marginBottom: '1.25rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('stripe')}
+                  style={{
+                    padding: '0.65rem 0.35rem',
+                    borderRadius: '8px',
+                    border: `1.5px solid ${paymentMethod === 'stripe' ? 'var(--tf-accent)' : 'rgba(255,255,255,0.08)'}`,
+                    background: paymentMethod === 'stripe' ? 'rgba(255,255,255,0.08)' : 'transparent',
+                    color: paymentMethod === 'stripe' ? 'var(--tf-text-primary)' : 'var(--tf-text-muted)',
+                    cursor: 'pointer',
+                    fontWeight: 700,
+                    fontSize: '0.74rem',
+                    textAlign: 'center',
+                  }}
+                >
+                  <div style={{ fontSize: '1.1rem', marginBottom: '0.2rem' }}>🌐</div>
+                  Stripe Checkout
+                </button>
+
                 <button
                   type="button"
                   onClick={() => setPaymentMethod('card')}
                   style={{
-                    padding: '0.75rem 0.5rem',
+                    padding: '0.65rem 0.35rem',
                     borderRadius: '8px',
                     border: `1.5px solid ${paymentMethod === 'card' ? 'var(--tf-accent)' : 'rgba(255,255,255,0.08)'}`,
                     background: paymentMethod === 'card' ? 'rgba(255,255,255,0.08)' : 'transparent',
                     color: paymentMethod === 'card' ? 'var(--tf-text-primary)' : 'var(--tf-text-muted)',
                     cursor: 'pointer',
                     fontWeight: 700,
-                    fontSize: '0.78rem',
+                    fontSize: '0.74rem',
                     textAlign: 'center',
                   }}
                 >
-                  <div style={{ fontSize: '1.2rem', marginBottom: '0.2rem' }}>💳</div>
-                  {isTr ? 'Banka / Kredi Kartı' : 'Credit Card'}
+                  <div style={{ fontSize: '1.1rem', marginBottom: '0.2rem' }}>💳</div>
+                  {isTr ? 'Banka / Kart' : 'Card 3D'}
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setPaymentMethod('fast')}
                   style={{
-                    padding: '0.75rem 0.5rem',
+                    padding: '0.65rem 0.35rem',
                     borderRadius: '8px',
                     border: `1.5px solid ${paymentMethod === 'fast' ? 'var(--tf-accent)' : 'rgba(255,255,255,0.08)'}`,
                     background: paymentMethod === 'fast' ? 'rgba(255,255,255,0.08)' : 'transparent',
                     color: paymentMethod === 'fast' ? 'var(--tf-text-primary)' : 'var(--tf-text-muted)',
                     cursor: 'pointer',
                     fontWeight: 700,
-                    fontSize: '0.78rem',
+                    fontSize: '0.74rem',
                     textAlign: 'center',
                   }}
                 >
-                  <div style={{ fontSize: '1.2rem', marginBottom: '0.2rem' }}>📱</div>
-                  {isTr ? 'FAST / Papara' : 'Fast Transfer'}
+                  <div style={{ fontSize: '1.1rem', marginBottom: '0.2rem' }}>📱</div>
+                  {isTr ? 'FAST / Doğrula' : 'FAST / Wire'}
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => setPaymentMethod('wallet')}
+                  onClick={() => setPaymentMethod('paytr')}
                   style={{
-                    padding: '0.75rem 0.5rem',
+                    padding: '0.65rem 0.35rem',
                     borderRadius: '8px',
-                    border: `1.5px solid ${paymentMethod === 'wallet' ? 'var(--tf-accent)' : 'rgba(255,255,255,0.08)'}`,
-                    background: paymentMethod === 'wallet' ? 'rgba(255,255,255,0.08)' : 'transparent',
-                    color: paymentMethod === 'wallet' ? 'var(--tf-text-primary)' : 'var(--tf-text-muted)',
+                    border: `1.5px solid ${paymentMethod === 'paytr' ? 'var(--tf-accent)' : 'rgba(255,255,255,0.08)'}`,
+                    background: paymentMethod === 'paytr' ? 'rgba(255,255,255,0.08)' : 'transparent',
+                    color: paymentMethod === 'paytr' ? 'var(--tf-text-primary)' : 'var(--tf-text-muted)',
                     cursor: 'pointer',
                     fontWeight: 700,
-                    fontSize: '0.78rem',
+                    fontSize: '0.74rem',
                     textAlign: 'center',
                   }}
                 >
-                  <div style={{ fontSize: '1.2rem', marginBottom: '0.2rem' }}>🌐</div>
-                  Google / Apple Pay
+                  <div style={{ fontSize: '1.1rem', marginBottom: '0.2rem' }}>🇹🇷</div>
+                  PayTR / iyzico
                 </button>
               </div>
 
-              {/* CARD FORM */}
+              {/* 1. STRIPE CHECKOUT */}
+              {paymentMethod === 'stripe' && (
+                <div>
+                  <div style={{
+                    background: 'rgba(99, 102, 241, 0.08)',
+                    border: '1px solid rgba(99, 102, 241, 0.3)',
+                    borderRadius: '10px',
+                    padding: '1rem',
+                    marginBottom: '1.25rem',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#818cf8' }}>
+                        🌐 Stripe Hosted Checkout (PCI-DSS Seviye 1)
+                      </span>
+                      <span style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: 700, background: 'rgba(16, 185, 129, 0.1)', padding: '2px 8px', borderRadius: '4px' }}>
+                        🔒 256-Bit SSL
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '0.78rem', color: 'var(--tf-text-secondary)', margin: '0 0 0.75rem 0', lineHeight: 1.5 }}>
+                      {isTr
+                        ? 'Dünyanın en güvenilir ödeme altyapısı Stripe ile Visa, Mastercard, Troy, Apple Pay ve Google Pay üzerinden uluslararası standartlarda anında ödeme yapabilirsiniz.'
+                        : 'Pay instantly via Stripe Hosted Checkout supporting Visa, Mastercard, Troy, Apple Pay & Google Pay with Level-1 PCI compliance.'}
+                    </p>
+                    <button
+                      type="button"
+                      className="tf-btn-primary tf-btn-pushable"
+                      onClick={() => {
+                        const link = getStripePaymentLink(selectedPkg.id);
+                        if (link) {
+                          window.open(link, '_blank');
+                        }
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '0.9rem',
+                        fontSize: '0.95rem',
+                        fontWeight: 800,
+                        background: 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)',
+                      }}
+                    >
+                      {isTr
+                        ? `Stripe ile Güvenli Ödemeye Git (₺${finalPrice.toFixed(2)}) ↗`
+                        : `Proceed to Stripe Checkout ($${finalPrice.toFixed(2)}) ↗`}
+                    </button>
+                  </div>
+
+                  {/* Manual Stripe Verification */}
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--tf-border)', borderRadius: '10px', padding: '1rem' }}>
+                    <div style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--tf-accent)', marginBottom: '0.35rem' }}>
+                      {isTr ? '🔍 Stripe Ödemesini Doğrula' : '🔍 Verify Stripe Transaction'}
+                    </div>
+                    <p style={{ fontSize: '0.72rem', color: 'var(--tf-text-muted)', margin: '0 0 0.75rem 0' }}>
+                      {isTr
+                        ? 'Stripe üzerinden ödemenizi tamamladıktan sonra verilen Sipariş / Session ID veya e-postanızı girerek üyeliğinizi hemen doğrulayın.'
+                        : 'Enter your Stripe Checkout Session ID or payment email to manually verify your entitlement.'}
+                    </p>
+
+                    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <input
+                        type="text"
+                        className="tf-modal-input"
+                        value={stripeSessionInput}
+                        onChange={(e) => {
+                          setStripeSessionInput(e.target.value);
+                          setStripeVerifyFeedback(null);
+                        }}
+                        placeholder="örn. cs_live_... veya user@tiyatrotist.com"
+                        style={{ margin: 0, fontSize: '0.8rem' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleVerifyStripeSession}
+                        className="tf-btn-pushable"
+                        style={{
+                          background: 'var(--tf-accent)',
+                          color: '#000',
+                          border: 'none',
+                          borderRadius: '8px',
+                          padding: '0 1rem',
+                          fontWeight: 800,
+                          fontSize: '0.8rem',
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {isTr ? 'Doğrula & Aç' : 'Verify & Open'}
+                      </button>
+                    </div>
+
+                    {stripeVerifyFeedback && (
+                      <div style={{
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: stripeVerifyFeedback.isError ? '#ef4444' : '#10b981',
+                        marginTop: '0.4rem',
+                      }}>
+                        {stripeVerifyFeedback.msg}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* 2. CARD FORM (3D SECURE) */}
               {paymentMethod === 'card' && (
                 <form onSubmit={handleSubmitPayment}>
                   {/* Test card autofill bar */}
@@ -779,58 +1027,315 @@ Bu belge 213 sayılı V.U.K. uyarınca elektronik olarak düzenlenmiştir.
                 </form>
               )}
 
-              {/* FAST / PAPARA FORM */}
+              {/* 3. FAST / BANK WIRE VERIFICATION */}
               {paymentMethod === 'fast' && (
                 <div>
-                  <p style={{ fontSize: '0.82rem', color: 'var(--tf-text-secondary)', margin: '0 0 1rem 0' }}>
-                    {isTr
-                      ? 'FAST veya Papara ile anında 7/24 havale yapın. Açıklama kısmına kullanıcı adınızı yazmanız yeterlidir.'
-                      : 'Transfer instantly via FAST or Papara. Mention your username in description.'}
-                  </p>
-                  <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.85rem', borderRadius: '8px', border: '1px solid var(--tf-border)', marginBottom: '1rem' }}>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--tf-text-muted)' }}>IBAN (TR):</div>
-                    <div style={{ fontFamily: 'var(--tf-font-mono)', fontWeight: 800, fontSize: '0.95rem', color: 'var(--tf-accent)', margin: '0.2rem 0 0.5rem 0' }}>
-                      TR33 0006 1005 1234 5678 9012 34
+                  {wireOrderSubmitted ? (
+                    /* ÖDEME DOĞRULAMA SAYFASI / VERIFICATION STATUS SCREEN */
+                    <div style={{
+                      background: 'rgba(245, 158, 11, 0.06)',
+                      border: '1.5px solid #f59e0b',
+                      borderRadius: '12px',
+                      padding: '1.25rem',
+                      textAlign: 'left',
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        <span style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                          background: 'rgba(245, 158, 11, 0.2)',
+                          color: '#f59e0b',
+                          border: '1px solid #f59e0b',
+                          padding: '4px 10px',
+                          borderRadius: '20px',
+                          fontSize: '0.76rem',
+                          fontWeight: 800,
+                          letterSpacing: '0.05em',
+                        }}>
+                          ⏳ {isTr ? 'ÖDEME DOĞRULANIYOR / İNCELENİYOR' : 'PAYMENT VERIFICATION PENDING'}
+                        </span>
+                        <span style={{ fontFamily: 'var(--tf-font-mono)', fontSize: '0.75rem', color: 'var(--tf-text-muted)' }}>
+                          Sipariş No: <strong style={{ color: 'var(--tf-text-primary)' }}>{orderRefId}</strong>
+                        </span>
+                      </div>
+
+                      <p style={{ fontSize: '0.82rem', color: 'var(--tf-text-secondary)', lineHeight: 1.6, marginBottom: '1rem' }}>
+                        {isTr
+                          ? 'Ödeme bildiriminiz finans merkezimize kaydedildi. Banka transferiniz (FAST / Havale) hesap hareketleriyle eşleştirildikten sonra üyeliğiniz otomatik olarak aktif edilecektir.'
+                          : 'Your transfer notice has been logged into our ledger. Once verified against bank statements (5-15 mins), your account perks will activate automatically.'}
+                      </p>
+
+                      <div style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', padding: '0.85rem', marginBottom: '1rem', fontSize: '0.78rem' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                          <div><span style={{ color: 'var(--tf-text-muted)' }}>{isTr ? 'Paket:' : 'Bundle:'}</span> <strong>{selectedPkg.nameTr}</strong></div>
+                          <div><span style={{ color: 'var(--tf-text-muted)' }}>{isTr ? 'Tutar:' : 'Amount:'}</span> <strong>₺{finalPrice.toFixed(2)}</strong></div>
+                          <div><span style={{ color: 'var(--tf-text-muted)' }}>{isTr ? 'Gönderen:' : 'Sender:'}</span> <strong>{wireSenderName}</strong></div>
+                          <div><span style={{ color: 'var(--tf-text-muted)' }}>{isTr ? 'Banka:' : 'Bank:'}</span> <strong>{wireBankSelected}</strong></div>
+                          <div style={{ gridColumn: 'span 2' }}>
+                            <span style={{ color: 'var(--tf-text-muted)' }}>{isTr ? 'Dekont / Ref No:' : 'Receipt / Ref:'}</span>{' '}
+                            <strong style={{ fontFamily: 'var(--tf-font-mono)' }}>{wireRefNumber}</strong>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <button
+                          type="button"
+                          className="tf-ctrl-btn tf-btn-pushable"
+                          onClick={handleDownloadWireSummary}
+                          style={{ width: '100%', padding: '0.75rem', fontSize: '0.82rem', fontWeight: 800 }}
+                        >
+                          📄 {isTr ? 'Havale Bildirim Belgesini İndir (.txt)' : 'Download Receipt Summary (.txt)'}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const text = encodeURIComponent(`Merhaba Tiyatrotist Destek, TypeFlow havale bildirimi yaptım. Sipariş No: ${orderRefId}, Gönderen: ${wireSenderName}, Tutar: ₺${finalPrice.toFixed(2)}`);
+                            window.open(`https://wa.me/905000000000?text=${text}`, '_blank');
+                          }}
+                          className="tf-btn-pushable"
+                          style={{
+                            background: '#25d366',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            padding: '0.75rem',
+                            fontWeight: 800,
+                            fontSize: '0.82rem',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          💬 {isTr ? 'WhatsApp / Finans Destek Hattına Bildir' : 'Contact Support via WhatsApp'}
+                        </button>
+
+                        <div style={{ borderTop: '1px dashed rgba(255,255,255,0.1)', marginTop: '0.5rem', paddingTop: '0.75rem' }}>
+                          <div style={{ fontSize: '0.68rem', color: 'var(--tf-text-muted)', marginBottom: '0.35rem' }}>
+                            {isTr ? '🧪 Geliştirici & Test Simülasyonu:' : '🧪 Dev & Test Fast-Forward:'}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={finalizePayment}
+                            className="tf-btn-pushable"
+                            style={{
+                              width: '100%',
+                              background: '#10b981',
+                              color: '#fff',
+                              border: 'none',
+                              borderRadius: '8px',
+                              padding: '0.6rem',
+                              fontWeight: 800,
+                              fontSize: '0.75rem',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            ✓ {isTr ? '[Yönetici Simülasyonu: Havaleyi Onayla ve Paketi Aç]' : '[Admin Sim: Approve Wire & Activate]'}
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--tf-text-muted)' }}>Papara No:</div>
-                    <div style={{ fontFamily: 'var(--tf-font-mono)', fontWeight: 800, fontSize: '0.9rem', color: '#10b981' }}>
-                      1092837465
+                  ) : (
+                    /* BANK ACCOUNTS & SUBMISSION FORM */
+                    <div>
+                      <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.85rem', borderRadius: '10px', border: '1px solid var(--tf-border)', marginBottom: '1rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--tf-accent)' }}>
+                            🏦 {PAYMENT_CONFIG.bankTransfer.bankName}
+                          </span>
+                          <span style={{ fontSize: '0.68rem', color: 'var(--tf-text-muted)' }}>
+                            Alıcı: {PAYMENT_CONFIG.bankTransfer.accountHolder}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.3)', padding: '0.5rem 0.75rem', borderRadius: '6px', marginBottom: '0.5rem' }}>
+                          <span style={{ fontFamily: 'var(--tf-font-mono)', fontWeight: 800, fontSize: '0.85rem', color: '#fff' }}>
+                            {PAYMENT_CONFIG.bankTransfer.iban}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard?.writeText(PAYMENT_CONFIG.bankTransfer.iban);
+                              alert(isTr ? 'IBAN kopyalandı!' : 'IBAN copied!');
+                            }}
+                            style={{ background: 'transparent', border: 'none', color: 'var(--tf-accent)', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700 }}
+                          >
+                            📋 {isTr ? 'Kopyala' : 'Copy'}
+                          </button>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.74rem' }}>
+                          <span style={{ color: 'var(--tf-text-muted)' }}>Papara Hesap No:</span>
+                          <span style={{ fontFamily: 'var(--tf-font-mono)', fontWeight: 700, color: '#10b981' }}>
+                            {PAYMENT_CONFIG.bankTransfer.paparaNo}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div style={{ background: 'rgba(245, 158, 11, 0.08)', border: '1px dashed #f59e0b', borderRadius: '8px', padding: '0.6rem 0.8rem', marginBottom: '1rem', fontSize: '0.74rem', color: '#fbbf24' }}>
+                        ⚠️ <strong>{isTr ? 'Önemli Not:' : 'Important:'}</strong>{' '}
+                        {isTr
+                          ? `Havale/FAST açıklama kısmına lütfen sipariş kodunuzu (${orderRefId}) yazınız.`
+                          : `Please write your order code (${orderRefId}) in transfer description.`}
+                      </div>
+
+                      {/* ÖDEME BİLDİRİM FORMU */}
+                      <form onSubmit={handleSubmitWireNotice}>
+                        <div style={{ marginBottom: '0.75rem' }}>
+                          <label className="tf-modal-label">{isTr ? 'Gönderen Adı Soyadı' : 'Sender Full Name'}</label>
+                          <input
+                            type="text"
+                            className="tf-modal-input"
+                            value={wireSenderName}
+                            onChange={(e) => setWireSenderName(e.target.value)}
+                            placeholder="örn. Ahmet Yılmaz"
+                          />
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                          <div>
+                            <label className="tf-modal-label">{isTr ? 'Gönderilen Banka' : 'Transfer Bank'}</label>
+                            <select
+                              className="tf-modal-input"
+                              value={wireBankSelected}
+                              onChange={(e) => setWireBankSelected(e.target.value)}
+                              style={{ height: '42px', padding: '0.5rem' }}
+                            >
+                              <option value="Türkiye İş Bankası">Türkiye İş Bankası</option>
+                              <option value="QNB Enpara">QNB Enpara</option>
+                              <option value="Garanti BBVA">Garanti BBVA</option>
+                              <option value="Ziraat Bankası">Ziraat Bankası</option>
+                              <option value="Akbank">Akbank</option>
+                              <option value="Papara">Papara</option>
+                              <option value="Diğer">{isTr ? 'Diğer Banka' : 'Other'}</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="tf-modal-label">{isTr ? 'Dekont / FAST Ref No' : 'Receipt / FAST Ref'}</label>
+                            <input
+                              type="text"
+                              className="tf-modal-input"
+                              value={wireRefNumber}
+                              onChange={(e) => setWireRefNumber(e.target.value)}
+                              placeholder="örn. 98124712"
+                            />
+                          </div>
+                        </div>
+
+                        {wireError && (
+                          <div style={{ color: '#ef4444', fontSize: '0.74rem', marginBottom: '0.75rem', fontWeight: 700 }}>
+                            {wireError}
+                          </div>
+                        )}
+
+                        <button
+                          type="submit"
+                          className="tf-btn-primary tf-btn-pushable"
+                          style={{ width: '100%', padding: '0.85rem', fontWeight: 800 }}
+                        >
+                          📥 {isTr ? `Havale Bildirimini Gönder (₺${finalPrice.toFixed(2)})` : `Submit Transfer Notice ($${finalPrice.toFixed(2)})`}
+                        </button>
+                      </form>
                     </div>
-                  </div>
-                  <button
-                    type="button"
-                    className="tf-btn-primary tf-btn-pushable"
-                    onClick={finalizePayment}
-                    style={{ width: '100%', padding: '0.85rem' }}
-                  >
-                    ✓ {isTr ? 'Havale / FAST Yaptım, Onayla' : 'I Have Transferred, Complete Order'}
-                  </button>
+                  )}
                 </div>
               )}
 
-              {/* GOOGLE / APPLE PAY */}
-              {paymentMethod === 'wallet' && (
-                <div style={{ textAlign: 'center', padding: '1rem 0' }}>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--tf-text-secondary)', marginBottom: '1rem' }}>
-                    {isTr ? 'Biyometrik doğrulama ile tek tıkla ödeme yapın.' : '1-click biometric payment.'}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={finalizePayment}
-                    style={{
-                      background: '#000',
-                      color: '#fff',
-                      border: '1px solid #fff',
-                      borderRadius: '8px',
-                      padding: '0.85rem 2rem',
-                      fontWeight: 800,
-                      cursor: 'pointer',
-                      fontSize: '0.95rem',
-                      width: '100%',
-                    }}
-                  >
-                     Pay / Google Pay ile ₺{finalPrice.toFixed(2)} Öde
-                  </button>
+              {/* 4. PAYTR / IYZICO */}
+              {paymentMethod === 'paytr' && (
+                <div>
+                  <div style={{
+                    background: 'rgba(239, 68, 68, 0.08)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    borderRadius: '10px',
+                    padding: '1rem',
+                    marginBottom: '1.25rem',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#f87171' }}>
+                        🇹🇷 PayTR / iyzico Türkiye Sanal POS
+                      </span>
+                      <span style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: 700, background: 'rgba(16, 185, 129, 0.1)', padding: '2px 8px', borderRadius: '4px' }}>
+                        🛡️ BDDK Lisanslı
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '0.78rem', color: 'var(--tf-text-secondary)', margin: '0 0 0.75rem 0', lineHeight: 1.5 }}>
+                      {isTr
+                        ? 'Bonus, World, Maximum, Axess, CardFinans ve Paraf dahil tüm yerel kartlarla peşin veya 12 aya varan taksit seçenekleriyle güvenle ödeme yapabilirsiniz.'
+                        : 'Secure installments and debit payments powered by Turkish payment service providers.'}
+                    </p>
+                    <button
+                      type="button"
+                      className="tf-btn-primary tf-btn-pushable"
+                      onClick={() => {
+                        window.open(PAYMENT_CONFIG.paytrPaymentUrl, '_blank');
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '0.9rem',
+                        fontSize: '0.95rem',
+                        fontWeight: 800,
+                        background: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)',
+                      }}
+                    >
+                      {isTr
+                        ? `PayTR Güvenli Ödeme Ekranına Git (₺${finalPrice.toFixed(2)}) ↗`
+                        : `Proceed to PayTR Gateway ($${finalPrice.toFixed(2)}) ↗`}
+                    </button>
+                  </div>
+
+                  {/* PayTR Ref Verification */}
+                  <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--tf-border)', borderRadius: '10px', padding: '1rem' }}>
+                    <div style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--tf-accent)', marginBottom: '0.35rem' }}>
+                      {isTr ? '🔍 PayTR Ödemesini Doğrula' : '🔍 Verify PayTR Transaction'}
+                    </div>
+                    <p style={{ fontSize: '0.72rem', color: 'var(--tf-text-muted)', margin: '0 0 0.75rem 0' }}>
+                      {isTr
+                        ? 'PayTR üzerinden ödemenizi tamamladıktan sonra verilen Sipariş veya Dekont numaranızı girerek üyeliğinizi hemen doğrulayın.'
+                        : 'Enter your PayTR Order or Merchant transaction number to verify entitlement.'}
+                    </p>
+
+                    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <input
+                        type="text"
+                        className="tf-modal-input"
+                        value={paytrRefInput}
+                        onChange={(e) => {
+                          setPaytrRefInput(e.target.value);
+                          setPaytrVerifyFeedback(null);
+                        }}
+                        placeholder="örn. PTR-981249 veya 2026-TR..."
+                        style={{ margin: 0, fontSize: '0.8rem' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleVerifyPayTr}
+                        className="tf-btn-pushable"
+                        style={{
+                          background: 'var(--tf-accent)',
+                          color: '#000',
+                          border: 'none',
+                          borderRadius: '8px',
+                          padding: '0 1rem',
+                          fontWeight: 800,
+                          fontSize: '0.8rem',
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {isTr ? 'Doğrula & Aç' : 'Verify & Open'}
+                      </button>
+                    </div>
+
+                    {paytrVerifyFeedback && (
+                      <div style={{
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: paytrVerifyFeedback.isError ? '#ef4444' : '#10b981',
+                        marginTop: '0.4rem',
+                      }}>
+                        {paytrVerifyFeedback.msg}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

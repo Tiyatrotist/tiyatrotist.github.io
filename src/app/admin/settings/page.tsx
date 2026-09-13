@@ -13,6 +13,7 @@ import { getAdminDict, AdminLocale } from '@/lib/admin-i18n';
 import FormField from '@/components/admin/FormField';
 import LoadingSpinner from '@/components/admin/LoadingSpinner';
 import TranslationAction from '@/components/admin/TranslationAction';
+import { getPendingWireOrders, updatePendingOrderStatus, PendingWireOrder, PAYMENT_CONFIG } from '@/config/payment';
 
 export default function SettingsPage() {
   const [form, setForm] = useState({
@@ -32,7 +33,19 @@ export default function SettingsPage() {
     return 'tr';
   });
 
+  const [pendingOrders, setPendingOrders] = useState<PendingWireOrder[]>([]);
+
   const dict = getAdminDict(locale);
+
+  useEffect(() => {
+    setPendingOrders(getPendingWireOrders());
+  }, []);
+
+  const handleApproveOrder = (orderId: string) => {
+    updatePendingOrderStatus(orderId, 'approved');
+    setPendingOrders(getPendingWireOrders());
+    setSuccess(`Sipariş (${orderId}) başarıyla onaylandı ve üyelik aktifleştirildi.`);
+  };
 
   useEffect(() => {
     const fetch = async () => {
@@ -246,6 +259,199 @@ export default function SettingsPage() {
           <div style={{ marginTop: '0.6rem', fontSize: '0.68rem', color: 'rgba(255,255,255,0.35)', fontFamily: 'monospace' }}>
             ✓ public/ads.txt dosyası aktif: google.com, pub-8882049102481920, DIRECT, f08c47fec0942fa0
           </div>
+        </div>
+
+        {/* 💳 Payment Gateways Configuration (Stripe, PayTR, FAST Wire) */}
+        <div style={{
+          marginTop: '1.5rem',
+          padding: '1.25rem',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: '6px',
+          background: 'rgba(255,255,255,0.02)',
+        }}>
+          <div style={{ fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.1em', color: '#10b981', marginBottom: '0.2rem' }}>
+            💳 ÖDEME ALTYAPISI (STRIPE / PAYTR / FAST HAVALE)
+          </div>
+          <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.45)', marginBottom: '1rem' }}>
+            Canlı Stripe Checkout bağlantılarınızı, PayTR ödeme linkinizi ve FAST/Havale hesap bilgilerinizi yönetin.
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.7rem', color: 'rgba(255,255,255,0.6)', marginBottom: '0.35rem' }}>
+                Stripe Super Yıllık Linki (buy.stripe.com)
+              </label>
+              <input
+                type="text"
+                className="admin-input"
+                defaultValue={typeof window !== 'undefined' ? (localStorage.getItem('tf_stripe_link_super_yearly') || PAYMENT_CONFIG.stripePaymentLinks.super_yearly) : PAYMENT_CONFIG.stripePaymentLinks.super_yearly}
+                placeholder="https://buy.stripe.com/..."
+                onBlur={(e) => {
+                  const val = e.target.value.trim();
+                  if (val && typeof window !== 'undefined') {
+                    localStorage.setItem('tf_stripe_link_super_yearly', val);
+                    setSuccess('Stripe Yıllık linki kaydedildi.');
+                  }
+                }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.7rem', color: 'rgba(255,255,255,0.6)', marginBottom: '0.35rem' }}>
+                Stripe Super Aylık Linki
+              </label>
+              <input
+                type="text"
+                className="admin-input"
+                defaultValue={typeof window !== 'undefined' ? (localStorage.getItem('tf_stripe_link_super_monthly') || PAYMENT_CONFIG.stripePaymentLinks.super_monthly) : PAYMENT_CONFIG.stripePaymentLinks.super_monthly}
+                placeholder="https://buy.stripe.com/..."
+                onBlur={(e) => {
+                  const val = e.target.value.trim();
+                  if (val && typeof window !== 'undefined') {
+                    localStorage.setItem('tf_stripe_link_super_monthly', val);
+                    setSuccess('Stripe Aylık linki kaydedildi.');
+                  }
+                }}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.7rem', color: 'rgba(255,255,255,0.6)', marginBottom: '0.35rem' }}>
+                Banka Havalesi / FAST IBAN
+              </label>
+              <input
+                type="text"
+                className="admin-input"
+                defaultValue={PAYMENT_CONFIG.bankTransfer.iban}
+                readOnly
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.7rem', color: 'rgba(255,255,255,0.6)', marginBottom: '0.35rem' }}>
+                PayTR Güvenli Ödeme URL
+              </label>
+              <input
+                type="text"
+                className="admin-input"
+                defaultValue={PAYMENT_CONFIG.paytrPaymentUrl}
+                readOnly
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* 📥 Pending Wire Orders (Havale / FAST Bildirimleri) */}
+        <div style={{
+          marginTop: '1.5rem',
+          padding: '1.25rem',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: '6px',
+          background: 'rgba(255,255,255,0.02)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+            <div>
+              <div style={{ fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.1em', color: '#f59e0b', marginBottom: '0.2rem' }}>
+                📥 BEKLEYEN HAVALE / FAST ÖDEME BİLDİRİMLERİ ({pendingOrders.filter((o) => o.status === 'pending_verification').length})
+              </div>
+              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.45)' }}>
+                Kullanıcıların TypeFlow üzerinden bildirdiği banka dekontları ve FAST transferleri.
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPendingOrders(getPendingWireOrders())}
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: '4px',
+                color: '#fff',
+                padding: '4px 8px',
+                fontSize: '0.7rem',
+                cursor: 'pointer',
+              }}
+            >
+              🔄 Yenile
+            </button>
+          </div>
+
+          {pendingOrders.length === 0 ? (
+            <div style={{ padding: '1rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.75rem', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '4px' }}>
+              Henüz bekleyen havale veya FAST ödeme bildirimi bulunmuyor.
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', textAlign: 'left' }}>
+                    <th style={{ padding: '0.5rem' }}>Sipariş No</th>
+                    <th style={{ padding: '0.5rem' }}>Gönderen</th>
+                    <th style={{ padding: '0.5rem' }}>Banka & Dekont</th>
+                    <th style={{ padding: '0.5rem' }}>Paket & Tutar</th>
+                    <th style={{ padding: '0.5rem' }}>Tarih</th>
+                    <th style={{ padding: '0.5rem' }}>Durum</th>
+                    <th style={{ padding: '0.5rem', textAlign: 'right' }}>İşlem</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingOrders.map((order) => (
+                    <tr key={order.orderId} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                      <td style={{ padding: '0.5rem', fontFamily: 'monospace', fontWeight: 700, color: '#38bdf8' }}>
+                        {order.orderId}
+                      </td>
+                      <td style={{ padding: '0.5rem' }}>
+                        <div style={{ fontWeight: 600 }}>{order.senderName}</div>
+                        <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)' }}>{order.userEmail}</div>
+                      </td>
+                      <td style={{ padding: '0.5rem' }}>
+                        <div>{order.bankName}</div>
+                        <div style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: '#10b981' }}>{order.referenceNumber}</div>
+                      </td>
+                      <td style={{ padding: '0.5rem' }}>
+                        <div>{order.packageName}</div>
+                        <div style={{ fontWeight: 700, color: '#f59e0b' }}>₺{order.amountTry.toFixed(2)}</div>
+                      </td>
+                      <td style={{ padding: '0.5rem', color: 'rgba(255,255,255,0.4)', fontSize: '0.68rem' }}>
+                        {new Date(order.createdAt).toLocaleDateString('tr-TR')}
+                      </td>
+                      <td style={{ padding: '0.5rem' }}>
+                        <span style={{
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          fontSize: '0.65rem',
+                          fontWeight: 700,
+                          background: order.status === 'approved' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                          color: order.status === 'approved' ? '#10b981' : '#f59e0b',
+                        }}>
+                          {order.status === 'approved' ? '✓ ONAYLANDI' : '⏳ İNCELENİYOR'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '0.5rem', textAlign: 'right' }}>
+                        {order.status !== 'approved' && (
+                          <button
+                            type="button"
+                            onClick={() => handleApproveOrder(order.orderId)}
+                            style={{
+                              background: '#10b981',
+                              color: '#fff',
+                              border: 'none',
+                              borderRadius: '4px',
+                              padding: '4px 10px',
+                              fontSize: '0.68rem',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            ✓ Onayla
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         {/* Maintenance Mode Toggle */}
