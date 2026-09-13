@@ -50,7 +50,7 @@ import { TypeFlowSuperModal } from './TypeFlowSuperModal';
 import { TypeFlowAdBreakModal } from './TypeFlowAdBreakModal';
 import { TypeFlowPracticeHub, PracticeDrillConfig } from './TypeFlowPracticeHub';
 import { TypeFlowGoogleAd } from './TypeFlowGoogleAd';
-import TypeFlowCheckoutPage, { CheckoutPackage } from './TypeFlowCheckoutPage';
+import TypeFlowCheckoutPage, { CheckoutPackage, PaymentDetails } from './TypeFlowCheckoutPage';
 import { getTechAds, getUnitsForLang } from './duolingoData';
 import '@/styles/typeflow.css';
 
@@ -245,6 +245,17 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
             parsed.hearts = parsed.energy;
             localStorage.setItem('tf_last_energy_time', String(Date.now()));
             console.debug('[TypeFlow:Energy] Passive recharge:', { oldEnergy, recharged: rechargeUnits, newEnergy: parsed.energy });
+          }
+        }
+
+        // Free Trial Expiration Check
+        if (parsed.subscriptionStatus === 'trialing' && parsed.trialEndsAt) {
+          const trialEnd = new Date(parsed.trialEndsAt).getTime();
+          if (Date.now() > trialEnd) {
+            console.debug('[TypeFlow:Subscription] Free trial has expired! Reverting to free tier.');
+            parsed.isPremium = false;
+            parsed.subscriptionStatus = 'expired';
+            try { localStorage.setItem('tf_user_profile', JSON.stringify(parsed)); } catch {}
           }
         }
 
@@ -463,21 +474,29 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
 
   // ─── SaaS Monetization & Focus Battery Handlers ───────────────────────────
   const handleUpgradeToSuper = (isFreeTrial: boolean = false) => {
+    if (isFreeTrial) {
+      console.debug('[TypeFlow:Microsite] Redirecting free trial request to checkout');
+      handleGoToCheckout('super_trial');
+      return;
+    }
     setProfile((prev) => {
-      const remainingGems = isFreeTrial ? (prev.gems || 0) : Math.max(0, (prev.gems || 0) - 400);
+      const remainingGems = Math.max(0, (prev.gems || 0) - 400);
       const updated: UserProfile = {
         ...prev,
         gems: remainingGems,
         isPremium: true,
+        subscriptionStatus: 'active',
+        subscriptionPlan: 'monthly',
         energy: 5,
         maxEnergy: 5,
         hearts: 5,
       };
       try { localStorage.setItem('tf_user_profile', JSON.stringify(updated)); } catch {}
-      console.debug('[TypeFlow:Microsite] Upgraded to Super TypeFlow Pro! Free trial:', isFreeTrial);
+      console.debug('[TypeFlow:Microsite] Upgraded to Super TypeFlow Pro via 400 Gems!');
       return updated;
     });
     setIsSuperModalOpen(false);
+    addToast(isTr ? '👑 400 Elmas ile Super TypeFlow Pro aktif edildi!' : '👑 Super TypeFlow Pro activated with 400 Gems!', 'success');
   };
 
   const handleGoToCheckout = (packageId: string = 'super_yearly') => {
@@ -486,8 +505,12 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
     setIsSuperModalOpen(false);
   };
 
-  const handleCheckoutPaymentSuccess = (pkg: CheckoutPackage) => {
-    console.debug('[TypeFlow:Microsite] Checkout payment verified for:', pkg.id);
+  const handleCheckoutPaymentSuccess = (pkg: CheckoutPackage, details?: PaymentDetails) => {
+    console.debug('[TypeFlow:Microsite] Checkout payment verified for:', pkg.id, 'isTrial:', pkg.isTrial);
+    const now = Date.now();
+    const isTrialPkg = !!pkg.isTrial || pkg.id === 'super_trial';
+    const trialDurationMs = 7 * 24 * 60 * 60 * 1000;
+
     setProfile((prev) => {
       const updated: UserProfile = {
         ...prev,
@@ -496,11 +519,63 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
         energy: pkg.energyReward || pkg.isSuper ? 5 : (prev.energy ?? 5),
         hearts: pkg.energyReward || pkg.isSuper ? 5 : (prev.hearts ?? 5),
         isPremium: pkg.isSuper ? true : prev.isPremium,
+        subscriptionStatus: isTrialPkg ? 'trialing' : (pkg.isSuper ? 'active' : prev.subscriptionStatus || 'free'),
+        subscriptionPlan: isTrialPkg ? 'trial' : (pkg.id === 'super_monthly' ? 'monthly' : (pkg.id === 'super_yearly' ? 'yearly' : prev.subscriptionPlan)),
+        trialStartedAt: isTrialPkg ? new Date(now).toISOString() : prev.trialStartedAt,
+        trialEndsAt: isTrialPkg ? new Date(now + trialDurationMs).toISOString() : prev.trialEndsAt,
+        premiumExpiresAt: isTrialPkg ? new Date(now + trialDurationMs).toISOString() : (pkg.isSuper ? new Date(now + 365 * 24 * 60 * 60 * 1000).toISOString() : prev.premiumExpiresAt),
+        paymentMethodBrand: details?.brand || 'visa',
+        paymentMethodLast4: details?.last4 || '4242',
+        lastOrderId: `TF-${now.toString().slice(-8)}`,
       };
       try { localStorage.setItem('tf_user_profile', JSON.stringify(updated)); } catch {}
       return updated;
     });
-    setActiveTab('shop');
+
+    if (isTrialPkg) {
+      addToast(
+        isTr
+          ? '✨ 7 Günlük Deneme Sürümü Başlatıldı! Sınırsız Enerji ve Sıfır Reklam aktif.'
+          : '✨ 7-Day Free Trial Started! Unlimited Energy & Zero Ads active.',
+        'success'
+      );
+    } else if (pkg.isSuper) {
+      addToast(
+        isTr
+          ? '👑 Super TypeFlow Pro Aktif Edildi! Teşekkür ederiz.'
+          : '👑 Super TypeFlow Pro Activated! Thank you.',
+        'success'
+      );
+    } else {
+      addToast(
+        isTr
+          ? `✓ ${pkg.nameTr} başarıyla hesabınıza tanımlandı!`
+          : `✓ ${pkg.nameEn} successfully added to your account!`,
+        'success'
+      );
+    }
+    setActiveTab('test');
+  };
+
+  const handleCancelSubscription = () => {
+    setProfile((prev) => {
+      const updated: UserProfile = {
+        ...prev,
+        isPremium: false,
+        subscriptionStatus: 'cancelled',
+        energy: 5,
+        hearts: 5,
+      };
+      try { localStorage.setItem('tf_user_profile', JSON.stringify(updated)); } catch {}
+      console.debug('[TypeFlow:Microsite] Subscription cancelled.');
+      return updated;
+    });
+    addToast(
+      isTr
+        ? 'Aboneliğiniz iptal edildi. Ücretsiz plana geçildi.'
+        : 'Your subscription has been cancelled. Reverted to free tier.',
+      'info'
+    );
   };
 
   const handleClaimEnergyReward = () => {
@@ -1486,6 +1561,7 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
           setIsSuperModalOpen(true);
         }}
         onOpenAdModal={handleTriggerAdBreak}
+        onCancelSubscription={handleCancelSubscription}
       />
 
       {/* 9. User Auth & Profile Customization Modal */}

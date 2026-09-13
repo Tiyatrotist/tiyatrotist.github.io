@@ -30,10 +30,37 @@ export interface CheckoutPackage {
   gemsReward?: number;
   energyReward?: boolean;
   isSuper?: boolean;
+  isTrial?: boolean;
+  renewalTextTr?: string;
+  renewalTextEn?: string;
   freezesReward?: number;
 }
 
+export interface PaymentDetails {
+  brand: string;
+  last4: string;
+}
+
 export const CHECKOUT_PACKAGES: CheckoutPackage[] = [
+  {
+    id: 'super_trial',
+    nameTr: 'Super TypeFlow Pro (7 Günlük Ücretsiz Deneme)',
+    nameEn: 'Super TypeFlow Pro (7-Day Free Trial)',
+    priceTry: 0.0,
+    originalPriceTry: 49.99,
+    descTr: '7 gün boyunca ₺0,00 ile sınırsız odak enerjisi (♾️), sıfır reklam (🚫) ve 2X XP! 7 gün sonra aylık ₺29,99/ay olarak yenilenir. İstediğin zaman tek tıkla iptal et.',
+    descEn: '7 days completely free ($0.00 today) with unlimited focus battery (♾️), zero ads (🚫) & 2X XP! Renews at ₺29.99/mo after trial. Cancel anytime with 1 click.',
+    badgeTr: '✨ 7 GÜN DENEME // ₺0,00',
+    badgeEn: '✨ 7-DAY TRIAL // ₺0.00',
+    icon: '👑',
+    isSuper: true,
+    isTrial: true,
+    energyReward: true,
+    gemsReward: 100,
+    freezesReward: 1,
+    renewalTextTr: '7 gün sonra aylık ₺29,99 / ay',
+    renewalTextEn: 'Renews at ₺29.99/mo after 7 days',
+  },
   {
     id: 'super_yearly',
     nameTr: 'Super TypeFlow Pro (Yıllık Plan)',
@@ -120,16 +147,56 @@ interface TypeFlowCheckoutPageProps {
   lang: Locale;
   profile: UserProfile;
   initialPackageId?: string;
-  onPaymentSuccess: (pkg: CheckoutPackage) => void;
+  onPaymentSuccess: (pkg: CheckoutPackage, details?: PaymentDetails) => void;
   onReturnToShop: () => void;
 }
 
 type PaymentMethod = 'card' | 'fast' | 'wallet';
 
+// Luhn Algorithm Check
+const isValidLuhn = (digits: string): boolean => {
+  let sum = 0;
+  let alternate = false;
+  for (let i = digits.length - 1; i >= 0; i--) {
+    let n = parseInt(digits.charAt(i), 10);
+    if (isNaN(n)) return false;
+    if (alternate) {
+      n *= 2;
+      if (n > 9) n = (n % 10) + 1;
+    }
+    sum += n;
+    alternate = !alternate;
+  }
+  return sum % 10 === 0;
+};
+
+// Card Brand Detector
+const detectCardBrand = (digits: string): 'visa' | 'mastercard' | 'troy' | 'amex' | 'unknown' => {
+  if (digits.startsWith('4')) return 'visa';
+  if (/^(5[1-5]|2[2-7])/.test(digits)) return 'mastercard';
+  if (/^9792/.test(digits)) return 'troy';
+  if (/^(34|37)/.test(digits)) return 'amex';
+  return 'unknown';
+};
+
+// Expiry Date Check
+const isValidExpiry = (val: string): boolean => {
+  if (!/^\d{2}\/\d{2}$/.test(val)) return false;
+  const [mmStr, yyStr] = val.split('/');
+  const mm = parseInt(mmStr, 10);
+  const yy = parseInt(yyStr, 10);
+  if (mm < 1 || mm > 12) return false;
+  const currentYear = new Date().getFullYear() % 100;
+  const currentMonth = new Date().getMonth() + 1;
+  if (yy < currentYear) return false;
+  if (yy === currentYear && mm < currentMonth) return false;
+  return true;
+};
+
 export default function TypeFlowCheckoutPage({
   lang,
   profile,
-  initialPackageId = 'super_yearly',
+  initialPackageId = 'super_trial',
   onPaymentSuccess,
   onReturnToShop,
 }: TypeFlowCheckoutPageProps) {
@@ -143,10 +210,18 @@ export default function TypeFlowCheckoutPage({
 
   // Form states: Card
   const [cardNumber, setCardNumber] = useState('');
-  const [cardHolder, setCardHolder] = useState('');
+  const [cardHolder, setCardHolder] = useState(profile.username ? profile.username.toUpperCase() : '');
   const [expiry, setExpiry] = useState('');
   const [cvv, setCvv] = useState('');
   const [use3DSecure, setUse3DSecure] = useState(true);
+  const [detectedBrand, setDetectedBrand] = useState<'visa' | 'mastercard' | 'troy' | 'amex' | 'unknown'>('unknown');
+  const [cardErrors, setCardErrors] = useState<{
+    number?: string;
+    holder?: string;
+    expiry?: string;
+    cvv?: string;
+    general?: string;
+  }>({});
 
   // Billing Details
   const [billingName, setBillingName] = useState(profile.username || '');
@@ -173,8 +248,12 @@ export default function TypeFlowCheckoutPage({
   // Format Card Number (adds spaces every 4 digits)
   const handleCardNumberChange = (val: string) => {
     const raw = val.replace(/\D/g, '').slice(0, 16);
+    setDetectedBrand(detectCardBrand(raw));
     const parts = raw.match(/[\s\S]{1,4}/g) || [];
     setCardNumber(parts.join(' '));
+    if (cardErrors.number) {
+      setCardErrors((prev) => ({ ...prev, number: undefined }));
+    }
   };
 
   // Format Expiry (MM/YY)
@@ -185,6 +264,20 @@ export default function TypeFlowCheckoutPage({
     } else {
       setExpiry(raw);
     }
+    if (cardErrors.expiry) {
+      setCardErrors((prev) => ({ ...prev, expiry: undefined }));
+    }
+  };
+
+  // Autofill Test Card (Stripe 4242 pattern - passes Luhn check)
+  const handleAutofillTestCard = () => {
+    setCardNumber('4242 4242 4242 4242');
+    setCardHolder(profile.username ? profile.username.toUpperCase() : 'BUĞRA TIYATROTİST');
+    setExpiry('12/28');
+    setCvv('789');
+    setDetectedBrand('visa');
+    setCardErrors({});
+    console.debug('[TypeFlow:Checkout] Autofilled valid 3D Secure test card (Visa 4242)');
   };
 
   // Apply Coupon
@@ -210,21 +303,48 @@ export default function TypeFlowCheckoutPage({
     }
   };
 
-  // Submit Payment
+  // Submit Payment with Strict Validation
   const handleSubmitPayment = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (paymentMethod === 'card') {
+      const cleanDigits = cardNumber.replace(/\s/g, '');
+      const errors: { number?: string; holder?: string; expiry?: string; cvv?: string } = {};
+
+      if (!cardHolder.trim() || cardHolder.trim().length < 3) {
+        errors.holder = isTr ? 'Kart üzerindeki isim en az 3 karakter olmalıdır.' : 'Name on card must be at least 3 characters.';
+      }
+      if (cleanDigits.length < 15 || cleanDigits.length > 16 || !isValidLuhn(cleanDigits)) {
+        errors.number = isTr ? 'Geçersiz kart numarası (Luhn kontrolü başarısız).' : 'Invalid card number (Luhn checksum failed).';
+      }
+      if (!isValidExpiry(expiry)) {
+        errors.expiry = isTr ? 'Geçerli bir son kullanma tarihi girin (AA/YY).' : 'Enter a valid future expiry date (MM/YY).';
+      }
+      if (cvv.length < 3) {
+        errors.cvv = isTr ? 'CVV 3 veya 4 haneli olmalıdır.' : 'CVV must be 3 or 4 digits.';
+      }
+
+      if (Object.keys(errors).length > 0) {
+        setCardErrors(errors);
+        console.debug('[TypeFlow:Checkout] Card validation failed:', errors);
+        return;
+      }
+    }
+
+    setCardErrors({});
     setIsProcessing(true);
+    console.debug('[TypeFlow:Checkout] Submitting payment authorization for:', selectedPkg.id, 'Trial:', selectedPkg.isTrial);
 
     if (use3DSecure) {
       setTimeout(() => {
         setIsProcessing(false);
         setShowOtpModal(true);
-      }, 900);
+      }, 700);
     } else {
       setTimeout(() => {
         setIsProcessing(false);
         finalizePayment();
-      }, 1200);
+      }, 1000);
     }
   };
 
@@ -232,8 +352,12 @@ export default function TypeFlowCheckoutPage({
   const finalizePayment = () => {
     setShowOtpModal(false);
     setIsCompleted(true);
-    console.debug('[TypeFlow:Payment] Transaction verified for package:', selectedPkg.id);
-    onPaymentSuccess(selectedPkg);
+    const cleanDigits = cardNumber.replace(/\s/g, '');
+    const last4 = cleanDigits.length >= 4 ? cleanDigits.slice(-4) : '4242';
+    const brand = detectedBrand !== 'unknown' ? detectedBrand : 'visa';
+
+    console.debug('[TypeFlow:Payment] Transaction verified for package:', selectedPkg.id, 'brand:', brand, 'last4:', last4);
+    onPaymentSuccess(selectedPkg, { brand, last4 });
   };
 
   // Download official receipt
@@ -496,29 +620,98 @@ Bu belge 213 sayılı V.U.K. uyarınca elektronik olarak düzenlenmiştir.
               {/* CARD FORM */}
               {paymentMethod === 'card' && (
                 <form onSubmit={handleSubmitPayment}>
+                  {/* Test card autofill bar */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem', background: 'rgba(56, 189, 248, 0.08)', border: '1px dashed rgba(56, 189, 248, 0.4)', borderRadius: '8px', padding: '0.5rem 0.75rem' }}>
+                    <div style={{ fontSize: '0.72rem', color: '#38bdf8', fontWeight: 600 }}>
+                      💳 {isTr ? 'Geliştirici & Test Modu' : 'Dev & Test Mode'}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleAutofillTestCard}
+                      className="tf-btn-pushable"
+                      style={{
+                        background: '#0284c7',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '6px',
+                        padding: '0.25rem 0.6rem',
+                        fontSize: '0.68rem',
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      ⚡ {isTr ? 'Test Kartı Doldur (4242...)' : 'Autofill Test Card'}
+                    </button>
+                  </div>
+
+                  {selectedPkg.isTrial && (
+                    <div style={{
+                      background: 'rgba(16, 185, 129, 0.1)',
+                      border: '1px solid #10b981',
+                      borderRadius: '8px',
+                      padding: '0.75rem',
+                      marginBottom: '1rem',
+                    }}>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#10b981', marginBottom: '0.25rem' }}>
+                        ✨ {isTr ? '7 Günlük Ücretsiz Deneme (₺0,00)' : '7-Day Free Trial ($0.00)'}
+                      </div>
+                      <p style={{ margin: 0, fontSize: '0.73rem', color: 'var(--tf-text-secondary)', lineHeight: 1.5 }}>
+                        {isTr
+                          ? 'Bugün kartınızdan hiçbir ücret çekilmeyecektir (₺0,00 provizyon). 7 gün boyunca Super TypeFlow ayrıcalıklarının tadını çıkarın. Dilediğiniz zaman tek tıkla iptal edebilirsiniz.'
+                          : 'You will not be charged today ($0.00 authorization). Enjoy all Super TypeFlow benefits for 7 days. Cancel anytime with 1 click.'}
+                      </p>
+                    </div>
+                  )}
+
                   <div style={{ marginBottom: '0.85rem' }}>
                     <label className="tf-modal-label">{isTr ? 'Kart Üzerindeki İsim' : 'Name on Card'}</label>
                     <input
                       type="text"
-                      className="tf-modal-input"
+                      className={`tf-modal-input ${cardErrors.holder ? 'input-error' : ''}`}
                       value={cardHolder}
-                      onChange={(e) => setCardHolder(e.target.value)}
+                      onChange={(e) => {
+                        setCardHolder(e.target.value);
+                        if (cardErrors.holder) setCardErrors((p) => ({ ...p, holder: undefined }));
+                      }}
                       placeholder="örn. BUĞRA TIYATROTİST"
-                      required
                     />
+                    {cardErrors.holder && (
+                      <div style={{ color: '#ef4444', fontSize: '0.72rem', marginTop: '0.25rem', fontWeight: 700 }}>
+                        {cardErrors.holder}
+                      </div>
+                    )}
                   </div>
 
                   <div style={{ marginBottom: '0.85rem' }}>
-                    <label className="tf-modal-label">{isTr ? 'Kart Numarası' : 'Card Number'}</label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <label className="tf-modal-label">{isTr ? 'Kart Numarası' : 'Card Number'}</label>
+                      {detectedBrand !== 'unknown' && (
+                        <span style={{
+                          fontSize: '0.68rem',
+                          fontWeight: 800,
+                          textTransform: 'uppercase',
+                          color: detectedBrand === 'visa' ? '#38bdf8' : detectedBrand === 'mastercard' ? '#f97316' : '#10b981',
+                          background: 'rgba(255,255,255,0.06)',
+                          padding: '1px 6px',
+                          borderRadius: '4px',
+                        }}>
+                          {detectedBrand}
+                        </span>
+                      )}
+                    </div>
                     <input
                       type="text"
-                      className="tf-modal-input"
+                      className={`tf-modal-input ${cardErrors.number ? 'input-error' : ''}`}
                       value={cardNumber}
                       onChange={(e) => handleCardNumberChange(e.target.value)}
-                      placeholder="5432 •••• •••• 1234"
+                      placeholder="4242 •••• •••• 4242"
                       maxLength={19}
-                      required
                     />
+                    {cardErrors.number && (
+                      <div style={{ color: '#ef4444', fontSize: '0.72rem', marginTop: '0.25rem', fontWeight: 700 }}>
+                        {cardErrors.number}
+                      </div>
+                    )}
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
@@ -526,25 +719,36 @@ Bu belge 213 sayılı V.U.K. uyarınca elektronik olarak düzenlenmiştir.
                       <label className="tf-modal-label">{isTr ? 'Son Kullanma Tarihi' : 'Expiry Date'}</label>
                       <input
                         type="text"
-                        className="tf-modal-input"
+                        className={`tf-modal-input ${cardErrors.expiry ? 'input-error' : ''}`}
                         value={expiry}
                         onChange={(e) => handleExpiryChange(e.target.value)}
                         placeholder="MM / YY"
                         maxLength={5}
-                        required
                       />
+                      {cardErrors.expiry && (
+                        <div style={{ color: '#ef4444', fontSize: '0.72rem', marginTop: '0.25rem', fontWeight: 700 }}>
+                          {cardErrors.expiry}
+                        </div>
+                      )}
                     </div>
                     <div>
                       <label className="tf-modal-label">CVV / CVC</label>
                       <input
                         type="password"
-                        className="tf-modal-input"
+                        className={`tf-modal-input ${cardErrors.cvv ? 'input-error' : ''}`}
                         value={cvv}
-                        onChange={(e) => setCvv(e.target.value.slice(0, 4))}
+                        onChange={(e) => {
+                          setCvv(e.target.value.slice(0, 4));
+                          if (cardErrors.cvv) setCardErrors((p) => ({ ...p, cvv: undefined }));
+                        }}
                         placeholder="•••"
                         maxLength={4}
-                        required
                       />
+                      {cardErrors.cvv && (
+                        <div style={{ color: '#ef4444', fontSize: '0.72rem', marginTop: '0.25rem', fontWeight: 700 }}>
+                          {cardErrors.cvv}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -556,7 +760,7 @@ Bu belge 213 sayılı V.U.K. uyarınca elektronik olarak düzenlenmiştir.
                       onChange={(e) => setUse3DSecure(e.target.checked)}
                     />
                     <label htmlFor="use3DS" style={{ fontSize: '0.78rem', color: 'var(--tf-text-secondary)', cursor: 'pointer' }}>
-                      {isTr ? '3D Secure ile Güvenli Doğrulama Yap (Önerilen)' : 'Use 3D Secure SMS Verification'}
+                      {isTr ? '3D Secure ile Güvenli Doğrulama Yap (Banka Onayı)' : 'Use 3D Secure SMS Verification'}
                     </label>
                   </div>
 
@@ -568,7 +772,9 @@ Bu belge 213 sayılı V.U.K. uyarınca elektronik olarak düzenlenmiştir.
                   >
                     {isProcessing
                       ? (isTr ? 'İşlem Güvenli Banka Ağına İletiliyor...' : 'Connecting to Bank...')
-                      : (isTr ? `₺${finalPrice.toFixed(2)} Güvenli Öde 🔒` : `Pay ₺${finalPrice.toFixed(2)} Securely 🔒`)}
+                      : selectedPkg.isTrial
+                        ? (isTr ? '✨ 7 Günlük Denemeyi Başlat (₺0,00) 🔒' : '✨ Start 7-Day Trial ($0.00) 🔒')
+                        : (isTr ? `₺${finalPrice.toFixed(2)} Güvenli Öde 🔒` : `Pay ₺${finalPrice.toFixed(2)} Securely 🔒`)}
                   </button>
                 </form>
               )}
@@ -765,18 +971,56 @@ Bu belge 213 sayılı V.U.K. uyarınca elektronik olarak düzenlenmiştir.
       {/* 3D SECURE OTP MODAL */}
       {showOtpModal && (
         <div className="tf-modal-backdrop">
-          <div className="tf-modal-dialog" style={{ maxWidth: '420px', textAlign: 'center' }}>
-            <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🛡️</div>
-            <h4 style={{ fontSize: '1.15rem', fontWeight: 800, margin: '0 0 0.4rem 0' }}>
-              {isTr ? '3D Secure Banka Onayı' : '3D Secure Bank Verification'}
+          <div className="tf-modal-dialog" style={{ maxWidth: '440px', textAlign: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <span style={{ fontSize: '1.8rem' }}>🏦</span>
+              <span style={{ fontSize: '1.2rem', fontWeight: 900, letterSpacing: '0.05em', color: '#38bdf8' }}>
+                BANK 3D SECURE
+              </span>
+            </div>
+
+            <h4 style={{ fontSize: '1.1rem', fontWeight: 800, margin: '0 0 0.4rem 0' }}>
+              {selectedPkg.isTrial
+                ? (isTr ? 'Banka Kart Doğrulama (₺0,00)' : 'Card Verification Authorization ($0.00)')
+                : (isTr ? 'Güvenli Ödeme Onayı' : 'Secure Payment Confirmation')}
             </h4>
-            <p style={{ fontSize: '0.8rem', color: 'var(--tf-text-secondary)', margin: '0 0 1.25rem 0' }}>
+
+            {/* Transaction summary badge */}
+            <div style={{
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid var(--tf-border)',
+              borderRadius: '8px',
+              padding: '0.75rem',
+              textAlign: 'left',
+              fontSize: '0.75rem',
+              margin: '0 0 1rem 0',
+              lineHeight: 1.6,
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--tf-text-muted)' }}>{isTr ? 'İşyeri:' : 'Merchant:'}</span>
+                <span style={{ fontWeight: 700 }}>TIYATROTIST LABS</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--tf-text-muted)' }}>{isTr ? 'Kart No:' : 'Card No:'}</span>
+                <span style={{ fontFamily: 'var(--tf-font-mono)' }}>
+                  •••• {cardNumber.replace(/\s/g, '').slice(-4) || '4242'} ({detectedBrand.toUpperCase()})
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--tf-text-muted)' }}>{isTr ? 'Provizyon Tutarı:' : 'Auth Amount:'}</span>
+                <span style={{ fontWeight: 800, color: '#10b981', fontFamily: 'var(--tf-font-mono)' }}>
+                  {selectedPkg.isTrial ? '₺0,00 (Doğrulama)' : `₺${finalPrice.toFixed(2)}`}
+                </span>
+              </div>
+            </div>
+
+            <p style={{ fontSize: '0.76rem', color: 'var(--tf-text-secondary)', margin: '0 0 1rem 0' }}>
               {isTr
-                ? 'Bankanız tarafından telefonunuza iletilen 4 haneli SMS doğrulama kodunu girin.'
-                : 'Enter the 4-digit SMS verification code sent by your bank.'}
+                ? '+90 (5**) *** ** 84 no\'lu telefonunuza iletilen 4 haneli SMS doğrulama kodunu girin.'
+                : 'Enter the 4-digit SMS verification code sent to +90 (5**) *** ** 84.'}
             </p>
 
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
               {otpCode.map((c, i) => (
                 <input
                   key={i}
@@ -789,11 +1033,11 @@ Bu belge 213 sayılı V.U.K. uyarınca elektronik olarak düzenlenmiştir.
                     setOtpCode(arr);
                   }}
                   style={{
-                    width: '42px',
-                    height: '48px',
+                    width: '44px',
+                    height: '50px',
                     textAlign: 'center',
-                    fontSize: '1.3rem',
-                    fontWeight: 800,
+                    fontSize: '1.4rem',
+                    fontWeight: 900,
                     background: 'rgba(255,255,255,0.06)',
                     border: '1.5px solid var(--tf-accent)',
                     borderRadius: '8px',
@@ -817,9 +1061,11 @@ Bu belge 213 sayılı V.U.K. uyarınca elektronik olarak düzenlenmiştir.
                 type="button"
                 className="tf-btn-primary tf-btn-pushable"
                 onClick={finalizePayment}
-                style={{ flex: 2, padding: '0.75rem' }}
+                style={{ flex: 2, padding: '0.75rem', fontWeight: 800 }}
               >
-                ✓ {isTr ? 'Onayla & Tamamla' : 'Confirm & Pay'}
+                ✓ {selectedPkg.isTrial
+                  ? (isTr ? 'Kartı Doğrula & Başlat' : 'Authorize & Start')
+                  : (isTr ? 'Onayla & Öde' : 'Confirm & Pay')}
               </button>
             </div>
           </div>

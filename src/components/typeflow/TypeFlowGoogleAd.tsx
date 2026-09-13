@@ -11,6 +11,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Locale } from '@/dictionaries';
 import { UserProfile } from './types';
+import { GOOGLE_ADSENSE_CONFIG, getActiveAdSenseClientId, isAdSenseEnabled } from '@/config/ads';
 
 interface TypeFlowGoogleAdProps {
   lang: Locale;
@@ -83,6 +84,7 @@ const GOOGLE_AD_ITEMS: AdItem[] = [
 export const TypeFlowGoogleAd: React.FC<TypeFlowGoogleAdProps> = ({
   lang,
   profile,
+  slot,
   onRewardClaim,
   onOpenSuperModal,
 }) => {
@@ -93,8 +95,29 @@ export const TypeFlowGoogleAd: React.FC<TypeFlowGoogleAdProps> = ({
   const [isRewardReady, setIsRewardReady] = useState(false);
   const [rewardClaimed, setRewardClaimed] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [adSenseStatus, setAdSenseStatus] = useState<'loading' | 'active' | 'blocked'>('loading');
 
   const ad = GOOGLE_AD_ITEMS[currentAdIndex] || GOOGLE_AD_ITEMS[0];
+  const activeClientId = getActiveAdSenseClientId();
+  const activeSlotId = slot || GOOGLE_ADSENSE_CONFIG.slots.banner;
+  const isEnabled = isAdSenseEnabled();
+
+  // Push AdSense slot when mounted
+  useEffect(() => {
+    if (profile.isPremium || !isEnabled) return;
+
+    try {
+      if (typeof window !== 'undefined') {
+        // @ts-expect-error Google adsbygoogle script injects this array
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+        setAdSenseStatus('active');
+        console.debug('[TypeFlow:GoogleAd] AdSense unit pushed successfully. Slot:', activeSlotId, 'Publisher:', activeClientId);
+      }
+    } catch (err) {
+      console.debug('[TypeFlow:GoogleAd] AdSense push skipped or blocked by adblocker:', err);
+      setAdSenseStatus('blocked');
+    }
+  }, [profile.isPremium, isEnabled, activeSlotId, activeClientId]);
 
   // Hidden for Super TypeFlow subscribers
   if (profile.isPremium) {
@@ -128,16 +151,33 @@ export const TypeFlowGoogleAd: React.FC<TypeFlowGoogleAdProps> = ({
   return (
     <>
       <div className="tf-google-ad-container" role="region" aria-label="Google Advertisement">
+        {/* Real Google AdSense Script Slot (if filled by Google) */}
+        {isEnabled && (
+          <div className="tf-adsense-ins-wrap" style={{ overflow: 'hidden' }}>
+            <ins
+              className="adsbygoogle"
+              style={{ display: 'block', textAlign: 'center' }}
+              data-ad-client={activeClientId}
+              data-ad-slot={activeSlotId}
+              data-ad-format="auto"
+              data-full-width-responsive="true"
+            />
+          </div>
+        )}
+
         {/* Top Meta Bar */}
         <div className="tf-google-ad-top">
           <div className="tf-google-ad-label">
             <span>{isTr ? 'Google Reklamları' : 'Ads by Google'}</span>
             <span
               className="tf-adchoices-icon"
-              title={isTr ? 'Reklam Tercihleri' : 'AdChoices'}
+              title={isTr ? 'Reklam Tercihleri (AdChoices)' : 'AdChoices'}
               onClick={() => window.open('https://www.google.com/ads/preferences/', '_blank')}
             >
               ⓘ
+            </span>
+            <span style={{ fontSize: '0.62rem', color: 'var(--tf-text-muted)', fontFamily: 'var(--tf-font-mono)', opacity: 0.6 }}>
+              // {activeClientId.slice(0, 11)}...
             </span>
           </div>
 

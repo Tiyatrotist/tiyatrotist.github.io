@@ -209,14 +209,27 @@ export default function TypeFlowHeader({
 
           {/* Super TypeFlow SaaS Pill / Button */}
           {profile.isPremium ? (
-            <div
-              className="tf-duo-pill pill-super"
-              onClick={onOpenSuperModal}
-              title={isTr ? "Super TypeFlow Üyeliği Aktif" : "Super TypeFlow Active"}
-            >
-              <span>👑</span>
-              <span>SUPER</span>
-            </div>
+            (() => {
+              const isTrial = profile.subscriptionStatus === 'trialing' && profile.trialEndsAt;
+              const trialDaysLeft = isTrial
+                ? Math.max(1, Math.ceil((new Date(profile.trialEndsAt!).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+                : 0;
+
+              return (
+                <div
+                  className={`tf-duo-pill pill-super ${isTrial ? 'pill-trial' : ''}`}
+                  onClick={onOpenSuperModal}
+                  title={
+                    isTrial
+                      ? (isTr ? `7 Günlük Deneme Sürümü (${trialDaysLeft} gün kaldı)` : `7-Day Free Trial (${trialDaysLeft} days left)`)
+                      : (isTr ? "Super TypeFlow Üyeliği Aktif" : "Super TypeFlow Active")
+                  }
+                >
+                  <span>👑</span>
+                  <span>{isTrial ? (isTr ? `DENEME (${trialDaysLeft}g)` : `TRIAL (${trialDaysLeft}d)`) : 'SUPER'}</span>
+                </div>
+              );
+            })()
           ) : (
             <button
               type="button"

@@ -49,8 +49,11 @@ export const TypeFlowSuperModal: React.FC<TypeFlowSuperModalProps> = ({
   const isAlreadyPremium = !!profile.isPremium;
 
   const handleStartTrial = () => {
-    console.debug('[TypeFlow:SuperModal] Starting free trial');
-    onUpgradeToSuper(true);
+    console.debug('[TypeFlow:SuperModal] Navigating to checkout for 7-day free trial authorization (super_trial)');
+    onClose();
+    if (onNavigateToCheckout) {
+      onNavigateToCheckout('super_trial');
+    }
   };
 
   const handleGemUpgrade = () => {
@@ -166,11 +169,19 @@ export const TypeFlowSuperModal: React.FC<TypeFlowSuperModalProps> = ({
             <div className="tf-super-active-box">
               <span className="tf-super-active-icon">✨</span>
               <div style={{ textAlign: 'left' }}>
-                <strong style={{ color: '#10b981' }}>{isTr ? 'Super Üyeliğin Aktif' : 'Super Status Active'}</strong>
+                <strong style={{ color: '#10b981' }}>
+                  {profile.subscriptionStatus === 'trialing'
+                    ? (isTr ? '7 Günlük Deneme Sürümün Aktif' : '7-Day Free Trial Active')
+                    : (isTr ? 'Super Üyeliğin Aktif' : 'Super Status Active')}
+                </strong>
                 <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.82rem', color: '#94a3b8' }}>
-                  {isTr
-                    ? 'Sınırsız odak enerjisinin ve reklamsız deneyimin tadını çıkarıyorsun.'
-                    : 'You are enjoying unlimited energy and ad-free typing mastery.'}
+                  {profile.subscriptionStatus === 'trialing' && profile.trialEndsAt
+                    ? (isTr
+                        ? `Deneme süreniz ${new Date(profile.trialEndsAt).toLocaleDateString('tr-TR')} tarihine kadar geçerlidir.`
+                        : `Your trial is valid until ${new Date(profile.trialEndsAt).toLocaleDateString('en-US')}.`)
+                    : (isTr
+                        ? 'Sınırsız odak enerjisinin ve reklamsız deneyimin tadını çıkarıyorsun.'
+                        : 'You are enjoying unlimited energy and ad-free typing mastery.')}
                 </p>
               </div>
             </div>

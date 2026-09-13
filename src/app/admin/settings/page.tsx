@@ -180,6 +180,74 @@ export default function SettingsPage() {
           />
         </div>
 
+        {/* Google AdSense Configuration Card */}
+        <div style={{
+          marginTop: '1.5rem',
+          padding: '1.25rem',
+          border: '1px solid rgba(56, 189, 248, 0.2)',
+          borderRadius: '6px',
+          background: 'rgba(56, 189, 248, 0.03)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+            <div>
+              <div style={{ fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.1em', color: '#38bdf8', marginBottom: '0.2rem' }}>
+                📢 GOOGLE ADSENSE REKLAM AYARLARI
+              </div>
+              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.45)' }}>
+                TypeFlow ve genel sitede gösterilecek Google AdSense yayıncı kimliğini ve reklam durumunu yönetin.
+              </div>
+            </div>
+            <label className="admin-toggle" aria-label="Google AdSense Reklamlarını Aç / Kapat">
+              <input
+                type="checkbox"
+                checked={form.maintenance_mode ? false : true}
+                onChange={(e) => {
+                  if (typeof window !== 'undefined') {
+                    localStorage.setItem('tf_adsense_enabled', String(e.target.checked));
+                  }
+                  setSuccess(e.target.checked ? 'Google AdSense reklamları etkinleştirildi.' : 'Google AdSense reklamları duraklatıldı.');
+                }}
+              />
+              <span className="admin-toggle-slider" />
+            </label>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.7rem', color: 'rgba(255,255,255,0.6)', marginBottom: '0.35rem' }}>
+                AdSense Yayıncı ID (Publisher ID)
+              </label>
+              <input
+                type="text"
+                className="admin-input"
+                defaultValue={typeof window !== 'undefined' ? (localStorage.getItem('tf_adsense_client_id') || 'ca-pub-8882049102481920') : 'ca-pub-8882049102481920'}
+                placeholder="ca-pub-XXXXXXXXXXXXXXXX"
+                onBlur={(e) => {
+                  const val = e.target.value.trim();
+                  if (val && typeof window !== 'undefined') {
+                    localStorage.setItem('tf_adsense_client_id', val);
+                    setSuccess('AdSense Yayıncı ID kaydedildi.');
+                  }
+                }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.7rem', color: 'rgba(255,255,255,0.6)', marginBottom: '0.35rem' }}>
+                Banner Slot ID
+              </label>
+              <input
+                type="text"
+                className="admin-input"
+                defaultValue="8172635490"
+                placeholder="örn. 8172635490"
+              />
+            </div>
+          </div>
+          <div style={{ marginTop: '0.6rem', fontSize: '0.68rem', color: 'rgba(255,255,255,0.35)', fontFamily: 'monospace' }}>
+            ✓ public/ads.txt dosyası aktif: google.com, pub-8882049102481920, DIRECT, f08c47fec0942fa0
+          </div>
+        </div>
+
         {/* Maintenance Mode Toggle */}
         <div style={{
           marginTop: '1.5rem',

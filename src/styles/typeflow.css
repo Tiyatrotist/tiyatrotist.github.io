@@ -5983,5 +5983,37 @@
   }
 }
 
+/* ─── PAYMENT & GOOGLE ADSENSE STYLES ─────────────────────────────────────── */
+.tf-modal-input.input-error {
+  border-color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.06) !important;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+}
+
+.tf-duo-pill.pill-trial {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(56, 189, 248, 0.15)) !important;
+  border-color: #10b981 !important;
+  color: #34d399 !important;
+  animation: tf-trial-pulse 3s infinite ease-in-out;
+}
+
+@keyframes tf-trial-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 rgba(16, 185, 129, 0);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
+  }
+}
+
+.tf-adsense-ins-wrap {
+  width: 100%;
+  min-height: 90px;
+  background: rgba(255, 255, 255, 0.01);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 
 

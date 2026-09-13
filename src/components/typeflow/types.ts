@@ -208,6 +208,15 @@ export interface UserProfile {
   isPremium: boolean; // Super TypeFlow (Unlimited Energy ♾️, Zero Ads)
   premiumExpiresAt?: string;
 
+  // Subscription & Free Trial Lifecycle
+  subscriptionStatus?: 'free' | 'trialing' | 'active' | 'cancelled' | 'expired';
+  subscriptionPlan?: 'trial' | 'monthly' | 'yearly';
+  trialStartedAt?: string;
+  trialEndsAt?: string;
+  paymentMethodBrand?: string; // 'visa' | 'mastercard' | 'troy' | 'amex'
+  paymentMethodLast4?: string;
+  lastOrderId?: string;
+
   // Legacy fallback
   hearts?: number;
   maxHearts?: number;

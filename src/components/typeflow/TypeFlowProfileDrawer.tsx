@@ -30,6 +30,7 @@ interface TypeFlowProfileDrawerProps {
   onOpenShop: () => void;
   onOpenSuperModal?: () => void;
   onOpenAdModal?: () => void;
+  onCancelSubscription?: () => void;
 }
 
 type DrawerView = 'main' | 'themes' | 'sound' | 'lang' | 'typing' | 'goals' | 'account';
@@ -71,6 +72,7 @@ export default function TypeFlowProfileDrawer({
   onOpenShop,
   onOpenSuperModal,
   onOpenAdModal,
+  onCancelSubscription,
 }: TypeFlowProfileDrawerProps) {
   const isTr = lang === 'tr';
 
@@ -96,6 +98,7 @@ export default function TypeFlowProfileDrawer({
   const [capsLockAlert, setCapsLockAlert] = useState(true);
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false); // Audit Fix #14
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   // Reset to main view whenever drawer opens
   useEffect(() => {
@@ -916,6 +919,98 @@ export default function TypeFlowProfileDrawer({
                       ))}
                     </div>
                   </div>
+                )}
+              </div>
+
+              {/* Section 1.5: Subscription & Free Trial Management */}
+              <div className="tf-account-section-card" style={{ border: '1px solid rgba(234, 179, 8, 0.3)', background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.05), rgba(56, 189, 248, 0.04))' }}>
+                <h5 className="tf-account-card-heading">
+                  <span>👑</span>
+                  <span>{isTr ? 'Abonelik & Üyelik Planı' : 'Subscription & Membership'}</span>
+                </h5>
+
+                <div style={{ marginBottom: '1rem', fontSize: '0.82rem', lineHeight: 1.6 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                    <span style={{ color: 'var(--tf-text-secondary)' }}>{isTr ? 'Aktif Plan:' : 'Active Plan:'}</span>
+                    <strong style={{ color: profile.isPremium ? '#10b981' : 'var(--tf-text-primary)' }}>
+                      {profile.isPremium
+                        ? (profile.subscriptionStatus === 'trialing'
+                            ? (isTr ? '✨ 7 Günlük Ücretsiz Deneme' : '✨ 7-Day Free Trial')
+                            : 'Super TypeFlow Pro 👑')
+                        : (isTr ? 'Ücretsiz Plan (Temel)' : 'Free Tier (Basic)')}
+                    </strong>
+                  </div>
+
+                  {profile.subscriptionStatus === 'trialing' && profile.trialEndsAt && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                      <span style={{ color: 'var(--tf-text-secondary)' }}>{isTr ? 'Deneme Bitiş:' : 'Trial Ends:'}</span>
+                      <span style={{ fontFamily: 'var(--tf-font-mono)', color: '#fbbf24', fontWeight: 700 }}>
+                        {new Date(profile.trialEndsAt).toLocaleDateString(isTr ? 'tr-TR' : 'en-US')}
+                      </span>
+                    </div>
+                  )}
+
+                  {profile.paymentMethodLast4 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                      <span style={{ color: 'var(--tf-text-secondary)' }}>{isTr ? 'Kayıtlı Kart:' : 'Card:'}</span>
+                      <span style={{ fontFamily: 'var(--tf-font-mono)' }}>
+                        {profile.paymentMethodBrand?.toUpperCase() || 'KART'} •••• {profile.paymentMethodLast4}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {profile.isPremium ? (
+                  <div>
+                    {!showCancelConfirm ? (
+                      <button
+                        type="button"
+                        className="tf-ctrl-btn tf-btn-pushable"
+                        onClick={() => setShowCancelConfirm(true)}
+                        style={{ width: '100%', fontSize: '0.78rem', padding: '0.6rem', color: '#f87171' }}
+                      >
+                        {isTr ? 'Aboneliği / Denemeyi İptal Et' : 'Cancel Subscription / Trial'}
+                      </button>
+                    ) : (
+                      <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', borderRadius: '8px', padding: '0.75rem', textAlign: 'center' }}>
+                        <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.75rem', color: '#fca5a5' }}>
+                          {isTr
+                            ? 'Aboneliğinizi iptal etmek istediğinize emin misiniz? Sınırsız enerji ve reklamsız deneyim sonlandırılacaktır.'
+                            : 'Are you sure you want to cancel? Unlimited energy and zero ads will end.'}
+                        </p>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button
+                            type="button"
+                            className="tf-btn-pushable"
+                            style={{ flex: 1, background: '#ef4444', color: '#fff', border: 'none', borderRadius: '6px', padding: '0.4rem', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer' }}
+                            onClick={() => {
+                              setShowCancelConfirm(false);
+                              if (onCancelSubscription) onCancelSubscription();
+                            }}
+                          >
+                            {isTr ? 'Evet, İptal Et' : 'Yes, Cancel'}
+                          </button>
+                          <button
+                            type="button"
+                            className="tf-btn-pushable"
+                            style={{ flex: 1, background: 'var(--tf-surface)', color: 'var(--tf-text-primary)', border: '1px solid var(--tf-border)', borderRadius: '6px', padding: '0.4rem', fontSize: '0.75rem', cursor: 'pointer' }}
+                            onClick={() => setShowCancelConfirm(false)}
+                          >
+                            {isTr ? 'Vazgeç' : 'Keep Plan'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="tf-btn-primary tf-btn-pushable"
+                    onClick={() => onOpenSuperModal?.()}
+                    style={{ width: '100%', fontSize: '0.8rem', padding: '0.65rem' }}
+                  >
+                    👑 {isTr ? 'Super TypeFlow Pro\'ya Geç' : 'Upgrade to Super TypeFlow'}
+                  </button>
                 )}
               </div>
 

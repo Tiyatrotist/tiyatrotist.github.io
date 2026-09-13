@@ -1,0 +1,9 @@
+# Google AdSense — Authorized Digital Sellers (ads.txt)
+# https://support.google.com/adsense/answer/7532444
+# Format: <Field #1>, <Field #2>, <Field #3>, <Field #4>
+# Field 1: Domain name of the advertising system (google.com)
+# Field 2: Publisher Account ID (e.g. pub-XXXXXXXXXXXXXXXX)
+# Field 3: Type of Relationship (DIRECT)
+# Field 4: Certification Authority ID (f08c47fec0942fa0 for Google)
+
+google.com, pub-8882049102481920, DIRECT, f08c47fec0942fa0
