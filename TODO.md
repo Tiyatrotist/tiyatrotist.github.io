@@ -28,3 +28,44 @@
 - ~~Ödeme sayfası yok~~
 
 - ~~Roket Animasyonu istediğim gibi değil kaldıralım~~
+
+- ~~Bakım sayfasında Dil seçeneği butonu çalışmıyor.~~
+- ~~adsense kurulumunu nasıl yapacağımı daha anlatmadın yeni plana göre~~
+- ~~yeni plana göre tüm site için bir yapılacaklar listesi lazım~~
+
+---
+
+## 🚀 YENİ PLAN: FEDORA SUNUCU & ALT ALAN ADI (SUBDOMAIN) YOL HARİTASI
+
+### 1. ALTYAPI & SUNUCU (Fedora Linux & Nginx)
+- [x] Fedora sunucuya SSH ile bağlanılması (192.168.1.104)
+- [x] Nginx v1.30, Certbot v5.7, Node.js ve bağımlılıkların kurulumu
+- [x] Fedora SELinux (`httpd_can_network_connect 1`, `httpd_sys_content_t`) ve Firewalld (HTTP 80, HTTPS 443) izinleri
+- [x] Nginx sanal sunucularının yapılandırılması:
+  - `tiyatrotist.com.tr` (Ana Portföy & Blog)
+  - `typeflow.tiyatrotist.com.tr` (TypeFlow SaaS)
+  - `bookos.tiyatrotist.com.tr` (BookOS İndirme & Tanıtım)
+- [x] Fedora üzerinde üretim derlemesi (`npm run build` -> `/var/www/tiyatrotist/out`)
+- [ ] Domain (tiyatrotist.com.tr) DNS A kayıtlarının sunucu IP'sine yönlendirilmesi
+- [ ] Tek komutla Let's Encrypt SSL (HTTPS) kurulumu (`certbot --nginx -d ...`)
+- [ ] Tek komutluk güncelleme betiği (`deploy.sh`: git pull + build + nginx reload)
+
+### 2. GOOGLE ADSENSE (Yeni Plana Göre)
+- [x] Kök `public/ads.txt` dosyasının Nginx üzerinden servis edilmesi (`/ads.txt`)
+- [x] Admin panelinden AdSense Yayıncı ID ve Slot ID yönetimi
+- [x] TypeFlow arayüzünde Google AdSense reklam kutuları ve odak enerjisi ödül entegrasyonu
+- [ ] AdSense paneline ana domainin (`tiyatrotist.com.tr`) eklenmesi ve incelemeye gönderilmesi
+- [ ] Ana domain onaylandıktan sonra `typeflow.tiyatrotist.com.tr` alt alan adının AdSense'e eklenmesi (Tekrar inceleme beklemeden anında reklam yayınlama)
+
+### 3. ÖDEME & SAAS MONETIZATION
+- [x] Sahte ödeme geçişlerinin kaldırılması, gerçek ödeme altyapısına geçiş
+- [x] Stripe Checkout Hosted Gateway entegrasyonu
+- [x] 3D Secure SMS OTP banka doğrulama modalı
+- [x] FAST / Havale Dekont Doğrulama Sayfası ve Sipariş Kodu üretimi
+- [x] Admin panelinde bekleyen havale bildirimlerini onaylama tablosu
+- [ ] Canlı Stripe hesabı açıldığında canlı `buy.stripe.com` linklerinin admin panele girilmesi
+
+### 4. KULLANICI & OTURUM (SSO - Single Sign-On)
+- [x] Misafir kullanıcı ve yerel profil senkronizasyonu
+- [x] 7 günlük ücretsiz Super deneme ve abonelik iptal yönetimi
+- [ ] Alt alan adları arasında ortak oturum çerezi (`domain: '.tiyatrotist.com.tr'`) ayarı
