@@ -35,37 +35,38 @@
 
 ---
 
-## 🚀 YENİ PLAN: FEDORA SUNUCU & ALT ALAN ADI (SUBDOMAIN) YOL HARİTASI
+## 🚀 GÜNCEL PLAN: GITHUB PAGES & TIYATROTIST.COM.TR DAĞITIM YOL HARİTASI
 
-### 1. ALTYAPI & SUNUCU (Fedora Linux & Nginx)
-- [x] Fedora sunucuya SSH ile bağlanılması (192.168.1.104)
-- [x] Nginx v1.30, Certbot v5.7, Node.js ve bağımlılıkların kurulumu
-- [x] Fedora SELinux (`httpd_can_network_connect 1`, `httpd_sys_content_t`) ve Firewalld (HTTP 80, HTTPS 443) izinleri
-- [x] Nginx sanal sunucularının yapılandırılması:
-  - `tiyatrotist.com.tr` (Ana Portföy & Blog)
-  - `typeflow.tiyatrotist.com.tr` (TypeFlow SaaS)
-  - `bookos.tiyatrotist.com.tr` (BookOS İndirme & Tanıtım)
-- [x] Fedora üzerinde üretim derlemesi (`npm run build` -> `/var/www/tiyatrotist/out`)
-- [ ] Domain (tiyatrotist.com.tr) DNS A kayıtlarının sunucu IP'sine yönlendirilmesi
-- [ ] Tek komutla Let's Encrypt SSL (HTTPS) kurulumu (`certbot --nginx -d ...`)
-- [ ] Tek komutluk güncelleme betiği (`deploy.sh`: git pull + build + nginx reload)
+> **Güvenlik Notu:** Ev/yerel Fedora sunucusunda port yönlendirme (80/443), sabit IP/DDNS ve ev ağı güvenlik riskleri nedeniyle sunucu mimarisi terk edilmiş; kurumsal güvenlik, sıfır maliyet, global CDN ve ücretsiz otomatik SSL sağlayan **GitHub Pages** altyapısına geçilmiştir.
 
-### 2. GOOGLE ADSENSE (Yeni Plana Göre)
-- [x] Kök `public/ads.txt` dosyasının Nginx üzerinden servis edilmesi (`/ads.txt`)
-- [x] Admin panelinden AdSense Yayıncı ID ve Slot ID yönetimi
-- [x] TypeFlow arayüzünde Google AdSense reklam kutuları ve odak enerjisi ödül entegrasyonu
-- [ ] AdSense paneline ana domainin (`tiyatrotist.com.tr`) eklenmesi ve incelemeye gönderilmesi
-- [ ] Ana domain onaylandıktan sonra `typeflow.tiyatrotist.com.tr` alt alan adının AdSense'e eklenmesi (Tekrar inceleme beklemeden anında reklam yayınlama)
+### 1. ALTYAPI & GITHUB PAGES DAĞITIMI
+- [x] ~~Fedora yerel sunucu denemesi ve konfigürasyonlarının güvenlik amacıyla durdurulması~~
+- [x] `public/CNAME` dosyasının oluşturulması (`tiyatrotist.com.tr`)
+- [x] GitHub Actions CI/CD dağıtım betiğinin (`.github/workflows/deploy.yml`) CNAME ve `.nojekyll` desteğiyle güncellenmesi
+- [x] `/typeflow` ve `/bookos` için kök alan adı doğrudan yönlendirme rotalarının (`src/app/typeflow/page.tsx`, `src/app/bookos/page.tsx`) eklenmesi
+- [x] Yerel üretim derlemesinin test edilmesi (`npm run build` -> 43 statik sayfa, CNAME ve ads.txt doğrulandı)
+- [ ] Domain panelinde (METUnic, Turhost, IHS, Natro veya Cloudflare) DNS kayıtlarının girilmesi:
+  - **A Kayıtları (@):** `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`
+  - **CNAME Kaydı (www):** `tiyatrotist.github.io`
+- [ ] GitHub Repo Ayarları -> Pages sekmesinde Custom Domain'in (`tiyatrotist.com.tr`) onaylanması ve "Enforce HTTPS" kutucuğunun işaretlenmesi
 
-### 3. ÖDEME & SAAS MONETIZATION
+### 2. GOOGLE ADSENSE (GitHub Pages & Özel Domain)
+- [x] Kök `public/ads.txt` dosyasının oluşturulması ve derlemede (`out/ads.txt`) sunulması
+- [x] Admin panelinden AdSense Yayıncı ID ve Slot ID ayarlarının dinamik yönetimi
+- [x] TypeFlow içerisinde AdSense reklam kutuları ve odak enerjisi ödül entegrasyonu
+- [ ] Domain bağlandıktan sonra `https://tiyatrotist.com.tr` adresinin Google AdSense paneline eklenmesi
+- [ ] Google AdSense botunun `https://tiyatrotist.com.tr/ads.txt` dosyasını doğrulaması (otomatik)
+- [ ] Domain bazlı onay sayesinde tüm alt yolların (`/typeflow`, `/bookos`, `/tr`, `/en`) tek seferde onaylanması
+
+### 3. ÖDEME & SAAS MONETIZATION (TypeFlow)
 - [x] Sahte ödeme geçişlerinin kaldırılması, gerçek ödeme altyapısına geçiş
 - [x] Stripe Checkout Hosted Gateway entegrasyonu
 - [x] 3D Secure SMS OTP banka doğrulama modalı
-- [x] FAST / Havale Dekont Doğrulama Sayfası ve Sipariş Kodu üretimi
-- [x] Admin panelinde bekleyen havale bildirimlerini onaylama tablosu
+- [x] FAST / Havale Dekont Doğrulama Sayfası ve Sipariş Kodu (`TF-TRF-XXXXXX`) üretimi
+- [x] Admin panelinde bekleyen havale bildirimlerini onaylama / reddetme tablosu
 - [ ] Canlı Stripe hesabı açıldığında canlı `buy.stripe.com` linklerinin admin panele girilmesi
 
-### 4. KULLANICI & OTURUM (SSO - Single Sign-On)
+### 4. KULLANICI & OTURUM (SSO & Local Persistence)
 - [x] Misafir kullanıcı ve yerel profil senkronizasyonu
 - [x] 7 günlük ücretsiz Super deneme ve abonelik iptal yönetimi
-- [ ] Alt alan adları arasında ortak oturum çerezi (`domain: '.tiyatrotist.com.tr'`) ayarı
+- [x] Supabase Auth + LocalStorage oturum entegrasyonu (GitHub Pages tek kök alan adı altında çerez veya localStorage bölünmesi olmadan tam uyumlu)

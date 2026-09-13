@@ -44,6 +44,7 @@ jobs:
           npm run build
           touch ./out/.nojekyll
           cp ./out/_not-found.html ./out/404.html || true
+          echo "tiyatrotist.com.tr" > ./out/CNAME
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
