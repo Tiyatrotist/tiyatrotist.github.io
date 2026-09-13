@@ -31,10 +31,14 @@
   position: absolute;
   top: 1.75rem;
   right: 2rem;
-  z-index: 10;
+  z-index: 9999;
+  pointer-events: auto;
 }
 
 .maintenance__lang-btn {
+  position: relative;
+  z-index: 10000;
+  pointer-events: auto;
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.18);
   color: rgba(255, 255, 255, 0.55);

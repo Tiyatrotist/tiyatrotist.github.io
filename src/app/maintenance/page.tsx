@@ -8,6 +8,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { DotEngine } from '@/engine/DotEngine';
 import { textToDots } from '@/engine/DotTypography';
 import { tr } from '@/dictionaries/tr';
@@ -68,6 +69,7 @@ function computeMaintenanceTypography(
 }
 
 export default function MaintenancePage({ initialLang }: MaintenancePageProps = {}) {
+  const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<DotEngine | null>(null);
 
@@ -85,32 +87,32 @@ export default function MaintenancePage({ initialLang }: MaintenancePageProps = 
     return 'tr';
   });
 
-  // Keep state synced if initialLang or URL changes
+  // Track initialLang prop changes from parent without overwriting local user toggle actions
+  const prevInitialLangRef = useRef<Locale | undefined>(initialLang);
   useEffect(() => {
-    if (initialLang && (initialLang === 'tr' || initialLang === 'en') && initialLang !== lang) {
+    if (initialLang && initialLang !== prevInitialLangRef.current) {
+      prevInitialLangRef.current = initialLang;
       setLang(initialLang);
-      return;
     }
-    if (typeof window !== 'undefined') {
-      const pathname = window.location.pathname;
-      if (pathname.startsWith('/en') && lang !== 'en') {
-        setLang('en');
-      } else if (pathname.startsWith('/tr') && lang !== 'tr') {
-        setLang('tr');
-      }
-    }
-  }, [initialLang, lang]);
+  }, [initialLang]);
 
   const dict = lang === 'tr' ? tr : en;
 
   const toggleLanguage = () => {
     const nextLang: Locale = lang === 'tr' ? 'en' : 'tr';
+    console.debug('[MaintenancePage] Toggling language from', lang, 'to', nextLang);
     setLang(nextLang);
     if (typeof window !== 'undefined') {
-      localStorage.setItem('preferred_lang', nextLang);
-      // If we are on localized route like /tr/maintenance, update URL smoothly
-      if (window.location.pathname.includes('/maintenance')) {
-        window.history.replaceState(null, '', `/${nextLang}/maintenance`);
+      try {
+        localStorage.setItem('preferred_lang', nextLang);
+      } catch {}
+      const pathname = window.location.pathname;
+      if (pathname.includes('/maintenance')) {
+        if (pathname.startsWith('/tr/') || pathname.startsWith('/en/')) {
+          router.push(`/${nextLang}/maintenance`);
+        } else {
+          window.history.replaceState(null, '', `/${nextLang}/maintenance`);
+        }
       }
     }
   };
