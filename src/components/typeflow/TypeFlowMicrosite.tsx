@@ -334,6 +334,45 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
       console.warn('[TypeFlow:Microsite] Error loading state from localStorage:', e);
       setIsHydrated(true);
     }
+
+    // ─── Real Supabase Auth State Synchronization ────────────────────────────
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      console.debug('[TypeFlow:Auth] Supabase auth state changed:', event, session?.user?.email);
+      if (session?.user) {
+        setProfile((prev) => {
+          const userEmail = session.user.email || '';
+          const metaName = session.user.user_metadata?.username || session.user.user_metadata?.full_name || userEmail.split('@')[0];
+          const updated: UserProfile = {
+            ...prev,
+            id: session.user.id,
+            email: userEmail,
+            username: metaName,
+            isGuest: false,
+          };
+          try {
+            localStorage.setItem('tf_user_profile', JSON.stringify(updated));
+          } catch {}
+          return updated;
+        });
+      } else if (event === 'SIGNED_OUT') {
+        setProfile((prev) => {
+          const updated: UserProfile = {
+            ...prev,
+            isGuest: true,
+            email: undefined,
+            username: 'Daktilocu_' + Math.floor(Math.random() * 900 + 100),
+          };
+          try {
+            localStorage.setItem('tf_user_profile', JSON.stringify(updated));
+          } catch {}
+          return updated;
+        });
+      }
+    });
+
+    return () => {
+      authListener?.subscription?.unsubscribe();
+    };
   }, []);
 
   // Save Preferences

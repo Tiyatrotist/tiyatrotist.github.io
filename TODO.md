@@ -84,3 +84,14 @@
 - [x] ~~Her ligde kullanıcının adının çıkması hatasını düzelt (kullanıcı yalnızca kendi aktif liginde yer alır)~~
 - [x] ~~Gerçek son kullanıcıya yönelik lig altyapısı (Supabase ve yerel oturumlardan gerçek kullanıcı verisi)~~
 - [x] ~~Pazar gecesine canlı geri sayım sayacı ve gerçek terfi/düşme analizi~~
+
+### 7. GERÇEK KULLANICI KİMLİK DOĞRULAMA (SUPABASE AUTH)
+- [x] ~~Sahte 5 adımlı sihirbaz ve önceden tanımlı sahte OTP ('482910') akışını tamamen kaldır~~
+- [x] ~~Simüle edilmiş sahte sosyal hesap oluşturma mantığını kaldır~~
+- [x] ~~Gerçek Supabase E-posta & Şifre Girişi (`signInWithPassword`) ve Türkçeleştirilmiş hata yönetimi~~
+- [x] ~~Gerçek Supabase Kayıt Ol (`signUp`) ve e-posta doğrulama bilgilendirmesi~~
+- [x] ~~Gerçek Şifre Sıfırlama (`resetPasswordForEmail`) ve `/typeflow` geri yönlendirme akışı~~
+- [x] ~~Gerçek Google & GitHub OAuth (`signInWithOAuth`) entegrasyonu~~
+- [x] ~~Gerçek Oturum Kapatma (`signOut`) ve güvenli misafir moduna geçiş~~
+- [x] ~~`TypeFlowMicrosite` üzerinde canlı `onAuthStateChange` oturum dinleyicisi ve reaktif profil senkronizasyonu~~
+- [x] ~~KVKK / GDPR Madde 20 Veri Taşınabilirliği (.json indirme) ve profil özelleştirme desteği~~
