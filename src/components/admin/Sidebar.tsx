@@ -15,6 +15,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { AdminDict } from '@/lib/admin-i18n';
 import { supabase } from '@/lib/supabase';
+import { clearAdminCookies } from '@/lib/admin-auth';
 
 interface SidebarProps {
   dict: AdminDict;
@@ -104,7 +105,8 @@ export default function Sidebar({ dict, open, onClose }: SidebarProps) {
   const pathname = usePathname();
 
   const handleLogout = async () => {
-    console.debug('[admin] Logging out…');
+    console.debug('[admin] Logging out and clearing cookies…');
+    clearAdminCookies();
     await supabase.auth.signOut();
     window.location.href = '/admin/login';
   };

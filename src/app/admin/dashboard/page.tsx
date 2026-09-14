@@ -16,6 +16,11 @@ import { supabase } from '@/lib/supabase';
 import { getAdminDict, AdminLocale } from '@/lib/admin-i18n';
 import LoadingSpinner from '@/components/admin/LoadingSpinner';
 import { getUnifiedProjects } from '@/config/projects';
+import {
+  getRecentProjectEvents,
+  getProjectUsageStats,
+  ProjectUsageEvent,
+} from '@/lib/project-analytics';
 
 interface DashboardMetrics {
   publishedProjects: number;
@@ -35,6 +40,21 @@ export default function DashboardPage() {
     if (typeof window !== 'undefined') return (localStorage.getItem('admin_locale') as AdminLocale) || 'tr';
     return 'tr';
   });
+
+  // Guest Usage & Telemetry State
+  const [eventsFilter, setEventsFilter] = useState<string>('all');
+  const [telemetryEvents, setTelemetryEvents] = useState<ProjectUsageEvent[]>([]);
+  const [usageStats, setUsageStats] = useState({
+    totalEvents: 0,
+    guestEvents: 0,
+    todayEvents: 0,
+    projectBreakdown: {} as Record<string, number>,
+  });
+
+  const refreshTelemetry = useCallback(() => {
+    setTelemetryEvents(getRecentProjectEvents(eventsFilter, 40));
+    setUsageStats(getProjectUsageStats());
+  }, [eventsFilter]);
 
   const dict = getAdminDict(locale);
 
@@ -140,7 +160,8 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchMetrics();
-  }, [fetchMetrics]);
+    refreshTelemetry();
+  }, [fetchMetrics, refreshTelemetry]);
 
   if (loading) {
     return <LoadingSpinner text={dict.common.loading} large />;
@@ -259,7 +280,152 @@ export default function DashboardPage() {
             </div>
           </div>
         </section>
+
+        {/* 4. Proje Kullanım & Misafir Etkinlikleri (Project Guest Usage & Telemetry) */}
+        <section className="admin-overview-section" style={{ marginTop: '1.5rem' }}>
+          <div className="admin-overview-section-header">
+            <div>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+                <span>PROJE KULLANIM & MİSAFİR ETKİNLİKLERİ</span>
+                <span style={{ fontSize: '0.72rem', background: '#10b981', color: '#000', padding: '2px 8px', borderRadius: '4px', fontWeight: 800 }}>CANLI TELEMETRİ</span>
+              </h3>
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', margin: '0.25rem 0 0 0' }}>
+                Oturum açmadan (misafir) ve kayıtlı olarak projeleri (BookOS, TypeFlow) kullanan ziyaretçilerin kaydolan eylemleri.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={refreshTelemetry}
+              className="admin-btn admin-btn-ghost admin-btn-sm"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+            >
+              🔄 Olayları Yenile
+            </button>
+          </div>
+
+          {/* Telemetry Summary Cards */}
+          <div className="admin-cards">
+            <div className="admin-card">
+              <div className="admin-card-label">Toplam Kayıtlı Olay</div>
+              <div className="admin-card-value" style={{ color: '#38bdf8' }}>{usageStats.totalEvents}</div>
+              <div className="admin-card-sub" style={{ color: 'rgba(255,255,255,0.4)' }}>Tüm projeler geneli</div>
+            </div>
+            <div className="admin-card">
+              <div className="admin-card-label">Misafir / Oturum Açılmamış</div>
+              <div className="admin-card-value" style={{ color: '#f59e0b' }}>
+                {usageStats.guestEvents}
+                <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginLeft: '0.4rem' }}>
+                  ({usageStats.totalEvents > 0 ? Math.round((usageStats.guestEvents / usageStats.totalEvents) * 100) : 0}%)
+                </span>
+              </div>
+              <div className="admin-card-sub" style={{ color: 'rgba(255,255,255,0.4)' }}>Oturum açmadan etkileşim</div>
+            </div>
+            <div className="admin-card">
+              <div className="admin-card-label">Bugün Gerçekleşen Olaylar</div>
+              <div className="admin-card-value" style={{ color: '#10b981' }}>{usageStats.todayEvents}</div>
+              <div className="admin-card-sub" style={{ color: 'rgba(255,255,255,0.4)' }}>Son 24 saat</div>
+            </div>
+            <div className="admin-card">
+              <div className="admin-card-label">BookOS vs TypeFlow</div>
+              <div className="admin-card-value" style={{ fontSize: '1rem', color: '#e2e8f0' }}>
+                <span style={{ color: '#ff6a00' }}>{usageStats.projectBreakdown['bookos'] || 0}</span>
+                <span style={{ color: 'rgba(255,255,255,0.3)', margin: '0 0.35rem' }}>/</span>
+                <span style={{ color: '#3b82f6' }}>{usageStats.projectBreakdown['typeflow'] || 0}</span>
+              </div>
+              <div className="admin-card-sub" style={{ color: 'rgba(255,255,255,0.4)' }}>BookOS / TypeFlow dağılımı</div>
+            </div>
+          </div>
+
+          {/* Project Filter Pills */}
+          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.25rem', marginBottom: '0.75rem', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace' }}>FİLTRELE:</span>
+            <button
+              onClick={() => setEventsFilter('all')}
+              className={`admin-btn admin-btn-sm ${eventsFilter === 'all' ? 'admin-btn-primary' : 'admin-btn-ghost'}`}
+              style={{ fontSize: '0.75rem', padding: '0.25rem 0.6rem' }}
+            >
+              Tümü ({usageStats.totalEvents})
+            </button>
+            <button
+              onClick={() => setEventsFilter('bookos')}
+              className={`admin-btn admin-btn-sm ${eventsFilter === 'bookos' ? 'admin-btn-primary' : 'admin-btn-ghost'}`}
+              style={{ fontSize: '0.75rem', padding: '0.25rem 0.6rem', borderColor: eventsFilter === 'bookos' ? '#ff6a00' : undefined, background: eventsFilter === 'bookos' ? '#ff6a00' : undefined, color: eventsFilter === 'bookos' ? '#000' : undefined }}
+            >
+              BookOS ({usageStats.projectBreakdown['bookos'] || 0})
+            </button>
+            <button
+              onClick={() => setEventsFilter('typeflow')}
+              className={`admin-btn admin-btn-sm ${eventsFilter === 'typeflow' ? 'admin-btn-primary' : 'admin-btn-ghost'}`}
+              style={{ fontSize: '0.75rem', padding: '0.25rem 0.6rem', borderColor: eventsFilter === 'typeflow' ? '#3b82f6' : undefined, background: eventsFilter === 'typeflow' ? '#3b82f6' : undefined, color: eventsFilter === 'typeflow' ? '#fff' : undefined }}
+            >
+              TypeFlow ({usageStats.projectBreakdown['typeflow'] || 0})
+            </button>
+          </div>
+
+          {/* Real-time Telemetry Event Feed Table */}
+          <div style={{ overflowX: 'auto', background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'left' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.02)' }}>
+                  <th style={{ padding: '0.65rem 0.85rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>PROJE</th>
+                  <th style={{ padding: '0.65rem 0.85rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>KULLANICI TÜRÜ</th>
+                  <th style={{ padding: '0.65rem 0.85rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>GERÇEKLEŞEN OLAY</th>
+                  <th style={{ padding: '0.65rem 0.85rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>DETAYLAR</th>
+                  <th style={{ padding: '0.65rem 0.85rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textAlign: 'right' }}>ZAMAN</th>
+                </tr>
+              </thead>
+              <tbody>
+                {telemetryEvents.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>
+                      Henüz kaydedilmiş misafir olayı bulunmuyor. Ziyaretçiler BookOS veya TypeFlow'u kullandıkça olaylar burada canlı listelenecektir.
+                    </td>
+                  </tr>
+                ) : (
+                  telemetryEvents.map((evt) => (
+                    <tr key={evt.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                      <td style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap' }}>
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            fontWeight: 700,
+                            fontSize: '0.72rem',
+                            background: evt.project_slug === 'bookos' ? 'rgba(255, 106, 0, 0.2)' : 'rgba(59, 130, 246, 0.2)',
+                            color: evt.project_slug === 'bookos' ? '#ff8c38' : '#60a5fa',
+                            border: `1px solid ${evt.project_slug === 'bookos' ? 'rgba(255, 106, 0, 0.4)' : 'rgba(59, 130, 246, 0.4)'}`,
+                          }}
+                        >
+                          {evt.project_slug.toUpperCase()}
+                        </span>
+                      </td>
+                      <td style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap' }}>
+                        <span style={{ color: evt.is_guest ? '#f59e0b' : '#10b981', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <span>{evt.is_guest ? '⚡ Misafir' : '👤 Kayıtlı'}</span>
+                          <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>
+                            ({evt.user_identifier})
+                          </span>
+                        </span>
+                      </td>
+                      <td style={{ padding: '0.65rem 0.85rem', color: '#ffffff', fontWeight: 500 }}>
+                        {evt.event_name}
+                      </td>
+                      <td style={{ padding: '0.65rem 0.85rem', color: 'rgba(255,255,255,0.6)', fontFamily: 'monospace', fontSize: '0.75rem' }}>
+                        {evt.metadata ? Object.entries(evt.metadata).map(([k, v]) => `${k}: ${v}`).join(' | ') : '—'}
+                      </td>
+                      <td style={{ padding: '0.65rem 0.85rem', color: 'rgba(255,255,255,0.4)', textAlign: 'right', whiteSpace: 'nowrap', fontSize: '0.75rem' }}>
+                        {evt.created_at ? new Date(evt.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—'}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
       </div>
     </>
   );
 }
+

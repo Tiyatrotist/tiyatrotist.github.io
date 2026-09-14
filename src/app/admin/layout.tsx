@@ -12,6 +12,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { supabase, OWNER_ID } from '@/lib/supabase';
 import { getAdminDict, AdminLocale } from '@/lib/admin-i18n';
+import { setAdminCookies, clearAdminCookies } from '@/lib/admin-auth';
 import Sidebar from '@/components/admin/Sidebar';
 import AdminHeader from '@/components/admin/AdminHeader';
 import LoadingSpinner from '@/components/admin/LoadingSpinner';
@@ -42,7 +43,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         console.debug('[admin/layout] Session check:', session?.user?.id ?? 'none');
 
         if (!session?.user) {
-          console.debug('[admin/layout] No session, redirecting to login…');
+          console.debug('[admin/layout] No session, clearing cookies and redirecting to login…');
+          clearAdminCookies();
           if (!window.location.pathname.startsWith('/admin/login')) {
             window.location.href = '/admin/login';
           }
@@ -51,13 +53,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         if (session.user.id !== OWNER_ID) {
           console.debug('[admin/layout] Non-owner user:', session.user.id);
+          clearAdminCookies();
           setAuthState('denied');
           return;
+        }
+
+        // Refresh/confirm admin session cookies
+        if (session.access_token) {
+          setAdminCookies({
+            token: session.access_token,
+            email: session.user.email || '',
+            role: 'owner',
+          });
         }
 
         setAuthState('authenticated');
       } catch (err) {
         console.debug('[admin/layout] Auth check error:', err);
+        clearAdminCookies();
         if (!window.location.pathname.startsWith('/admin/login')) {
           window.location.href = '/admin/login';
         }
@@ -67,12 +80,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     checkAuth();
 
     // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.debug('[admin/layout] Auth state change:', event);
       if (event === 'SIGNED_OUT') {
+        clearAdminCookies();
         if (!window.location.pathname.startsWith('/admin/login')) {
           window.location.href = '/admin/login';
         }
+      } else if (event === 'SIGNED_IN' && session?.user?.id === OWNER_ID && session.access_token) {
+        setAdminCookies({
+          token: session.access_token,
+          email: session.user.email || '',
+          role: 'owner',
+        });
       }
     });
 

@@ -11,6 +11,7 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { supabase, OWNER_ID } from '@/lib/supabase';
 import { getAdminDict, AdminLocale } from '@/lib/admin-i18n';
+import { setAdminCookies } from '@/lib/admin-auth';
 import LoadingSpinner from '@/components/admin/LoadingSpinner';
 import '../../admin/admin.css';
 
@@ -30,7 +31,14 @@ export default function AdminLoginPage() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user?.id === OWNER_ID) {
-          console.debug('[admin/login] Already authenticated as owner, redirecting…');
+          console.debug('[admin/login] Already authenticated as owner, syncing cookie and redirecting…');
+          if (session.access_token) {
+            setAdminCookies({
+              token: session.access_token,
+              email: session.user.email || '',
+              role: 'owner',
+            });
+          }
           window.location.href = '/admin/dashboard';
           return;
         }
@@ -69,7 +77,14 @@ export default function AdminLoginPage() {
         return;
       }
 
-      console.debug('[admin/login] Owner authenticated, redirecting to dashboard…');
+      console.debug('[admin/login] Owner authenticated, setting cookies and redirecting…');
+      if (data.session?.access_token) {
+        setAdminCookies({
+          token: data.session.access_token,
+          email: data.user.email || email,
+          role: 'owner',
+        });
+      }
       window.location.href = '/admin/dashboard';
     } catch {
       console.debug('[admin/login] Network error');

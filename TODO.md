@@ -94,4 +94,13 @@
 - [x] ~~Gerçek Google & GitHub OAuth (`signInWithOAuth`) entegrasyonu~~
 - [x] ~~Gerçek Oturum Kapatma (`signOut`) ve güvenli misafir moduna geçiş~~
 - [x] ~~`TypeFlowMicrosite` üzerinde canlı `onAuthStateChange` oturum dinleyicisi ve reaktif profil senkronizasyonu~~
-- [x] ~~KVKK / GDPR Madde 20 Veri Taşınabilirliği (.json indirme) ve profil özelleştirme desteği~~
+- [x] ~~KVKK / GDPR Madde 20 Veri Taşınabilirliği (.json indirme) ve profil özelleştirme desteği~~
+
+### 8. ADMİN COOKİE OTURUMU & PROJELER İÇİN MİSAFİR KULLANIM TELEMETRİSİ
+- [x] ~~Admin panelinde güvenli çerez (`admin_session`, `admin_user`, `admin_role`, `admin_logged_in`) oluşturulması ve 7 günlük max-age ile kalıcı kılınması~~
+- [x] ~~Admin oturum kapatma (`Sidebar` & `Layout`) sırasında tüm admin çerezlerinin temizlenmesi~~
+- [x] ~~Diğer projeler (BookOS, TypeFlow) için birleşik misafir kullanım ve telemetri kütüphanesi (`src/lib/project-analytics.ts`)~~
+- [x] ~~BookOS için oturum açmadan kullanılabilir canlı dokunsal not editörü, bilgi grafı gezgini ve çekirdek tanılama benchmarkı~~
+- [x] ~~BookOS misafir notlarının yerel belleğe otomatik debounced kaydedilmesi ve `content_edit`, `feature_interaction`, `download_click` olaylarının loglanması~~
+- [x] ~~Admin Dashboard paneline canlı "Proje Kullanım & Misafir Etkinlikleri Telemetrisi" tablosu ve istatistik kartlarının eklenmesi~~
+

@@ -5,6 +5,7 @@
 
 'use client';
 
+import { useEffect } from 'react';
 import { Locale, Dictionary } from '@/dictionaries';
 import BookOSHeader from './BookOSHeader';
 import BookOSHero from './BookOSHero';
@@ -14,6 +15,7 @@ import BookOSTechnical from './BookOSTechnical';
 import BookOSReleases from './BookOSReleases';
 import BookOSDownload from './BookOSDownload';
 import BookOSFooter from './BookOSFooter';
+import { recordProjectEvent } from '@/lib/project-analytics';
 import '@/styles/bookos.css';
 
 interface BookOSMicrositeProps {
@@ -22,6 +24,17 @@ interface BookOSMicrositeProps {
 }
 
 export default function BookOSMicrosite({ lang, dict }: BookOSMicrositeProps) {
+  useEffect(() => {
+    console.debug('[BookOS:Microsite] Tracking anonymous guest session visit');
+    recordProjectEvent({
+      projectSlug: 'bookos',
+      event_type: 'page_view',
+      event_name: 'BookOS Çalışma Alanı Ziyareti',
+      is_guest: true,
+      metadata: { lang, timestamp: Date.now() },
+    });
+  }, [lang]);
+
   return (
     <div className="bookos-microsite">
       <BookOSHeader lang={lang} dict={dict} />

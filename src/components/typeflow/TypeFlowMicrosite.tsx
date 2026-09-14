@@ -53,6 +53,7 @@ import { TypeFlowGoogleAd } from './TypeFlowGoogleAd';
 import TypeFlowCheckoutPage, { CheckoutPackage, PaymentDetails, CHECKOUT_PACKAGES } from './TypeFlowCheckoutPage';
 import { getTechAds, getUnitsForLang } from './duolingoData';
 import { supabase } from '@/lib/supabase';
+import { recordProjectEvent } from '@/lib/project-analytics';
 import '@/styles/typeflow.css';
 
 interface TypeFlowMicrositeProps {
@@ -876,6 +877,22 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
         console.debug('[TypeFlow:Leagues] Supabase sync notice:', err);
       }
     })();
+
+    // Record telemetry event for project analytics (Guest & Authenticated)
+    recordProjectEvent({
+      projectSlug: 'typeflow',
+      event_type: 'test_complete',
+      event_name: `Daktilo Testi Tamamlandı: ${finalWpm} WPM (%${finalAcc})`,
+      is_guest: profile.isGuest,
+      user_identifier: profile.username || (profile.isGuest ? 'Misafir Daktilocu' : 'Kullanıcı'),
+      metadata: {
+        wpm: finalWpm,
+        accuracy: finalAcc,
+        mode: mode === 'words' ? 'Kelimeler' : mode === 'story' ? 'Hikaye' : mode === 'dev' ? 'Kod/CLI' : 'Ders',
+        earnedXp,
+        earnedGems,
+      },
+    });
 
     try {
       const communityStr = localStorage.getItem('tf_community_league_members');
