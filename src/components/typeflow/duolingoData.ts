@@ -2093,41 +2093,6 @@ export const LEAGUE_TIERS: { id: LeagueTier; nameTr: string; nameEn: string; ico
   { id: 'diamond', nameTr: 'Daktilo Kozmosu // Optik Zirve', nameEn: 'Quantum Optical Overlord', icon: '👑', minXp: 2000 },
 ];
 
-export const MOCK_LEAGUE_MEMBERS: Record<LeagueTier, LeagueMember[]> = {
-  bronze: [
-    { id: 'b1', username: 'cyber_phoenix', avatar: '🔥', weeklyXp: 280, rank: 1 },
-    { id: 'b2', username: 'neo_coder', avatar: '⚡', weeklyXp: 245, rank: 2 },
-    { id: 'b3', username: 'ghost_typist', avatar: '👻', weeklyXp: 210, rank: 3 },
-    { id: 'b4', username: 'terminal_root', avatar: '🤖', weeklyXp: 160, rank: 4 },
-    { id: 'b5', username: 'speedy_fox', avatar: '🦊', weeklyXp: 130, rank: 5 },
-    { id: 'b6', username: 'retro_coder', avatar: '👾', weeklyXp: 95, rank: 6 },
-    { id: 'b7', username: 'quantum_leap', avatar: '🌐', weeklyXp: 60, rank: 7 },
-  ],
-  silver: [
-    { id: 's1', username: 'vortex_pulse', avatar: '🌀', weeklyXp: 490, rank: 1 },
-    { id: 's2', username: 'neon_rider', avatar: '🏍️', weeklyXp: 430, rank: 2 },
-    { id: 's3', username: 'matrix_hacker', avatar: '🕶️', weeklyXp: 380, rank: 3 },
-    { id: 's4', username: 'syntax_witch', avatar: '🔮', weeklyXp: 310, rank: 4 },
-    { id: 's5', username: 'pixel_monk', avatar: '🧘', weeklyXp: 260, rank: 5 },
-  ],
-  gold: [
-    { id: 'g1', username: 'hyper_velocity', avatar: '🚀', weeklyXp: 820, rank: 1 },
-    { id: 'g2', username: 'chronos_time', avatar: '⏳', weeklyXp: 750, rank: 2 },
-    { id: 'g3', username: 'solaris_prime', avatar: '☀️', weeklyXp: 690, rank: 3 },
-    { id: 'g4', username: 'apex_predator', avatar: '🦅', weeklyXp: 610, rank: 4 },
-  ],
-  sapphire: [
-    { id: 'sp1', username: 'celestial_zen', avatar: '✨', weeklyXp: 1440, rank: 1 },
-    { id: 'sp2', username: 'frost_byte', avatar: '❄️', weeklyXp: 1380, rank: 2 },
-    { id: 'sp3', username: 'deep_ocean', avatar: '🌊', weeklyXp: 1290, rank: 3 },
-  ],
-  diamond: [
-    { id: 'd1', username: 'omnipresent_god', avatar: '👑', weeklyXp: 2450, rank: 1 },
-    { id: 'd2', username: 'speed_of_light', avatar: '⚡', weeklyXp: 2120, rank: 2 },
-    { id: 'd3', username: 'singularity_ai', avatar: '🌌', weeklyXp: 1910, rank: 3 },
-  ],
-};
-
 // ─── 3. ZORLAŞTIRILMIŞ GÜNLÜK GÖREVLER (DAILY QUESTS) ─────────────────────────
 export function getDailyQuests(
   lang: Locale,

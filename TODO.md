@@ -78,3 +78,9 @@
 - [x] ~~Çok aşamalı dinamik ders yapısı (Aşama 1: Kas Hafızası Drilleri, Aşama 2: Kelime İnşası, Aşama 3: Akıcı Cümle ve Yıldız Sınavı)~~
 - [x] ~~Görevleri ve başarımları zorlaştır (Günlük 250 XP, 5 test, 3 ders aşaması, %96+ doğruluk; 60/80/100/120 WPM, 7/30 gün seri, 50/200 test)~~
 - [x] ~~Verilen elmasları azalt (Enflasyonu bitir: 1 base elmas, +1 doğruluk, 2-4 ders ödülü, 5-7 sınav ödülü, mağaza fiyatlarını dengeli seviyeye çek)~~
+
+### 6. GERÇEK KULLANICI LİG SİSTEMİ
+- [x] ~~Sahte lig botlarını kaldır (`MOCK_LEAGUE_MEMBERS` temizlendi)~~
+- [x] ~~Her ligde kullanıcının adının çıkması hatasını düzelt (kullanıcı yalnızca kendi aktif liginde yer alır)~~
+- [x] ~~Gerçek son kullanıcıya yönelik lig altyapısı (Supabase ve yerel oturumlardan gerçek kullanıcı verisi)~~
+- [x] ~~Pazar gecesine canlı geri sayım sayacı ve gerçek terfi/düşme analizi~~

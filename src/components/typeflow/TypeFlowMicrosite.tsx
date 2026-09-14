@@ -52,6 +52,7 @@ import { TypeFlowPracticeHub, PracticeDrillConfig } from './TypeFlowPracticeHub'
 import { TypeFlowGoogleAd } from './TypeFlowGoogleAd';
 import TypeFlowCheckoutPage, { CheckoutPackage, PaymentDetails, CHECKOUT_PACKAGES } from './TypeFlowCheckoutPage';
 import { getTechAds, getUnitsForLang } from './duolingoData';
+import { supabase } from '@/lib/supabase';
 import '@/styles/typeflow.css';
 
 interface TypeFlowMicrositeProps {
@@ -84,15 +85,15 @@ const DEFAULT_PROFILE: UserProfile = {
   // Duolingo Gamification
   hearts: 5,
   maxHearts: 5,
-  gems: 150,
+  gems: 10,
   streakFreezes: 0,
   league: 'bronze',
-  weeklyXp: 280,
+  weeklyXp: 0,
   completedLessons: {},
   unlockedThemes: ['carbon', 'amber', 'emerald', 'slate', 'violet', 'rose', 'cyber'],
   unlockedSounds: ['thock', 'clicky', 'tactile', 'synth'],
   claimedQuests: [],
-  unlockedAchievements: ['first-step'],
+  unlockedAchievements: [],
 };
 
 export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrositeProps) {
@@ -223,15 +224,15 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
         parsed.isPremium = Boolean(parsed.isPremium);
         parsed.hearts = parsed.energy;
         parsed.maxHearts = 5;
-        parsed.gems = Math.max(0, parsed.gems ?? 150);
+        parsed.gems = Math.max(0, parsed.gems ?? 10);
         parsed.league = parsed.league || 'bronze';
-        parsed.weeklyXp = parsed.weeklyXp ?? 120;
+        parsed.weeklyXp = parsed.weeklyXp ?? 0;
         parsed.completedLessons = parsed.completedLessons || {};
         parsed.streakFreezes = parsed.streakFreezes ?? 0;
         parsed.unlockedThemes = parsed.unlockedThemes || ['carbon', 'amber', 'emerald', 'slate', 'violet', 'rose', 'cyber'];
         parsed.unlockedSounds = parsed.unlockedSounds || ['thock', 'clicky', 'tactile', 'synth'];
         parsed.claimedQuests = parsed.claimedQuests || [];
-        parsed.unlockedAchievements = parsed.unlockedAchievements || ['first-step'];
+        parsed.unlockedAchievements = parsed.unlockedAchievements || [];
 
         // ─── Audit Fix #6: Time-Based Energy Recharge (3 hours = +1 energy) ────
         if (!parsed.isPremium && (parsed.energy ?? 5) < 5) {
@@ -819,6 +820,42 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
     };
 
     handleProfileUpdate(updatedProfile);
+
+    // Sync real test score to Supabase and local community store for live leagues
+    (async () => {
+      try {
+        await supabase.from('typeflow_scores').insert({
+          username: profile.username || 'Anonim Daktilocu',
+          avatar: profile.avatar || '⚡',
+          wpm: finalWpm,
+          accuracy: finalAcc,
+          mode: mode === 'words' ? 'Kelimeler' : mode === 'story' ? 'Hikaye' : mode === 'dev' ? 'Kod/CLI' : 'Ders',
+          created_at: new Date().toISOString(),
+        });
+        console.debug('[TypeFlow:Leagues] Synced test score to Supabase');
+      } catch (err) {
+        console.debug('[TypeFlow:Leagues] Supabase sync notice:', err);
+      }
+    })();
+
+    try {
+      const communityStr = localStorage.getItem('tf_community_league_members');
+      const list = communityStr ? JSON.parse(communityStr) : [];
+      const existingIdx = list.findIndex((item: any) => item.username === profile.username);
+      if (existingIdx >= 0) {
+        list[existingIdx].weeklyXp = newWeeklyXp;
+        list[existingIdx].avatar = profile.avatar || '⚡';
+      } else {
+        list.push({
+          id: profile.id,
+          username: profile.username,
+          avatar: profile.avatar || '⚡',
+          weeklyXp: newWeeklyXp,
+          rank: 1,
+        });
+      }
+      localStorage.setItem('tf_community_league_members', JSON.stringify(list));
+    } catch {}
 
     const resultObj: TestResult = {
       wpm: finalWpm,
