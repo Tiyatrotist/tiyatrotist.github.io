@@ -78,6 +78,7 @@
 - [x] ~~Çok aşamalı dinamik ders yapısı (Aşama 1: Kas Hafızası Drilleri, Aşama 2: Kelime İnşası, Aşama 3: Akıcı Cümle ve Yıldız Sınavı)~~
 - [x] ~~Görevleri ve başarımları zorlaştır (Günlük 250 XP, 5 test, 3 ders aşaması, %96+ doğruluk; 60/80/100/120 WPM, 7/30 gün seri, 50/200 test)~~
 - [x] ~~Verilen elmasları azalt (Enflasyonu bitir: 1 base elmas, +1 doğruluk, 2-4 ders ödülü, 5-7 sınav ödülü, mağaza fiyatlarını dengeli seviyeye çek)~~
+- [x] ~~Ders Tamamlama ve Yıldız Kaydı Hatasının Düzeltilmesi (Tek aşamalı derslerin 3 aşamaya takılıp sıfırlanması giderildi, yıldızlar profile ve haritaya kaydedildi, "Akademiye Dön" butonu ve son kelime otomatik tamamlama eklendi)~~
 
 ### 6. GERÇEK KULLANICI LİG SİSTEMİ
 - [x] ~~Sahte lig botlarını kaldır (`MOCK_LEAGUE_MEMBERS` temizlendi)~~

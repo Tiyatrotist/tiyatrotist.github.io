@@ -729,17 +729,29 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
     }
 
     if (isLesson && activeLesson) {
+      const totalStages = activeLesson.stages && activeLesson.stages.length > 0 ? activeLesson.stages.length : 1;
       const currentStage = activeLesson.stages?.[activeLessonStage - 1];
       const targetMinWpm = currentStage ? currentStage.minWpm : activeLesson.minWpm;
       const targetMinAcc = currentStage ? currentStage.minAccuracy : activeLesson.minAccuracy;
       const passed = finalWpm >= targetMinWpm && finalAcc >= targetMinAcc;
 
+      console.debug('[TypeFlow:Lesson] Finishing lesson test:', {
+        lessonId: activeLesson.id,
+        stage: activeLessonStage,
+        totalStages,
+        finalWpm,
+        finalAcc,
+        targetMinWpm,
+        targetMinAcc,
+        passed,
+      });
+
       if (passed) {
-        if (activeLessonStage < (activeLesson.stages?.length || 3)) {
-          // Audit Fix #2: Intermediate stage completed — auto-advance to next stage
+        if (totalStages > 1 && activeLessonStage < totalStages) {
+          // Multi-stage lesson: Intermediate stage completed — auto-advance to next stage
           stars = 1;
-          earnedXp = Math.round((activeLesson.xpReward / 3) * (profile.isPremium ? 2 : 1));
-          earnedGems += 1; // Tightened: +1 gem for intermediate stage
+          earnedXp = Math.round((activeLesson.xpReward / totalStages) * (profile.isPremium ? 2 : 1));
+          earnedGems += 1; // +1 gem for intermediate stage
           // Schedule auto-advance to next stage after result is shown briefly
           const nextStage = activeLessonStage + 1;
           setTimeout(() => {
@@ -752,14 +764,17 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
             handleStartLesson(activeLesson!, nextStage);
           }, 2500);
         } else {
-          // Final stage 3 passed: award mastery stars!
+          // Final stage or single-stage lesson passed: award mastery stars!
           stars = 1;
           if (finalWpm >= targetMinWpm + 5 && finalAcc >= 94) stars = 2;
           if (finalWpm >= targetMinWpm + 10 && finalAcc >= 97) stars = 3;
           earnedXp = activeLesson.xpReward * (profile.isPremium ? 2 : 1);
           earnedGems += activeLesson.gemReward;
+          console.debug('[TypeFlow:Lesson] Full lesson completed! Stars awarded:', stars, 'XP:', earnedXp, 'Gems:', earnedGems);
         }
       } else {
+        // Failed stage/test: target criteria not met
+        stars = 0;
         // Failed stage/test: deduct 1 Focus Battery cell if not premium
         if (!profile.isPremium) {
           setProfile((prev) => {
@@ -824,9 +839,11 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
     // Record lesson completion when final stage passed
     const newCompletedLessons = { ...(profile.completedLessons || {}) };
     if (isLesson && activeLesson && stars > 0) {
-      const isFinalStage = activeLessonStage >= (activeLesson.stages?.length || 1);
+      const totalStages = activeLesson.stages && activeLesson.stages.length > 0 ? activeLesson.stages.length : 1;
+      const isFinalStage = activeLessonStage >= totalStages;
       if (isFinalStage) {
         newCompletedLessons[activeLesson.id] = Math.max(newCompletedLessons[activeLesson.id] || 0, stars);
+        console.debug('[TypeFlow:Lesson] Saved completion for lesson:', activeLesson.id, 'Stars:', newCompletedLessons[activeLesson.id]);
       }
     }
 
@@ -1055,6 +1072,14 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
 
       soundEngine.playKey(false, isCharError);
     }
+
+    // Auto-complete immediately if user types the final character of the last word correctly
+    const isLastWord = currentWordIndex === words.length - 1;
+    if (isLastWord && normVal === normTarget) {
+      console.debug('[TypeFlow:Engine] Final word matched without space, auto-submitting');
+      handleSpaceSubmit(val);
+      return;
+    }
   };
 
   const handleSpaceSubmit = (submittedVal?: string) => {
@@ -1245,7 +1270,7 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
             setPracticeSubView('hub');
             setTestStatus('idle');
             setIsLessonFailed(false);
-          } else if (tab === 'path' && testStatus === 'completed') {
+          } else if (tab === 'path') {
             setActiveLesson(null);
             setMode('words');
             setTestStatus('idle');
@@ -1545,10 +1570,18 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
                   <TypeFlowResults
                     lang={lang}
                     result={testResult}
+                    activeLesson={activeLesson}
                     onRestart={initializeTest}
                     onReturnToProjects={() => router.push(`/${lang}/projects`)}
                     onViewLeaderboard={() => setActiveTab('leagues')}
-                    onReturnToPath={() => setActiveTab('path')}
+                    onReturnToPath={() => {
+                      console.debug('[TypeFlow:Microsite] Returning to Learn Path from Results HUD');
+                      setActiveLesson(null);
+                      setMode('words');
+                      setTestStatus('idle');
+                      setIsLessonFailed(false);
+                      setActiveTab('path');
+                    }}
                     onPrevLesson={prevLesson ? () => handleStartLesson(prevLesson) : undefined}
                     onNextLesson={nextLesson ? () => handleStartLesson(nextLesson) : undefined}
                   />

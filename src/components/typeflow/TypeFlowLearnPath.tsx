@@ -236,6 +236,18 @@ export default function TypeFlowLearnPath({
               </div>
             </div>
 
+            {/* Completed Badge Indicator */}
+            {profile.completedLessons?.[selectedLesson.id] > 0 && (
+              <div style={{ margin: '0.75rem 0', padding: '0.6rem 0.8rem', background: 'rgba(34, 197, 94, 0.12)', border: '1px solid #22c55e', borderRadius: '10px', textAlign: 'center', fontSize: '0.85rem', color: '#16a34a', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                <span>✓</span>
+                <span>
+                  {isTr
+                    ? `Bu ders tamamlandı (${profile.completedLessons[selectedLesson.id]} / 3 ⭐). Hızınızı pekiştirmek için tekrar oynayabilirsiniz!`
+                    : `Completed (${profile.completedLessons[selectedLesson.id]} / 3 ⭐). Replay anytime to beat your score!`}
+                </span>
+              </div>
+            )}
+
             {/* Battery Depleted Warning or Launch */}
             {isBatteryEmpty ? (
               <div className="tf-lesson-hearts-empty">
@@ -292,7 +304,9 @@ export default function TypeFlowLearnPath({
                   className="tf-lesson-launch-btn tf-btn-pushable"
                   onClick={handleLaunch}
                 >
-                  ▶ {isTr ? 'Dersi Başlat' : 'Start Lesson'}
+                  {profile.completedLessons?.[selectedLesson.id] > 0
+                    ? (isTr ? '↺ Dersi Tekrarla' : '↺ Replay Lesson')
+                    : (isTr ? '▶ Dersi Başlat' : '▶ Start Lesson')}
                 </button>
               </div>
             )}

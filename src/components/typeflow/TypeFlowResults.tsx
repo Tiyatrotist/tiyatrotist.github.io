@@ -7,12 +7,13 @@
 
 import React, { useState } from 'react';
 import { Locale } from '@/dictionaries';
-import { TestResult } from './types';
+import { TestResult, Lesson } from './types';
 import KeyboardHeatmap from './KeyboardHeatmap';
 
 interface TypeFlowResultsProps {
   lang: Locale;
   result: TestResult;
+  activeLesson?: Lesson | null;
   onRestart: () => void;
   onReturnToProjects: () => void;
   onViewLeaderboard?: () => void;
@@ -24,6 +25,7 @@ interface TypeFlowResultsProps {
 export default function TypeFlowResults({
   lang,
   result,
+  activeLesson,
   onRestart,
   onReturnToProjects,
   onViewLeaderboard,
@@ -218,19 +220,44 @@ export default function TypeFlowResults({
 
       {/* Duolingo Lesson Rewards Banner */}
       {result.mode === 'lesson' && (
-        <div style={{ background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(168, 85, 247, 0.12))', border: '1px solid #38bdf8', borderRadius: '14px', padding: '1.25rem', marginTop: '1rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '2.2rem', marginBottom: '0.4rem', display: 'flex', justifyContent: 'center', gap: '10px' }}>
-            <span className="tf-star-spring-1">{result.stars && result.stars >= 1 ? '⭐' : '☆'}</span>
-            <span className="tf-star-spring-2">{result.stars && result.stars >= 2 ? '⭐' : '☆'}</span>
-            <span className="tf-star-spring-3">{result.stars && result.stars >= 3 ? '⭐' : '☆'}</span>
+        result.stars && result.stars > 0 ? (
+          <div style={{ background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(56, 189, 248, 0.12))', border: '1.5px solid #22c55e', borderRadius: '14px', padding: '1.25rem', marginTop: '1rem', textAlign: 'center', boxShadow: '0 8px 24px rgba(34, 197, 94, 0.15)' }}>
+            <div style={{ fontSize: '2.2rem', marginBottom: '0.4rem', display: 'flex', justifyContent: 'center', gap: '10px' }}>
+              <span className="tf-star-spring-1">{result.stars >= 1 ? '⭐' : '☆'}</span>
+              <span className="tf-star-spring-2">{result.stars >= 2 ? '⭐' : '☆'}</span>
+              <span className="tf-star-spring-3">{result.stars >= 3 ? '⭐' : '☆'}</span>
+            </div>
+            <h4 style={{ margin: '0 0 0.25rem 0', color: '#22c55e', fontSize: '1.2rem', fontWeight: 800 }}>
+              {isTr ? '🎉 Ders Başarıyla Tamamlandı!' : '🎉 Lesson Completed!'}
+            </h4>
+            <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--tf-text-secondary)' }}>
+              {isTr ? `Kazanılan Ödül: +${result.earnedXp || 25} XP ve +${result.earnedGems || 5} 💎 Elmas` : `Rewards: +${result.earnedXp || 25} XP & +${result.earnedGems || 5} 💎 Gems`}
+            </p>
+            <div style={{ marginTop: '0.6rem', display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(34, 197, 94, 0.18)', color: '#16a34a', padding: '0.25rem 0.85rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 800 }}>
+              <span>✓</span>
+              <span>{isTr ? 'Akademi Haritasına Kaydedildi' : 'Saved to Academy Path'}</span>
+            </div>
           </div>
-          <h4 style={{ margin: '0 0 0.25rem 0', color: '#38bdf8', fontSize: '1.15rem', fontWeight: 800 }}>
-            {isTr ? 'Aşama ve Ders Başarıyla Tamamlandı!' : 'Stage & Lesson Completed!'}
-          </h4>
-          <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--tf-text-secondary)' }}>
-            {isTr ? `Kazanılan Ödül: +${result.earnedXp || 25} XP ve +${result.earnedGems || 15} 💎 Elmas` : `Rewards: +${result.earnedXp || 25} XP & +${result.earnedGems || 15} 💎 Gems`}
-          </p>
-        </div>
+        ) : (
+          <div style={{ background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(245, 158, 11, 0.12))', border: '1.5px solid #ef4444', borderRadius: '14px', padding: '1.25rem', marginTop: '1rem', textAlign: 'center', boxShadow: '0 8px 24px rgba(239, 68, 68, 0.15)' }}>
+            <div style={{ fontSize: '2.2rem', marginBottom: '0.4rem', display: 'flex', justifyContent: 'center', gap: '10px' }}>
+              <span>☆</span>
+              <span>☆</span>
+              <span>☆</span>
+            </div>
+            <h4 style={{ margin: '0 0 0.25rem 0', color: '#ef4444', fontSize: '1.2rem', fontWeight: 800 }}>
+              {isTr ? '⚠️ Ustalık Barajı Sağlanamadı' : '⚠️ Mastery Goal Not Met'}
+            </h4>
+            <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.88rem', color: 'var(--tf-text-secondary)' }}>
+              {isTr
+                ? `Bu dersi tamamlamak için gereken baraj: ${activeLesson?.minWpm || 20} WPM ve %${activeLesson?.minAccuracy || 90} Doğruluk.`
+                : `Target criteria to pass this lesson: ${activeLesson?.minWpm || 20} WPM and %${activeLesson?.minAccuracy || 90} Accuracy.`}
+            </p>
+            <p style={{ margin: 0, fontSize: '0.82rem', color: '#f59e0b', fontWeight: 700 }}>
+              {isTr ? 'Sonucunuz barajın altında kaldığı için ders henüz tamamlanmadı. Lütfen tekrar deneyin!' : 'Your score fell below target criteria. Please try again!'}
+            </p>
+          </div>
+        )
       )}
 
       {/* Actions and Sharing (Simplified per User Request) */}
@@ -238,14 +265,15 @@ export default function TypeFlowResults({
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center', width: '100%' }}>
           {result.mode === 'lesson' ? (
             <>
-              {onPrevLesson && (
+              {onReturnToPath && (
                 <button
                   className="tf-btn-secondary tf-btn-pushable"
-                  onClick={onPrevLesson}
-                  title={isTr ? "Önceki Dersi Yükle" : "Previous Lesson"}
+                  onClick={onReturnToPath}
+                  title={isTr ? "Akademi Haritasına Dön" : "Back to Academy Path"}
+                  style={{ borderColor: '#38bdf8', color: '#38bdf8', fontWeight: 800 }}
                 >
-                  <span>←</span>
-                  <span>{isTr ? 'Önceki Ders' : 'Previous Lesson'}</span>
+                  <span>🗺️</span>
+                  <span>{isTr ? 'Akademiye Dön' : 'Back to Path'}</span>
                 </button>
               )}
 
@@ -259,7 +287,7 @@ export default function TypeFlowResults({
                 <span>{isTr ? 'Dersi Tekrarla' : 'Repeat Lesson'}</span>
               </button>
 
-              {onNextLesson && (
+              {onNextLesson && result.stars && result.stars > 0 && (
                 <button
                   className="tf-btn-primary tf-btn-pushable"
                   onClick={onNextLesson}
@@ -268,6 +296,17 @@ export default function TypeFlowResults({
                 >
                   <span>→</span>
                   <span>{isTr ? 'Sıradaki Ders' : 'Next Lesson'}</span>
+                </button>
+              )}
+
+              {onPrevLesson && (
+                <button
+                  className="tf-btn-secondary tf-btn-pushable"
+                  onClick={onPrevLesson}
+                  title={isTr ? "Önceki Dersi Yükle" : "Previous Lesson"}
+                >
+                  <span>←</span>
+                  <span>{isTr ? 'Önceki Ders' : 'Previous Lesson'}</span>
                 </button>
               )}
 
