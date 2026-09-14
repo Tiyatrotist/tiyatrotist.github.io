@@ -40,6 +40,7 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://znsxdqzoojgauevifnel.supabase.co' }}
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_AZIDRInTs7zlZCN0Ub3L7A_7U9pgUsD' }}
+          NEXT_PUBLIC_ADSENSE_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_ADSENSE_CLIENT_ID || 'ca-pub-7828284439187298' }}
         run: |
           npm run build
           touch ./out/.nojekyll
