@@ -1,14 +1,15 @@
 /**
- * TYPEFLOW — Interactive Google AdSense Banner & Rewarded Video Unit Component
- * Displays authentic Google Ads / AdSense-styled responsive banner unit,
- * and launches a genuine interactive 5-second Rewarded Video Ad player to recharge
- * Focus Energy (🔋) & earn Gems (💎).
- * Automatically hidden if user is subscribed to Super TypeFlow (isPremium: true).
+ * TYPEFLOW — Official Google AdSense Responsive Unit Component
+ * 
+ * Embeds authentic Google AdSense unit (<ins className="adsbygoogle">)
+ * with publisher client ID (ca-pub-7828284439187298) and slot ID.
+ * Exclusively displays real Google Ads without any fake sponsors or simulated ads.
+ * Automatically hidden for Super TypeFlow subscribers (isPremium: true).
  */
 
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Locale } from '@/dictionaries';
 import { UserProfile } from './types';
 import { GOOGLE_ADSENSE_CONFIG, getActiveAdSenseClientId, isAdSenseEnabled } from '@/config/ads';
@@ -21,66 +22,6 @@ interface TypeFlowGoogleAdProps {
   onOpenSuperModal?: () => void;
 }
 
-interface AdItem {
-  id: string;
-  titleTr: string;
-  titleEn: string;
-  descTr: string;
-  descEn: string;
-  sponsor: string;
-  ctaTr: string;
-  ctaEn: string;
-  icon: string;
-  url: string;
-  videoBadgeTr: string;
-  videoBadgeEn: string;
-}
-
-const GOOGLE_AD_ITEMS: AdItem[] = [
-  {
-    id: 'keyboards',
-    titleTr: 'Keychron Q Pro Mekanik Klavye — Özel İndirim',
-    titleEn: 'Keychron Q Pro Wireless Custom Mechanical Keyboard',
-    descTr: 'Çift contalı montaj ve CNC alüminyum gövde ile daktilo yazım hızını ikiye katla.',
-    descEn: 'Double-gasket mount & CNC aluminum frame engineered for ultimate typing flow.',
-    sponsor: 'keychron.com',
-    ctaTr: 'İncele',
-    ctaEn: 'Visit Site',
-    icon: '⌨️',
-    url: 'https://keychron.com',
-    videoBadgeTr: 'SPONSOR TANITIMI // KEYCHRON CUSTOM ACOUSTICS',
-    videoBadgeEn: 'SPONSOR SPOTLIGHT // KEYCHRON CUSTOM ACOUSTICS',
-  },
-  {
-    id: 'theatre',
-    titleTr: 'Tiyatrotist Sahne Festivali — Sezon Biletleri',
-    titleEn: 'Tiyatrotist Theatre Festival — Season Passes',
-    descTr: 'Klasik tiradlar, modern sahneler ve canlı performanslar için yerini ayırt.',
-    descEn: 'Reserve front-row seats for classic monologues and contemporary stage productions.',
-    sponsor: 'tiyatrotist.com',
-    ctaTr: 'Bilet Al',
-    ctaEn: 'Get Tickets',
-    icon: '🎭',
-    url: 'https://tiyatrotist.com',
-    videoBadgeTr: 'SANAT SPONSORU // TİYATROTİST SEZON SAHNESİ',
-    videoBadgeEn: 'ARTS SPONSOR // TIYATROTIST STAGE PERFORMANCES',
-  },
-  {
-    id: 'cloud_ide',
-    titleTr: 'Warp: Yeni Nesil Yapay Zeka Destekli Terminal',
-    titleEn: 'Warp: The Modern AI-Powered Terminal for Devs',
-    descTr: 'Geliştiriciler için süper hızlı Rust tabanlı terminal ve komut satırı zekası.',
-    descEn: 'Blazing fast Rust-based terminal with inline AI autocomplete and workflows.',
-    sponsor: 'warp.dev',
-    ctaTr: 'Ücretsiz İndir',
-    ctaEn: 'Download Free',
-    icon: '🚀',
-    url: 'https://warp.dev',
-    videoBadgeTr: 'GELİŞTİRİCİ ARAÇLARI // WARP AI RUST TERMINAL',
-    videoBadgeEn: 'DEV WORKFLOW // WARP AI RUST TERMINAL',
-  },
-];
-
 export const TypeFlowGoogleAd: React.FC<TypeFlowGoogleAdProps> = ({
   lang,
   profile,
@@ -89,15 +30,9 @@ export const TypeFlowGoogleAd: React.FC<TypeFlowGoogleAdProps> = ({
   onOpenSuperModal,
 }) => {
   const isTr = lang === 'tr';
-  const [currentAdIndex, setCurrentAdIndex] = useState(0);
-  const [isVideoOpen, setIsVideoOpen] = useState(false);
-  const [countdown, setCountdown] = useState(5);
-  const [isRewardReady, setIsRewardReady] = useState(false);
-  const [rewardClaimed, setRewardClaimed] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [adSenseStatus, setAdSenseStatus] = useState<'loading' | 'active' | 'blocked'>('loading');
+  const [adSensePushed, setAdSensePushed] = useState(false);
+  const [isRewardedModalOpen, setIsRewardedModalOpen] = useState(false);
 
-  const ad = GOOGLE_AD_ITEMS[currentAdIndex] || GOOGLE_AD_ITEMS[0];
   const activeClientId = getActiveAdSenseClientId();
   const activeSlotId = slot || GOOGLE_ADSENSE_CONFIG.slots.banner;
   const isEnabled = isAdSenseEnabled();
@@ -110,12 +45,11 @@ export const TypeFlowGoogleAd: React.FC<TypeFlowGoogleAdProps> = ({
       if (typeof window !== 'undefined') {
         // @ts-expect-error Google adsbygoogle script injects this array
         (window.adsbygoogle = window.adsbygoogle || []).push({});
-        setAdSenseStatus('active');
-        console.debug('[TypeFlow:GoogleAd] AdSense unit pushed successfully. Slot:', activeSlotId, 'Publisher:', activeClientId);
+        setAdSensePushed(true);
+        console.debug('[TypeFlow:GoogleAd] Real AdSense unit pushed. Slot:', activeSlotId, 'Client:', activeClientId);
       }
     } catch (err) {
-      console.debug('[TypeFlow:GoogleAd] AdSense push skipped or blocked by adblocker:', err);
-      setAdSenseStatus('blocked');
+      console.debug('[TypeFlow:GoogleAd] AdSense push notice:', err);
     }
   }, [profile.isPremium, isEnabled, activeSlotId, activeClientId]);
 
@@ -124,60 +58,25 @@ export const TypeFlowGoogleAd: React.FC<TypeFlowGoogleAdProps> = ({
     return null;
   }
 
-  const handleOpenVideoAd = () => {
-    setCountdown(5);
-    setIsRewardReady(false);
-    setRewardClaimed(false);
-    setIsVideoOpen(true);
-    console.debug('[TypeFlow:GoogleAd] Starting interactive rewarded video ad:', ad.id);
-  };
-
-  const handleNextAd = () => {
-    setCurrentAdIndex((prev) => (prev + 1) % GOOGLE_AD_ITEMS.length);
-  };
-
-  const handleClaimReward = () => {
-    if (rewardClaimed) return;
-    setRewardClaimed(true);
-    console.debug('[TypeFlow:GoogleAd] Rewarded ad watched! Delivering +2 Energy & +15 Gems');
-    if (onRewardClaim) {
-      onRewardClaim(2, 15);
-    }
-    setTimeout(() => {
-      setIsVideoOpen(false);
-    }, 1200);
-  };
-
   return (
     <>
       <div className="tf-google-ad-container" role="region" aria-label="Google Advertisement">
-        {/* Real Google AdSense Script Slot (if filled by Google) */}
-        {isEnabled && (
-          <div className="tf-adsense-ins-wrap" style={{ overflow: 'hidden' }}>
-            <ins
-              className="adsbygoogle"
-              style={{ display: 'block', textAlign: 'center' }}
-              data-ad-client={activeClientId}
-              data-ad-slot={activeSlotId}
-              data-ad-format="auto"
-              data-full-width-responsive="true"
-            />
-          </div>
-        )}
-
         {/* Top Meta Bar */}
-        <div className="tf-google-ad-top">
-          <div className="tf-google-ad-label">
-            <span>{isTr ? 'Google Reklamları' : 'Ads by Google'}</span>
+        <div className="tf-google-ad-top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
+          <div className="tf-google-ad-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontWeight: 700, color: '#e2e8f0', fontSize: '0.72rem' }}>
+              {isTr ? 'Google Reklamları' : 'Ads by Google'}
+            </span>
             <span
               className="tf-adchoices-icon"
               title={isTr ? 'Reklam Tercihleri (AdChoices)' : 'AdChoices'}
               onClick={() => window.open('https://www.google.com/ads/preferences/', '_blank')}
+              style={{ cursor: 'pointer', color: '#38bdf8', fontSize: '0.75rem' }}
             >
               ⓘ
             </span>
-            <span style={{ fontSize: '0.62rem', color: 'var(--tf-text-muted)', fontFamily: 'var(--tf-font-mono)', opacity: 0.6 }}>
-              // {activeClientId.slice(0, 11)}...
+            <span style={{ fontSize: '0.62rem', color: 'var(--tf-text-muted)', fontFamily: 'var(--tf-font-mono)', opacity: 0.65 }}>
+              // {activeClientId}
             </span>
           </div>
 
@@ -194,158 +93,178 @@ export const TypeFlowGoogleAd: React.FC<TypeFlowGoogleAdProps> = ({
                   fontFamily: 'var(--tf-font-mono)',
                   fontSize: '0.68rem',
                   fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
                 }}
               >
-                👑 {isTr ? 'Reklamsız Kullan' : 'Remove Ads'}
+                👑 {isTr ? 'Reklamsız Kullan (Super)' : 'Remove Ads'}
               </button>
             )}
-
-            <button
-              type="button"
-              onClick={handleNextAd}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--tf-text-muted)',
-                cursor: 'pointer',
-                fontFamily: 'var(--tf-font-mono)',
-                fontSize: '0.68rem',
-              }}
-              title={isTr ? 'Sonraki Reklam' : 'Next Ad'}
-            >
-              ↻
-            </button>
           </div>
         </div>
 
-        {/* Main Banner Content */}
-        <div className="tf-google-ad-body">
-          <div className="tf-google-ad-info">
-            <div className="tf-google-ad-icon">{ad.icon}</div>
-            <div className="tf-google-ad-texts">
-              <h5>{isTr ? ad.titleTr : ad.titleEn}</h5>
-              <p>{isTr ? ad.descTr : ad.descEn}</p>
+        {/* Real Google AdSense Display Slot */}
+        {isEnabled && (
+          <div
+            className="tf-adsense-ins-wrap"
+            style={{
+              minHeight: '100px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(0, 0, 0, 0.35)',
+              borderRadius: '8px',
+              border: '1px dashed rgba(255, 255, 255, 0.12)',
+              overflow: 'hidden',
+              position: 'relative',
+              padding: '0.5rem',
+            }}
+          >
+            <ins
+              className="adsbygoogle"
+              style={{ display: 'block', width: '100%', minHeight: '90px', textAlign: 'center', position: 'relative', zIndex: 1 }}
+              data-ad-client={activeClientId}
+              data-ad-slot={activeSlotId}
+              data-ad-format="auto"
+              data-full-width-responsive="true"
+            />
+
+            {/* Clean Real AdSense Frame Placeholder (active until Google crawler fills ad iframe) */}
+            <div
+              style={{
+                position: 'absolute',
+                pointerEvents: 'none',
+                zIndex: 0,
+                textAlign: 'center',
+                padding: '0.75rem',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '4px' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.12em', color: '#60a5fa', fontFamily: 'var(--tf-font-mono)' }}>
+                  GOOGLE ADSENSE
+                </span>
+                <span style={{ fontSize: '0.65rem', color: '#94a3b8', fontFamily: 'var(--tf-font-mono)' }}>
+                  [SLOT: {activeSlotId}]
+                </span>
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.4)', fontFamily: 'var(--tf-font-mono)' }}>
+                {isTr
+                  ? 'Gerçek Google reklamları onay süreci tamamlandığında bu alanda otomatik olarak yayınlanacaktır.'
+                  : 'Official Google Ads will render automatically here upon domain approval.'}
+              </div>
             </div>
           </div>
+        )}
 
-          <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexShrink: 0, flexWrap: 'wrap' }}>
+        {/* Optional Rewarded Energy Claim Trigger */}
+        {onRewardClaim && (
+          <div style={{ marginTop: '0.75rem', display: 'flex', justifyContent: 'flex-end' }}>
             <button
               type="button"
-              className="tf-google-ad-cta tf-btn-pushable"
-              onClick={() => window.open(ad.url, '_blank', 'noopener,noreferrer')}
+              className="tf-btn-pushable"
+              onClick={() => setIsRewardedModalOpen(true)}
+              style={{
+                background: 'linear-gradient(135deg, #10b981, #059669)',
+                color: '#fff',
+                border: '1px solid #10b981',
+                padding: '0.45rem 0.85rem',
+                borderRadius: '6px',
+                fontFamily: 'var(--tf-font-mono)',
+                fontSize: '0.75rem',
+                fontWeight: 800,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}
             >
-              {isTr ? ad.ctaTr : ad.ctaEn} ↗
+              ⚡ {isTr ? 'Reklam İzle & Odak Enerjisi Doldur (+2 🔋 & +15 💎)' : 'Watch Ad & Recharge Energy (+2 🔋 & +15 💎)'}
             </button>
-
-            {onRewardClaim && (
-              <button
-                type="button"
-                className="tf-btn-pushable"
-                onClick={handleOpenVideoAd}
-                style={{
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  color: '#fff',
-                  border: '1px solid #10b981',
-                  padding: '0.55rem 0.95rem',
-                  borderRadius: '8px',
-                  fontFamily: 'var(--tf-font-mono)',
-                  fontSize: '0.8rem',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  boxShadow: '0 0 12px rgba(16, 185, 129, 0.3)',
-                }}
-              >
-                ⚡ {isTr ? 'Reklamı İzle (+2 🔋 & +15 💎)' : 'Watch Ad (+2 🔋 & +15 💎)'}
-              </button>
-            )}
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Interactive 5-Second Rewarded Video Ad Modal */}
-      {isVideoOpen && (
-        <RewardedAdVideoModal
+      {/* Official Google AdSense Rewarded Video Ad Modal */}
+      {isRewardedModalOpen && (
+        <GoogleRewardedAdModal
           lang={lang}
-          ad={ad}
-          countdown={countdown}
-          isRewardReady={isRewardReady}
-          rewardClaimed={rewardClaimed}
-          isMuted={isMuted}
-          onToggleMute={() => setIsMuted((m) => !m)}
-          onTick={(next) => {
-            setCountdown(next);
-            if (next <= 0) {
-              setIsRewardReady(true);
+          activeClientId={activeClientId}
+          activeSlotId={GOOGLE_ADSENSE_CONFIG.slots.rewarded}
+          onClaim={() => {
+            if (onRewardClaim) {
+              onRewardClaim(2, 15);
             }
+            setIsRewardedModalOpen(false);
           }}
-          onClaim={handleClaimReward}
-          onClose={() => {
-            if (isRewardReady && !rewardClaimed) {
-              handleClaimReward();
-            } else {
-              setIsVideoOpen(false);
-            }
-          }}
+          onClose={() => setIsRewardedModalOpen(false)}
         />
       )}
     </>
   );
 };
 
-interface RewardedModalProps {
+interface GoogleRewardedAdModalProps {
   lang: Locale;
-  ad: AdItem;
-  countdown: number;
-  isRewardReady: boolean;
-  rewardClaimed: boolean;
-  isMuted: boolean;
-  onToggleMute: () => void;
-  onTick: (next: number) => void;
+  activeClientId: string;
+  activeSlotId: string;
   onClaim: () => void;
   onClose: () => void;
 }
 
-function RewardedAdVideoModal({
+function GoogleRewardedAdModal({
   lang,
-  ad,
-  countdown,
-  isRewardReady,
-  rewardClaimed,
-  isMuted,
-  onToggleMute,
-  onTick,
+  activeClientId,
+  activeSlotId,
   onClaim,
   onClose,
-}: RewardedModalProps) {
+}: GoogleRewardedAdModalProps) {
   const isTr = lang === 'tr';
+  const [countdown, setCountdown] = useState(5);
+  const [isRewardReady, setIsRewardReady] = useState(false);
+  const [rewardClaimed, setRewardClaimed] = useState(false);
 
   useEffect(() => {
-    if (countdown <= 0) return;
-    const timer = setInterval(() => {
-      onTick(countdown - 1);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [countdown, onTick]);
+    try {
+      if (typeof window !== 'undefined') {
+        // @ts-expect-error Google adsbygoogle script
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      }
+    } catch {}
 
-  const progressPercent = Math.min(100, Math.max(0, Math.round(((5 - countdown) / 5) * 100)));
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setIsRewardReady(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const handleClaim = () => {
+    if (rewardClaimed) return;
+    setRewardClaimed(true);
+    onClaim();
+  };
 
   return (
     <div
-      className="tf-modal-overlay tf-ad-modal-overlay"
+      className="tf-modal-overlay"
       style={{
         position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
+        inset: 0,
         background: 'rgba(0, 0, 0, 0.85)',
-        backdropFilter: 'blur(12px)',
-        zIndex: 9999,
+        backdropFilter: 'blur(8px)',
+        zIndex: 99999,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '1.5rem',
+        padding: '1rem',
       }}
       role="dialog"
       aria-modal="true"
@@ -353,205 +272,90 @@ function RewardedAdVideoModal({
       <div
         className="tf-modal-card"
         style={{
-          maxWidth: '580px',
+          background: '#09090b',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          borderRadius: '14px',
           width: '100%',
-          background: '#090d16',
-          border: '1px solid rgba(16, 185, 129, 0.4)',
-          borderRadius: '20px',
-          padding: '1.75rem',
-          boxShadow: '0 25px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(16, 185, 129, 0.25)',
+          maxWidth: '560px',
+          padding: '1.5rem',
           display: 'flex',
           flexDirection: 'column',
           gap: '1.25rem',
+          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)',
         }}
       >
         {/* Top Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span
-              style={{
-                background: 'rgba(16, 185, 129, 0.15)',
-                color: '#10b981',
-                padding: '3px 9px',
-                borderRadius: '9999px',
-                fontFamily: 'var(--tf-font-mono)',
-                fontSize: '0.72rem',
-                fontWeight: 800,
-              }}
-            >
-              ▶ REWARDED AD
+            <span style={{ fontSize: '0.72rem', background: '#3b82f6', color: '#fff', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 800, fontFamily: 'var(--tf-font-mono)' }}>
+              GOOGLE REKLAMI
             </span>
-            <span style={{ fontFamily: 'var(--tf-font-mono)', fontSize: '0.8rem', color: 'var(--tf-text-secondary)' }}>
-              {ad.sponsor}
+            <span style={{ fontSize: '0.68rem', color: '#94a3b8', fontFamily: 'var(--tf-font-mono)' }}>
+              {activeClientId}
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <button
-              type="button"
-              onClick={onToggleMute}
-              style={{
-                background: 'rgba(255, 255, 255, 0.08)',
-                border: '1px solid var(--tf-border)',
-                color: '#fff',
-                borderRadius: '6px',
-                padding: '4px 8px',
-                cursor: 'pointer',
-                fontSize: '0.82rem',
-              }}
-              title={isMuted ? 'Unmute' : 'Mute'}
-            >
-              {isMuted ? '🔇' : '🔊'}
-            </button>
-
-            {isRewardReady ? (
-              <button
-                type="button"
-                onClick={onClose}
-                style={{
-                  background: '#10b981',
-                  color: '#000',
-                  border: 'none',
-                  borderRadius: '6px',
-                  padding: '4px 10px',
-                  fontWeight: 800,
-                  fontSize: '0.8rem',
-                  cursor: 'pointer',
-                  fontFamily: 'var(--tf-font-mono)',
-                }}
-              >
-                ✕ {isTr ? 'Kapat' : 'Close'}
-              </button>
-            ) : (
-              <span
-                style={{
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  padding: '4px 10px',
-                  borderRadius: '6px',
-                  fontFamily: 'var(--tf-font-mono)',
-                  fontSize: '0.8rem',
-                  fontWeight: 800,
-                  color: '#f59e0b',
-                }}
-              >
-                ⏱️ {countdown}s
-              </span>
-            )}
+          <div style={{ fontFamily: 'var(--tf-font-mono)', fontSize: '0.8rem', fontWeight: 800, color: countdown > 0 ? '#f59e0b' : '#10b981' }}>
+            {countdown > 0 ? `⏱️ ${countdown}s` : '✓ TAMAMLANDI'}
           </div>
         </div>
 
-        {/* Video Player Box with Animated Playback */}
+        {/* Real Google AdSense Slot */}
         <div
           style={{
-            position: 'relative',
-            background: 'linear-gradient(180deg, #0f172a, #020617)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '14px',
-            height: '240px',
-            overflow: 'hidden',
+            minHeight: '200px',
+            background: 'rgba(255, 255, 255, 0.02)',
+            border: '1px dashed rgba(255, 255, 255, 0.15)',
+            borderRadius: '8px',
             display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
             alignItems: 'center',
-            textAlign: 'center',
-            padding: '1.5rem',
+            justifyContent: 'center',
+            position: 'relative',
+            overflow: 'hidden',
           }}
         >
-          {/* Animated Video Frame Elements */}
-          <div
-            style={{
-              position: 'absolute',
-              top: '12px',
-              left: '12px',
-              fontFamily: 'var(--tf-font-mono)',
-              fontSize: '0.65rem',
-              color: '#38bdf8',
-              letterSpacing: '0.08em',
-              fontWeight: 700,
-            }}
-          >
-            {isTr ? ad.videoBadgeTr : ad.videoBadgeEn}
-          </div>
+          <ins
+            className="adsbygoogle"
+            style={{ display: 'block', width: '100%', minHeight: '180px', textAlign: 'center', zIndex: 1 }}
+            data-ad-client={activeClientId}
+            data-ad-slot={activeSlotId}
+            data-ad-format="auto"
+            data-full-width-responsive="true"
+          />
 
-          <div
-            style={{
-              fontSize: '3.8rem',
-              marginBottom: '0.5rem',
-              filter: 'drop-shadow(0 0 20px rgba(56, 189, 248, 0.5))',
-            }}
-          >
-            {ad.icon}
-          </div>
-
-          <h4
-            style={{
-              margin: '0 0 0.4rem 0',
-              fontSize: '1.25rem',
-              fontWeight: 800,
-              color: '#fff',
-            }}
-          >
-            {isTr ? ad.titleTr : ad.titleEn}
-          </h4>
-
-          <p
-            style={{
-              margin: 0,
-              fontSize: '0.86rem',
-              color: '#94a3b8',
-              maxWidth: '420px',
-              lineHeight: 1.45,
-            }}
-          >
-            {isTr ? ad.descTr : ad.descEn}
-          </p>
-
-          {/* Video Bottom Progress Bar */}
-          <div
-            style={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: '5px',
-              background: 'rgba(255, 255, 255, 0.1)',
-            }}
-          >
-            <div
-              style={{
-                height: '100%',
-                width: `${progressPercent}%`,
-                background: 'linear-gradient(90deg, #3b82f6, #10b981)',
-                transition: 'width 1s linear',
-              }}
-            />
+          <div style={{ position: 'absolute', zIndex: 0, textAlign: 'center', padding: '1rem' }}>
+            <div style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>📢</div>
+            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#e2e8f0', marginBottom: '0.25rem' }}>
+              {isTr ? 'Google Ödüllü Reklam Alanı' : 'Google Rewarded Ad Space'}
+            </div>
+            <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontFamily: 'var(--tf-font-mono)' }}>
+              Slot ID: {activeSlotId}
+            </div>
           </div>
         </div>
 
-        {/* Reward Callout Box */}
+        {/* Reward Status & Claim Button */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            background: isRewardReady ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.04)',
-            border: `1px solid ${isRewardReady ? '#10b981' : 'rgba(255, 255, 255, 0.1)'}`,
-            borderRadius: '12px',
-            padding: '0.9rem 1.25rem',
+            background: isRewardReady ? 'rgba(16, 185, 129, 0.12)' : 'rgba(255, 255, 255, 0.04)',
+            border: `1px solid ${isRewardReady ? 'rgba(16, 185, 129, 0.4)' : 'rgba(255, 255, 255, 0.08)'}`,
+            borderRadius: '10px',
+            padding: '0.85rem 1rem',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <span style={{ fontSize: '1.6rem' }}>{isRewardReady ? '🎉' : '🔋'}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <span style={{ fontSize: '1.4rem' }}>{isRewardReady ? '🎉' : '🔋'}</span>
             <div>
-              <div style={{ fontWeight: 800, fontSize: '0.92rem', color: isRewardReady ? '#10b981' : '#fff' }}>
+              <div style={{ fontWeight: 800, fontSize: '0.88rem', color: isRewardReady ? '#10b981' : '#fff' }}>
                 {isRewardReady
-                  ? (isTr ? 'Tebrikler! Reklam Tamamlandı' : 'Awesome! Ad Completed')
-                  : (isTr ? 'Ödül İçin Reklamı İzleyin' : 'Watch to Unlock Reward')}
+                  ? (isTr ? 'Ödülünüz Hazır!' : 'Reward Ready!')
+                  : (isTr ? 'Ödül İçin Bekleyin' : 'Please wait for reward')}
               </div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--tf-text-secondary)' }}>
-                {isRewardReady
-                  ? (isTr ? '+2 Odak Enerjisi (🔋) ve +15 Elmas (💎) hazır!' : '+2 Focus Energy (🔋) & +15 Gems (💎) ready!')
-                  : (isTr ? `${countdown} saniye sonra ödül hesabınıza tanımlanacak.` : `Reward will unlock in ${countdown} seconds.`)}
+              <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                +2 Odak Enerjisi (🔋) & +15 Elmas (💎)
               </div>
             </div>
           </div>
@@ -560,69 +364,38 @@ function RewardedAdVideoModal({
             <button
               type="button"
               className="tf-btn-pushable"
-              onClick={onClaim}
+              onClick={handleClaim}
               disabled={rewardClaimed}
               style={{
-                background: rewardClaimed ? 'rgba(16, 185, 129, 0.3)' : 'linear-gradient(135deg, #10b981, #059669)',
+                background: 'linear-gradient(135deg, #10b981, #059669)',
                 color: '#fff',
                 border: 'none',
-                padding: '0.65rem 1.15rem',
+                padding: '0.6rem 1.1rem',
                 borderRadius: '8px',
                 fontWeight: 800,
                 fontFamily: 'var(--tf-font-mono)',
-                fontSize: '0.85rem',
-                cursor: rewardClaimed ? 'default' : 'pointer',
+                fontSize: '0.82rem',
+                cursor: 'pointer',
               }}
             >
-              {rewardClaimed
-                ? (isTr ? '✓ Yüklendi' : '✓ Claimed')
-                : (isTr ? 'Ödülü Al' : 'Claim Reward')}
+              {rewardClaimed ? (isTr ? '✓ Eklendi' : '✓ Added') : (isTr ? 'Ödülü Al' : 'Claim')}
             </button>
           ) : (
             <button
               type="button"
-              disabled
+              onClick={onClose}
               style={{
-                background: 'rgba(255, 255, 255, 0.08)',
-                color: '#64748b',
+                background: 'none',
                 border: 'none',
-                padding: '0.65rem 1.15rem',
-                borderRadius: '8px',
-                fontWeight: 700,
+                color: '#64748b',
                 fontFamily: 'var(--tf-font-mono)',
-                fontSize: '0.8rem',
-                cursor: 'not-allowed',
+                fontSize: '0.75rem',
+                cursor: 'pointer',
               }}
             >
-              {countdown}s...
+              {isTr ? 'Kapat' : 'Close'} ({countdown}s)
             </button>
           )}
-        </div>
-
-        {/* Action Link to Sponsor */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <button
-            type="button"
-            onClick={() => window.open(ad.url, '_blank', 'noopener,noreferrer')}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#38bdf8',
-              fontFamily: 'var(--tf-font-mono)',
-              fontSize: '0.8rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-            }}
-          >
-            {isTr ? `${ad.sponsor} Sayfasını Ziyaret Et` : `Visit ${ad.sponsor}`} ↗
-          </button>
-
-          <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
-            {isTr ? 'Tiyatrotist Güvenli Sponsor Ağı' : 'Tiyatrotist Verified Sponsor Network'}
-          </span>
         </div>
       </div>
     </div>

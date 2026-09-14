@@ -1,28 +1,29 @@
 'use client';
 
 /**
- * TYPEFLOW — Sponsorlu Teknoloji Reklam Molası (Tech Ad Break) Modal
- * Shows tech sponsors (Keychron, Warp, Neon DB) to support free SaaS tier,
- * allows user to recharge +2 Focus Energy & +15 Gems or upgrade to Super TypeFlow to remove ads.
+ * TYPEFLOW — Official Google AdSense Rewarded Ad Break Modal
+ * 
+ * Displays authentic Google AdSense rewarded format unit to support free tier,
+ * allowing user to recharge +2 Focus Energy & +15 Gems or upgrade to Super TypeFlow to remove ads.
+ * Exclusively uses real Google AdSense scripts with ca-pub-7828284439187298.
  */
 
 import React, { useState, useEffect } from 'react';
-import { TechAd } from './types';
 import { Locale } from '@/dictionaries';
+import { GOOGLE_ADSENSE_CONFIG, getActiveAdSenseClientId } from '@/config/ads';
 
 interface TypeFlowAdBreakModalProps {
   isOpen: boolean;
   onClose: () => void;
-  ad: TechAd;
   onClaimEnergyReward: () => void;
   onOpenSuperModal: () => void;
   lang: Locale;
+  ad?: any; // kept for backwards compatibility if passed from caller
 }
 
 export const TypeFlowAdBreakModal: React.FC<TypeFlowAdBreakModalProps> = ({
   isOpen,
   onClose,
-  ad,
   onClaimEnergyReward,
   onOpenSuperModal,
   lang,
@@ -30,6 +31,8 @@ export const TypeFlowAdBreakModal: React.FC<TypeFlowAdBreakModalProps> = ({
   const isTr = lang === 'tr';
   const [secondsLeft, setSecondsLeft] = useState<number>(5);
   const [hasClaimed, setHasClaimed] = useState<boolean>(false);
+  const activeClientId = getActiveAdSenseClientId();
+  const activeSlotId = GOOGLE_ADSENSE_CONFIG.slots.rewarded;
 
   useEffect(() => {
     if (!isOpen) {
@@ -37,6 +40,13 @@ export const TypeFlowAdBreakModal: React.FC<TypeFlowAdBreakModalProps> = ({
       setHasClaimed(false);
       return;
     }
+
+    try {
+      if (typeof window !== 'undefined') {
+        // @ts-expect-error Google adsbygoogle script
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      }
+    } catch {}
 
     const timer = setInterval(() => {
       setSecondsLeft((prev) => {
@@ -52,15 +62,6 @@ export const TypeFlowAdBreakModal: React.FC<TypeFlowAdBreakModalProps> = ({
   }, [isOpen]);
 
   if (!isOpen) return null;
-
-  const handleCtaClick = () => {
-    console.debug('[TypeFlow:AdBreak] User clicked CTA:', ad.sponsor);
-    window.open(ad.ctaUrl, '_blank', 'noopener,noreferrer');
-    if (!hasClaimed) {
-      setHasClaimed(true);
-      onClaimEnergyReward();
-    }
-  };
 
   const handleClaimAndClose = () => {
     if (!hasClaimed) {
@@ -79,23 +80,27 @@ export const TypeFlowAdBreakModal: React.FC<TypeFlowAdBreakModalProps> = ({
       aria-modal="true"
       aria-labelledby="tf-ad-title"
     >
-      <div className="tf-modal-card tf-ad-modal-card" style={{ position: 'relative', overflow: 'hidden' }}>
+      <div className="tf-modal-card tf-ad-modal-card" style={{ position: 'relative', overflow: 'hidden', maxWidth: '520px' }}>
         {/* Top Header Bar */}
-        <div className="tf-ad-top-bar">
-          <div className="tf-ad-badge-wrap">
-            <span className="tf-ad-badge">{ad.badge}</span>
-            <span className="tf-ad-sponsor-name">{ad.sponsor}</span>
+        <div className="tf-ad-top-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <div className="tf-ad-badge-wrap" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span className="tf-ad-badge" style={{ background: '#3b82f6', color: '#fff', fontSize: '0.7rem', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 800, fontFamily: 'var(--tf-font-mono)' }}>
+              GOOGLE REKLAMI
+            </span>
+            <span style={{ fontSize: '0.68rem', color: '#94a3b8', fontFamily: 'var(--tf-font-mono)' }}>
+              {activeClientId}
+            </span>
           </div>
 
-          <div className="tf-ad-timer-pill">
+          <div className="tf-ad-timer-pill" style={{ fontFamily: 'var(--tf-font-mono)' }}>
             {secondsLeft > 0 ? (
-              <span style={{ color: '#f59e0b', fontWeight: 800 }}>⏱️ {secondsLeft}s</span>
+              <span style={{ color: '#f59e0b', fontWeight: 800, fontSize: '0.85rem' }}>⏱️ {secondsLeft}s</span>
             ) : (
               <button
                 type="button"
                 className="tf-ad-skip-btn tf-btn-pushable"
                 onClick={handleClaimAndClose}
-                style={{ background: '#10b981', color: '#000', fontWeight: 800, border: 'none' }}
+                style={{ background: '#10b981', color: '#000', fontWeight: 800, border: 'none', padding: '0.35rem 0.75rem', borderRadius: '6px', cursor: 'pointer' }}
               >
                 ✓ {isTr ? 'Ödülü Al' : 'Claim'} ✕
               </button>
@@ -103,11 +108,42 @@ export const TypeFlowAdBreakModal: React.FC<TypeFlowAdBreakModalProps> = ({
           </div>
         </div>
 
-        {/* Sponsor Banner Card */}
-        <div className="tf-ad-content-box" style={{ position: 'relative', overflow: 'hidden' }}>
-          <div className="tf-ad-hero-icon">{ad.icon}</div>
-          <h3 id="tf-ad-title" className="tf-ad-title">{ad.tagline}</h3>
-          <p className="tf-ad-description">{ad.description}</p>
+        {/* Real Google AdSense Rewarded Container */}
+        <div
+          className="tf-ad-content-box"
+          style={{
+            position: 'relative',
+            overflow: 'hidden',
+            minHeight: '160px',
+            background: 'rgba(0, 0, 0, 0.4)',
+            border: '1px dashed rgba(255, 255, 255, 0.15)',
+            borderRadius: '10px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1.25rem',
+            textAlign: 'center',
+          }}
+        >
+          <ins
+            className="adsbygoogle"
+            style={{ display: 'block', width: '100%', minHeight: '120px', textAlign: 'center', zIndex: 1 }}
+            data-ad-client={activeClientId}
+            data-ad-slot={activeSlotId}
+            data-ad-format="auto"
+            data-full-width-responsive="true"
+          />
+
+          <div style={{ position: 'absolute', zIndex: 0, pointerEvents: 'none' }}>
+            <div style={{ fontSize: '1.8rem', marginBottom: '0.4rem' }}>📢</div>
+            <h3 id="tf-ad-title" style={{ fontSize: '0.92rem', fontWeight: 700, margin: '0 0 0.25rem 0', color: '#f1f5f9' }}>
+              {isTr ? 'Google Ödüllü Reklamı' : 'Google Rewarded Ad'}
+            </h3>
+            <p style={{ fontSize: '0.72rem', color: '#94a3b8', margin: 0, fontFamily: 'var(--tf-font-mono)' }}>
+              Slot: {activeSlotId} • {activeClientId}
+            </p>
+          </div>
 
           {/* 5-second progress bar */}
           <div
@@ -135,22 +171,29 @@ export const TypeFlowAdBreakModal: React.FC<TypeFlowAdBreakModalProps> = ({
         <div
           className="tf-ad-reward-callout"
           style={{
+            marginTop: '1rem',
             background: secondsLeft === 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.08)',
             border: `1px solid ${secondsLeft === 0 ? '#10b981' : 'rgba(16, 185, 129, 0.3)'}`,
+            borderRadius: '8px',
+            padding: '0.75rem 1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            fontSize: '0.8rem',
           }}
         >
-          <span className="tf-ad-energy-icon">🔋</span>
+          <span style={{ fontSize: '1.3rem' }}>🔋</span>
           <span>
             {hasClaimed
-              ? (isTr ? '🎉 +2 Odak Enerjisi ve +15 Elmas şarj edildi!' : '🎉 +2 Focus Energy & +15 Gems recharged!')
+              ? (isTr ? '🎉 +2 Odak Enerjisi ve +15 Elmas hesabınıza tanımlandı!' : '🎉 +2 Focus Energy & +15 Gems recharged!')
               : secondsLeft === 0
-                ? (isTr ? '✓ Ödül hazır! Aşağıdan ödülünü al ve devam et.' : '✓ Reward ready! Claim below.')
-                : (isTr ? `Sponsoru inceleyerek +2 Odak Enerjisi ve +15 Elmas kazan (${secondsLeft}s).` : `Earn +2 Focus Energy & +15 Gems by viewing sponsor (${secondsLeft}s).`)}
+                ? (isTr ? '✓ Tebrikler! Reklam tamamlandı, ödülünüzü alabilirsiniz.' : '✓ Reward ready! Claim below.')
+                : (isTr ? `Reklamı izleyerek +2 Odak Enerjisi ve +15 Elmas kazanın (${secondsLeft}s).` : `Earn +2 Focus Energy & +15 Gems (${secondsLeft}s).`)}
           </span>
         </div>
 
         {/* CTAs */}
-        <div className="tf-ad-actions">
+        <div className="tf-ad-actions" style={{ marginTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           {secondsLeft === 0 ? (
             <button
               type="button"
@@ -159,33 +202,48 @@ export const TypeFlowAdBreakModal: React.FC<TypeFlowAdBreakModalProps> = ({
               style={{
                 background: 'linear-gradient(135deg, #10b981, #059669)',
                 color: '#fff',
-                padding: '0.85rem',
-                fontSize: '0.92rem',
+                border: 'none',
                 fontWeight: 800,
-                width: '100%',
+                padding: '0.65rem 1.25rem',
+                borderRadius: '8px',
+                cursor: 'pointer',
               }}
             >
-              🎉 {isTr ? 'Ödülü Al & Devam Et (+2 🔋 & +15 💎)' : 'Claim Reward & Continue (+2 🔋 & +15 💎)'}
+              {isTr ? '✓ Ödülü Al ve Devam Et' : '✓ Claim Reward & Continue'}
             </button>
           ) : (
             <button
               type="button"
-              className="tf-ad-cta-btn tf-btn-pushable"
-              onClick={handleCtaClick}
+              className="tf-btn-ghost"
+              onClick={onClose}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#64748b',
+                fontFamily: 'var(--tf-font-mono)',
+                fontSize: '0.75rem',
+                cursor: 'pointer',
+              }}
             >
-              {ad.ctaText} ↗
+              {isTr ? `Kapat (${secondsLeft}s)` : `Close (${secondsLeft}s)`}
             </button>
           )}
 
           <button
             type="button"
-            className="tf-ad-super-pitch-btn tf-btn-pushable"
-            onClick={() => {
-              onClose();
-              onOpenSuperModal();
+            className="tf-ad-super-link"
+            onClick={onOpenSuperModal}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#eab308',
+              cursor: 'pointer',
+              fontFamily: 'var(--tf-font-mono)',
+              fontSize: '0.75rem',
+              fontWeight: 700,
             }}
           >
-            👑 {isTr ? 'Super\'a Geç (Tüm Reklamları Kaldır)' : 'Get Super (Remove All Ads)'}
+            👑 {isTr ? 'Super ile Reklamları Kaldır' : 'Remove Ads with Super'}
           </button>
         </div>
       </div>
