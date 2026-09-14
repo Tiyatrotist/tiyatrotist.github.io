@@ -3,6 +3,8 @@ import Footer from '@/components/Footer';
 import Link from 'next/link';
 import { Locale, getDictionary } from '@/dictionaries';
 
+import { SYSTEM_PROJECTS } from '@/config/projects';
+
 interface ProjectsPageProps {
   params: Promise<{ lang: string }>;
 }
@@ -12,20 +14,15 @@ export default async function ProjectsPage({ params }: ProjectsPageProps) {
   const currentLang = (lang === 'tr' ? 'tr' : 'en') as Locale;
   const dict = getDictionary(currentLang);
 
-  const projects = [
-    {
-      slug: 'bookos',
-      title: 'BookOS',
-      description: dict.projectIntro.description,
-      year: '2026',
-    },
-    {
-      slug: 'typeflow',
-      title: 'TypeFlow',
-      description: dict.typeflow.tagline,
-      year: '2026',
-    },
-  ];
+  const projects = SYSTEM_PROJECTS.map((sp) => ({
+    slug: sp.slug,
+    title: sp.name,
+    description: currentLang === 'tr' ? sp.short_description_tr : sp.short_description_en,
+    year: sp.year,
+    featured: sp.featured,
+    release: sp.latestRelease,
+    tags: sp.tags,
+  }));
 
   return (
     <main className="main-container">
@@ -46,8 +43,25 @@ export default async function ProjectsPage({ params }: ProjectsPageProps) {
               data-cursor="expand"
             >
               <div className="project-card-info">
-                <h2 className="project-card-title">{project.title}</h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.35rem' }}>
+                  <h2 className="project-card-title" style={{ margin: 0 }}>{project.title}</h2>
+                  {project.featured && (
+                    <span style={{ fontSize: '0.65rem', padding: '0.15rem 0.45rem', borderRadius: '4px', background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.3)', fontWeight: 600 }}>
+                      ★ {currentLang === 'tr' ? 'ÖNE ÇIKAN' : 'FEATURED'}
+                    </span>
+                  )}
+                  <span style={{ fontSize: '0.68rem', fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)', marginLeft: 'auto' }}>
+                    {project.release}
+                  </span>
+                </div>
                 <p className="project-card-desc">{project.description}</p>
+                <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.6rem', flexWrap: 'wrap' }}>
+                  {project.tags.map((tag) => (
+                    <span key={tag} style={{ fontSize: '0.6rem', padding: '0.1rem 0.4rem', borderRadius: '2px', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace' }}>
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
               </div>
               <span className="project-card-link">{dict.projectsPage.enterBtn}</span>
             </Link>

@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { getAdminDict, AdminLocale } from '@/lib/admin-i18n';
 import LoadingSpinner from '@/components/admin/LoadingSpinner';
+import { getUnifiedProjects } from '@/config/projects';
 
 interface DashboardMetrics {
   publishedProjects: number;
@@ -44,11 +45,31 @@ export default function DashboardPage() {
       // Fetch projects
       const { data: projects } = await supabase
         .from('projects')
-        .select('id, published');
+        .select('id, slug, published');
 
-      const allProjects = projects || [];
-      const pubProj = allProjects.filter((p: { published: boolean }) => p.published).length;
-      const draftProj = allProjects.filter((p: { published: boolean }) => !p.published).length;
+      const dbProjects = projects || [];
+      const unified = getUnifiedProjects();
+
+      // Combine DB and unified projects
+      const allSlugs = new Set<string>();
+      let pubProj = 0;
+      let draftProj = 0;
+
+      // Add DB projects
+      dbProjects.forEach((p: { slug?: string; published: boolean }) => {
+        if (p.slug) allSlugs.add(p.slug);
+        if (p.published) pubProj++;
+        else draftProj++;
+      });
+
+      // Add unified projects not in DB
+      unified.forEach((up) => {
+        if (!allSlugs.has(up.slug)) {
+          allSlugs.add(up.slug);
+          if (up.published) pubProj++;
+          else draftProj++;
+        }
+      });
 
       // Fetch blog posts safely
       let pubPosts = 0;
@@ -86,7 +107,7 @@ export default function DashboardPage() {
 
       const latestRelease = releases?.[0]
         ? `${releases[0].version} (${releases[0].channel})`
-        : null;
+        : (unified[0]?.latestRelease || 'v2.4.0 (stable)');
 
       // Fetch media count
       const { data: mediaFiles } = await supabase

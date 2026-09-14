@@ -17,6 +17,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { getAdminDict, AdminLocale } from '@/lib/admin-i18n';
 import LoadingSpinner from '@/components/admin/LoadingSpinner';
+import { getUnifiedProjects } from '@/config/projects';
 
 interface ProjectWithRelease {
   id: string;
@@ -62,7 +63,7 @@ export default function ProjectsListPage() {
       }
 
       const allProjects = projData || [];
-      console.debug('[admin/projects] Loaded projects count:', allProjects.length, allProjects);
+      console.debug('[admin/projects] Loaded database projects count:', allProjects.length);
 
       // Fetch releases separately so a releases issue never blocks projects from rendering
       let allReleases: Array<{ project_id: string; version: string; channel: string; is_current: boolean; release_date: string }> = [];
@@ -72,24 +73,42 @@ export default function ProjectsListPage() {
           .select('project_id, version, channel, is_current, release_date')
           .order('release_date', { ascending: false });
 
-        if (relErr) {
-          console.warn('[admin/projects] Releases query warning:', relErr);
-        } else {
-          allReleases = relData || [];
+        if (!relErr && relData) {
+          allReleases = relData;
         }
       } catch (relEx) {
         console.warn('[admin/projects] Releases fetch exception:', relEx);
       }
 
-      // Map latest release for each project
-      const mapped: ProjectWithRelease[] = allProjects.map((p) => {
+      // Get unified system projects (TypeFlow, BookOS, etc.)
+      const unifiedSystemProjects = getUnifiedProjects();
+
+      // Merge database records with unified system projects
+      const mergedProjectsMap = new Map<string, any>();
+
+      // 1. Seed system projects
+      unifiedSystemProjects.forEach((sp) => {
+        mergedProjectsMap.set(sp.slug, {
+          id: sp.id,
+          slug: sp.slug,
+          name: sp.name,
+          published: sp.published,
+          featured: sp.featured,
+          created_at: sp.created_at,
+          updated_at: sp.updated_at,
+          latestRelease: sp.latestRelease,
+        });
+      });
+
+      // 2. Overlay database records
+      allProjects.forEach((p) => {
         const projReleases = allReleases.filter((r) => r.project_id === p.id);
         const currentRel = projReleases.find((r) => r.is_current) || projReleases[0];
         const latestRelease = currentRel
           ? `${currentRel.version} (${currentRel.channel})`
-          : null;
+          : (mergedProjectsMap.get(p.slug)?.latestRelease || null);
 
-        return {
+        mergedProjectsMap.set(p.slug, {
           id: p.id,
           slug: p.slug || '',
           name: p.name || p.slug || 'İsimsiz Proje',
@@ -98,9 +117,11 @@ export default function ProjectsListPage() {
           created_at: p.created_at,
           updated_at: p.updated_at,
           latestRelease,
-        };
+        });
       });
 
+      const mapped: ProjectWithRelease[] = Array.from(mergedProjectsMap.values());
+      console.debug('[admin/projects] Total merged projects for admin view:', mapped.length, mapped);
       setProjects(mapped);
     } catch (err: unknown) {
       console.error('[admin/projects] Unexpected fetch error:', err);
