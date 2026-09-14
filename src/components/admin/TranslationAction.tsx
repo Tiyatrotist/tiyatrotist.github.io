@@ -40,6 +40,7 @@ export default function TranslationAction({
 }: TranslationActionProps) {
   const [translating, setTranslating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
 
   const status = translationService.computeStatus(
@@ -57,6 +58,7 @@ export default function TranslationAction({
 
     setTranslating(true);
     setError(null);
+    setSuccessMsg(null);
 
     try {
       console.debug('[translation-action] Requesting translation:', {
@@ -75,6 +77,8 @@ export default function TranslationAction({
 
       if (response.translatedText) {
         onTranslated(response.translatedText);
+        setSuccessMsg(`✓ Çevrildi (${response.provider})`);
+        setTimeout(() => setSuccessMsg(null), 3500);
       }
     } catch (err: unknown) {
       console.error('[translation-action] Translation failed:', err);
@@ -142,6 +146,21 @@ export default function TranslationAction({
             )}
           </button>
           {statusBadge()}
+          {successMsg && (
+            <span
+              style={{
+                fontSize: '0.68rem',
+                color: '#10b981',
+                fontWeight: 600,
+                background: 'rgba(16, 185, 129, 0.15)',
+                border: '1px solid rgba(16, 185, 129, 0.3)',
+                padding: '2px 8px',
+                borderRadius: '4px',
+              }}
+            >
+              {successMsg}
+            </span>
+          )}
         </div>
       </div>
 

@@ -11,6 +11,7 @@ export interface TokenizedResult {
 }
 
 const PROTECTED_TERMS = [
+  'TypeFlow',
   'BookOS',
   'Tiyatrotist',
   'GitHub',
@@ -67,10 +68,13 @@ export function unmaskTechnicalContent(maskedText: string, tokens: Map<string, s
   if (!maskedText) return '';
 
   let restored = maskedText;
+
+  // Normalize any accidental whitespace inserted inside token delimiters by translation engines
+  restored = restored.replace(/__\s*TECH_TOKEN_(\d+)\s*__/gi, '__TECH_TOKEN_$1__');
+
   tokens.forEach((original, tokenId) => {
-    // Escape for regex replacement
     const escaped = tokenId.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
-    restored = restored.replace(new RegExp(escaped, 'g'), original);
+    restored = restored.replace(new RegExp(escaped, 'gi'), original);
   });
 
   return restored;

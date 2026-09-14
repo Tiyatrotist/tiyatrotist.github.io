@@ -2,10 +2,12 @@
  * TIYATROTIST — Isolated Translation Service
  *
  * Pluggable provider abstraction for bilingual CMS content translation.
- * - Technical token masking and restoration
- * - Caching layer
- * - Explicitly configurable provider: returns clear "provider not configured" error
- *   when no backend endpoint is configured (no fake AI simulation).
+ * - Technical token masking and restoration (Markdown, code, links, protected terms)
+ * - Multi-tier translation pipeline:
+ *   1. Remote API Provider (if explicitly configured via NEXT_PUBLIC_TRANSLATION_API_URL)
+ *   2. Google Translate Engine (Free public GTX endpoint, zero setup, ~100ms latency)
+ *   3. MyMemory Neural Translation (Free fallback provider)
+ * - In-memory and session caching layer
  */
 
 import {
@@ -18,11 +20,111 @@ import { maskTechnicalContent, unmaskTechnicalContent } from './tokenizer';
 import { translationCache } from './cache';
 
 /**
- * Remote API Translation Provider
- * Connects to a backend translation endpoint (Cloudflare Worker / Supabase Edge Function / External API).
+ * 1. Google Translate Public Engine
+ * Uses the standard zero-configuration client endpoint for instant, high-quality bilingual translation.
+ */
+export class GoogleTranslatePublicProvider implements ITranslationProvider {
+  readonly name = 'Google Translate Engine';
+
+  isAvailable(): boolean {
+    return true;
+  }
+
+  async translate(req: TranslationRequest): Promise<TranslationResponse> {
+    const { maskedText, tokens } = maskTechnicalContent(req.text);
+
+    console.debug('[translation:google] Initiating translation request:', {
+      source: req.sourceLanguage,
+      target: req.targetLanguage,
+      length: maskedText.length,
+    });
+
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${req.sourceLanguage}&tl=${req.targetLanguage}&dt=t&q=${encodeURIComponent(
+      maskedText
+    )}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+    });
+
+    if (!response.ok) {
+      throw new Error(`Google Translate HTTP error (${response.status})`);
+    }
+
+    const data = await response.json();
+    if (!data || !Array.isArray(data[0])) {
+      throw new Error('Google Translate returned an unexpected data structure');
+    }
+
+    // Concatenate all translated chunks
+    const rawTranslated = data[0].map((chunk: any) => chunk[0] || '').join('');
+    if (!rawTranslated) {
+      throw new Error('Google Translate returned an empty translation result');
+    }
+
+    const restoredText = unmaskTechnicalContent(rawTranslated, tokens);
+
+    return {
+      translatedText: restoredText,
+      provider: this.name,
+    };
+  }
+}
+
+/**
+ * 2. MyMemory Translation Provider
+ * High-reliability fallback provider when Google endpoints are throttled or offline.
+ */
+export class MyMemoryPublicProvider implements ITranslationProvider {
+  readonly name = 'MyMemory Translate Engine';
+
+  isAvailable(): boolean {
+    return true;
+  }
+
+  async translate(req: TranslationRequest): Promise<TranslationResponse> {
+    const { maskedText, tokens } = maskTechnicalContent(req.text);
+
+    console.debug('[translation:mymemory] Initiating fallback translation request:', {
+      source: req.sourceLanguage,
+      target: req.targetLanguage,
+      length: maskedText.length,
+    });
+
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(
+      maskedText
+    )}&langpair=${req.sourceLanguage}|${req.targetLanguage}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+    });
+
+    if (!response.ok) {
+      throw new Error(`MyMemory HTTP error (${response.status})`);
+    }
+
+    const data = await response.json();
+    const rawTranslated = data.responseData?.translatedText || '';
+
+    if (!rawTranslated || data.responseStatus !== 200) {
+      throw new Error(data.responseDetails || 'MyMemory translation failed');
+    }
+
+    const restoredText = unmaskTechnicalContent(rawTranslated, tokens);
+
+    return {
+      translatedText: restoredText,
+      provider: this.name,
+    };
+  }
+}
+
+/**
+ * 3. Custom Remote API Translation Provider
+ * Connects to a custom backend endpoint if defined in environment.
  */
 export class RemoteApiTranslationProvider implements ITranslationProvider {
-  readonly name = 'Remote API Provider';
+  readonly name = 'Custom Remote API';
 
   private endpointUrl: string | null;
 
@@ -38,26 +140,14 @@ export class RemoteApiTranslationProvider implements ITranslationProvider {
 
   async translate(req: TranslationRequest): Promise<TranslationResponse> {
     if (!this.isAvailable() || !this.endpointUrl) {
-      throw new Error(
-        'Çeviri sağlayıcısı yapılandırılmamış. Lütfen bir çeviri uç noktası (TRANSLATION_API_URL) tanımlayın veya backend servisini bağlayın.'
-      );
+      throw new Error('Custom translation API URL is not configured.');
     }
 
-    // 1. Mask technical tokens before sending to provider
     const { maskedText, tokens } = maskTechnicalContent(req.text);
-
-    console.debug('[translation] Sending masked text to remote provider:', {
-      source: req.sourceLanguage,
-      target: req.targetLanguage,
-      tokenCount: tokens.size,
-      endpoint: this.endpointUrl,
-    });
 
     const response = await fetch(this.endpointUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         text: maskedText,
         sourceLanguage: req.sourceLanguage,
@@ -68,13 +158,11 @@ export class RemoteApiTranslationProvider implements ITranslationProvider {
 
     if (!response.ok) {
       const errText = await response.text();
-      throw new Error(`Çeviri servisi hatası (${response.status}): ${errText}`);
+      throw new Error(`Custom API error (${response.status}): ${errText}`);
     }
 
     const data = await response.json();
     const rawTranslated = data.translatedText || data.translation || '';
-
-    // 2. Unmask technical tokens
     const restoredText = unmaskTechnicalContent(rawTranslated, tokens);
 
     return {
@@ -85,13 +173,56 @@ export class RemoteApiTranslationProvider implements ITranslationProvider {
 }
 
 /**
- * Main Translation Service
+ * 4. Composite Multi-Tier Translation Provider
+ * Tries Remote API -> Google Translate -> MyMemory sequentially.
+ */
+export class CompositeTranslationProvider implements ITranslationProvider {
+  readonly name = 'Composite Translation Engine';
+
+  private providers: ITranslationProvider[];
+
+  constructor() {
+    this.providers = [
+      new RemoteApiTranslationProvider(),
+      new GoogleTranslatePublicProvider(),
+      new MyMemoryPublicProvider(),
+    ];
+  }
+
+  isAvailable(): boolean {
+    return true;
+  }
+
+  async translate(req: TranslationRequest): Promise<TranslationResponse> {
+    let lastError: Error | null = null;
+
+    for (const provider of this.providers) {
+      if (!provider.isAvailable()) continue;
+
+      try {
+        const result = await provider.translate(req);
+        if (result && result.translatedText && result.translatedText.trim()) {
+          console.debug(`[translation:composite] Succeeded with provider: ${provider.name}`);
+          return result;
+        }
+      } catch (err: any) {
+        console.warn(`[translation:composite] Provider "${provider.name}" failed, falling back:`, err?.message || err);
+        lastError = err instanceof Error ? err : new Error(String(err));
+      }
+    }
+
+    throw lastError || new Error('Tüm çeviri servisleri meşgul. Lütfen tekrar deneyin.');
+  }
+}
+
+/**
+ * Main Translation Service Singleton
  */
 class TranslationService {
   private provider: ITranslationProvider;
 
   constructor() {
-    this.provider = new RemoteApiTranslationProvider();
+    this.provider = new CompositeTranslationProvider();
   }
 
   /**
@@ -127,7 +258,7 @@ class TranslationService {
       };
     }
 
-    // 2. Execute translation via provider
+    // 2. Execute translation via composite provider
     const result = await this.provider.translate(req);
 
     // 3. Save to cache

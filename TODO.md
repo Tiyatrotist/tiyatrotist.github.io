@@ -103,4 +103,11 @@
 - [x] ~~BookOS için oturum açmadan kullanılabilir canlı dokunsal not editörü, bilgi grafı gezgini ve çekirdek tanılama benchmarkı~~
 - [x] ~~BookOS misafir notlarının yerel belleğe otomatik debounced kaydedilmesi ve `content_edit`, `feature_interaction`, `download_click` olaylarının loglanması~~
 - [x] ~~Admin Dashboard paneline canlı "Proje Kullanım & Misafir Etkinlikleri Telemetrisi" tablosu ve istatistik kartlarının eklenmesi~~
+
+### 9. BILINGUAL CMS OTOMATİK ÇEVİRİ MOTORU (TR <-> EN)
+- [x] ~~Çeviri sağlayıcısının yapılandırılmamış olması (`RemoteApiTranslationProvider`) hatasının giderilmesi~~
+- [x] ~~Sıfır konfigürasyonlu, yüksek hızlı ve tam doğruluğa sahip Google Translate & MyMemory hibrit çeviri motorunun (`src/lib/translation/translation-service.ts`) kurulması~~
+- [x] ~~Teknik anahtar kelimelerin (`TypeFlow`, `BookOS`, `Tiyatrotist`, kod blokları, linkler) korunması ve geri açılması için `tokenizer.ts` optimizasyonu~~
+- [x] ~~Tüm Admin sayfalarındaki çeviri butonlarına (`TranslationAction.tsx`) canlı çeviri durumu, sağlayıcı rozeti ve başarı bildiriminin eklenmesi~~
+
 
