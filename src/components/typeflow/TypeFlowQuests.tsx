@@ -45,18 +45,39 @@ export default function TypeFlowQuests({
     if (ach.id === 'first-step') {
       current = profile.totalTests > 0 ? 1 : 0;
       if (current >= 1) isUnlocked = true;
+    } else if (ach.id === 'sniper-acc') {
+      current = Math.min(profile.totalTests, 5);
+      if (profile.totalTests >= 5 && profile.avgWpm >= 30) isUnlocked = true;
     } else if (ach.id === 'speed-demon') {
       current = profile.topWpm;
       if (current >= 60) isUnlocked = true;
+    } else if (ach.id === 'speed-master') {
+      current = profile.topWpm;
+      if (current >= 80) isUnlocked = true;
     } else if (ach.id === 'light-speed') {
       current = profile.topWpm;
       if (current >= 100) isUnlocked = true;
+    } else if (ach.id === 'hypersonic') {
+      current = profile.topWpm;
+      if (current >= 120) isUnlocked = true;
     } else if (ach.id === 'fire-keeper') {
       current = profile.streakDays;
-      if (current >= 3) isUnlocked = true;
+      if (current >= 7) isUnlocked = true;
+    } else if (ach.id === 'unbreakable-streak') {
+      current = profile.streakDays;
+      if (current >= 30) isUnlocked = true;
+    } else if (ach.id === 'century-club') {
+      current = profile.totalTests;
+      if (current >= 50) isUnlocked = true;
+    } else if (ach.id === 'typing-titan') {
+      current = profile.totalTests;
+      if (current >= 200) isUnlocked = true;
+    } else if (ach.id === 'code-ninja') {
+      current = Math.min(profile.totalTests, 15);
+      if (current >= 15) isUnlocked = true;
     } else if (ach.id === 'gem-hoarder') {
       current = profile.gems || 0;
-      if (current >= 200) isUnlocked = true;
+      if (current >= 100) isUnlocked = true;
     }
 
     return { ...ach, current, isUnlocked };
@@ -197,14 +218,35 @@ export default function TypeFlowQuests({
                 {ach.isUnlocked ? ach.icon : '🔒'}
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '0.98rem', fontWeight: 800, color: ach.isUnlocked ? '#f59e0b' : 'var(--tf-text-primary)' }}>
-                  {ach.title}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
+                  <div style={{ fontSize: '0.98rem', fontWeight: 800, color: ach.isUnlocked ? '#f59e0b' : 'var(--tf-text-primary)' }}>
+                    {ach.title}
+                  </div>
+                  <span style={{
+                    fontSize: '0.75rem',
+                    fontFamily: 'var(--tf-font-mono)',
+                    color: '#38bdf8',
+                    background: 'rgba(56, 189, 248, 0.1)',
+                    padding: '2px 6px',
+                    borderRadius: '6px',
+                    fontWeight: 700,
+                    whiteSpace: 'nowrap'
+                  }}>
+                    +{ach.rewardGems} 💎
+                  </span>
                 </div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--tf-text-secondary)', marginTop: '0.25rem', lineHeight: 1.4 }}>
                   {ach.description}
                 </div>
-                <div style={{ fontSize: '0.72rem', color: ach.isUnlocked ? '#10b981' : 'var(--tf-text-muted)', marginTop: '0.5rem', fontFamily: 'var(--tf-font-mono)', fontWeight: 700 }}>
-                  {ach.isUnlocked ? (isTr ? '✓ KİLİT AÇILDI' : '✓ UNLOCKED') : (isTr ? 'KİLİTLİ' : 'LOCKED')}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
+                  <div style={{ fontSize: '0.72rem', color: ach.isUnlocked ? '#10b981' : 'var(--tf-text-muted)', fontFamily: 'var(--tf-font-mono)', fontWeight: 700 }}>
+                    {ach.isUnlocked ? (isTr ? '✓ KİLİT AÇILDI' : '✓ UNLOCKED') : (isTr ? 'KİLİTLİ' : 'LOCKED')}
+                  </div>
+                  {!ach.isUnlocked && (
+                    <div style={{ fontSize: '0.72rem', color: 'var(--tf-text-muted)', fontFamily: 'var(--tf-font-mono)' }}>
+                      {ach.current} / {ach.target}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

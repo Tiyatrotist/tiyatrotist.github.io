@@ -384,9 +384,13 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
     let wordList: string[] = [];
 
     if (mode === 'lesson' && activeLesson) {
-      wordList = activeLesson.words;
-      setActiveSnippetTitle(activeLesson.title);
-      setActiveSnippetSub(activeLesson.description);
+      const stages = activeLesson.stages || [];
+      const currentStage = stages[activeLessonStage - 1];
+      wordList = (currentStage && currentStage.words && currentStage.words.length > 0)
+        ? currentStage.words
+        : activeLesson.words;
+      setActiveSnippetTitle(currentStage ? currentStage.title : activeLesson.title);
+      setActiveSnippetSub(currentStage ? currentStage.description : activeLesson.description);
     } else if (mode === 'words') {
       const count = wordModeType === 'words' ? wordCount : 250;
       wordList = generateCommonWords(lang, count, false, false);
@@ -413,7 +417,7 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
     setTestStatus('idle');
     setStartTime(null);
     setElapsedSeconds(0);
-    setTimeLeft(mode === 'lesson' ? 120 : timeLimit);
+    setTimeLeft(mode === 'lesson' ? 240 : timeLimit);
     setLiveWpm(0);
     setLiveAccuracy(100);
     setLiveStreak(0);
@@ -426,7 +430,7 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
     currentSecondErrors.current = 0;
     totalCorrectCharsRef.current = 0;
     totalIncorrectCharsRef.current = 0;
-  }, [mode, wordModeType, wordCount, timeLimit, lang, activeLesson]);
+  }, [mode, wordModeType, wordCount, timeLimit, lang, activeLesson, activeLessonStage]);
 
   // Reinitialize when settings change
   useEffect(() => {
@@ -669,20 +673,18 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
     // Duolingo Progression & Gems Calculation
     const isLesson = mode === 'lesson' && Boolean(activeLesson);
     let earnedXp = Math.round(finalWpm * 1.5 + (finalAcc >= 95 ? 40 : 20));
-    let earnedGems = 8; // Base gems for completing any drill
+    let earnedGems = 1; // Base gems for completing any drill (strictly scarce economy)
     let stars = 0;
 
     // High accuracy bonus gems
     if (finalAcc >= 98) {
-      earnedGems += 15;
-    } else if (finalAcc >= 95) {
-      earnedGems += 8;
+      earnedGems += 1;
     }
 
     // Personal Best bonus gems
     const isPb = finalWpm > profile.topWpm && profile.topWpm > 0;
     if (isPb) {
-      earnedGems += 25;
+      earnedGems += 2;
     }
 
     if (isLesson && activeLesson) {
@@ -696,7 +698,7 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
           // Audit Fix #2: Intermediate stage completed — auto-advance to next stage
           stars = 1;
           earnedXp = Math.round((activeLesson.xpReward / 3) * (profile.isPremium ? 2 : 1));
-          earnedGems += 10;
+          earnedGems += 1; // Tightened: +1 gem for intermediate stage
           // Schedule auto-advance to next stage after result is shown briefly
           const nextStage = activeLessonStage + 1;
           setTimeout(() => {

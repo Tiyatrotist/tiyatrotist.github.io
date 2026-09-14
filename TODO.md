@@ -71,3 +71,10 @@
 - [x] Misafir kullanıcı ve yerel profil senkronizasyonu
 - [x] 7 günlük ücretsiz Super deneme ve abonelik iptal yönetimi
 - [x] Supabase Auth + LocalStorage oturum entegrasyonu (GitHub Pages tek kök alan adı altında çerez veya localStorage bölünmesi olmadan tam uyumlu)
+
+### 5. DAKTİLO AKADEMİSİ: DERSLER, GÖREVLER & ELMAS EKONOMİSİ
+- [x] ~~Dersleri uzat, planla ve yeniden yaz (8-10 hecelik kısa testler yerine 40-80 kelimelik gerçek metinler ve paragraflar)~~
+- [x] ~~Ders sayısını arttır (10 Ünite, 50+ kapsamlı ders, Türkçe ve İngilizce tam müfredat)~~
+- [x] ~~Çok aşamalı dinamik ders yapısı (Aşama 1: Kas Hafızası Drilleri, Aşama 2: Kelime İnşası, Aşama 3: Akıcı Cümle ve Yıldız Sınavı)~~
+- [x] ~~Görevleri ve başarımları zorlaştır (Günlük 250 XP, 5 test, 3 ders aşaması, %96+ doğruluk; 60/80/100/120 WPM, 7/30 gün seri, 50/200 test)~~
+- [x] ~~Verilen elmasları azalt (Enflasyonu bitir: 1 base elmas, +1 doğruluk, 2-4 ders ödülü, 5-7 sınav ödülü, mağaza fiyatlarını dengeli seviyeye çek)~~

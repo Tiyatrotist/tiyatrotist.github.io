@@ -92,7 +92,7 @@ export default function TypeFlowLearnPath({
                 <p className="tf-unit-desc">{unit.description}</p>
               </div>
               <div style={{ fontSize: '1.8rem' }}>
-                {unitIdx === 0 ? '🏁' : unitIdx === 1 ? '⚡' : unitIdx === 2 ? '🌊' : unitIdx === 3 ? '🔢' : unitIdx === 4 ? '🚀' : '💻'}
+                {['🏁', '⚡', '🌊', '⇧', '✍️', '🔢', '🚀', '📖', '💻', '👑'][unitIdx] || '🏆'}
               </div>
             </div>
 

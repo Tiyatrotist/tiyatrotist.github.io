@@ -103,7 +103,7 @@ export const TypeFlowPracticeHub: React.FC<TypeFlowPracticeHubProps> = ({
       title: isTr ? '⚡ 30s Hız Patlaması Antrenmanı' : '⚡ 30s Speed Burst Drill',
       timeLimit: 30,
       xpReward: 50,
-      gemReward: 10,
+      gemReward: 1,
       leagueReward: 2,
       caseSensitive,
       includePunctuation,
@@ -119,7 +119,7 @@ export const TypeFlowPracticeHub: React.FC<TypeFlowPracticeHubProps> = ({
       title: isTr ? '🏃 60s Dayanıklılık Maratonu' : '🏃 60s Endurance Grind',
       timeLimit: 60,
       xpReward: 100,
-      gemReward: 20,
+      gemReward: 2,
       leagueReward: 5,
       caseSensitive,
       includePunctuation,
@@ -136,7 +136,7 @@ export const TypeFlowPracticeHub: React.FC<TypeFlowPracticeHubProps> = ({
       wordCount: 25,
       minAccuracy: 98,
       xpReward: 150,
-      gemReward: 30,
+      gemReward: 2,
       leagueReward: 10,
       caseSensitive,
       includePunctuation,
@@ -154,7 +154,7 @@ export const TypeFlowPracticeHub: React.FC<TypeFlowPracticeHubProps> = ({
       title: generated.title,
       generatedWords: generated.words,
       xpReward: 75,
-      gemReward: 15,
+      gemReward: 1,
       leagueReward: 3,
       topicId: generated.topic.id,
       caseSensitive,
@@ -172,7 +172,7 @@ export const TypeFlowPracticeHub: React.FC<TypeFlowPracticeHubProps> = ({
       wordCount: 20,
       minAccuracy: 95,
       xpReward: 40,
-      gemReward: 10,
+      gemReward: 1,
       leagueReward: 1,
       energyReward: 1,
       caseSensitive,
@@ -314,7 +314,7 @@ export const TypeFlowPracticeHub: React.FC<TypeFlowPracticeHubProps> = ({
             {/* Payout Tag */}
             <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
               <span className="tf-badge" style={{ background: 'rgba(168, 85, 247, 0.1)', color: '#a855f7' }}>+50 XP</span>
-              <span className="tf-badge" style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8' }}>+10 💎</span>
+              <span className="tf-badge" style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8' }}>+1 💎</span>
               <span className="tf-badge" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>+2 🏆 Lig</span>
             </div>
           </div>
@@ -367,7 +367,7 @@ export const TypeFlowPracticeHub: React.FC<TypeFlowPracticeHubProps> = ({
             {/* Payout Tag */}
             <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
               <span className="tf-badge" style={{ background: 'rgba(168, 85, 247, 0.1)', color: '#a855f7' }}>+100 XP</span>
-              <span className="tf-badge" style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8' }}>+20 💎</span>
+              <span className="tf-badge" style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8' }}>+2 💎</span>
               <span className="tf-badge" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>+5 🏆 Lig</span>
             </div>
           </div>
@@ -420,7 +420,7 @@ export const TypeFlowPracticeHub: React.FC<TypeFlowPracticeHubProps> = ({
             {/* Payout Tag */}
             <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
               <span className="tf-badge" style={{ background: 'rgba(168, 85, 247, 0.1)', color: '#a855f7' }}>+150 XP</span>
-              <span className="tf-badge" style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8' }}>+30 💎</span>
+              <span className="tf-badge" style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8' }}>+2 💎</span>
               <span className="tf-badge" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>+10 🏆 Lig</span>
             </div>
           </div>
@@ -490,7 +490,7 @@ export const TypeFlowPracticeHub: React.FC<TypeFlowPracticeHubProps> = ({
             {/* Payout Tag */}
             <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
               <span className="tf-badge" style={{ background: 'rgba(168, 85, 247, 0.1)', color: '#a855f7' }}>+75 XP</span>
-              <span className="tf-badge" style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8' }}>+15 💎</span>
+              <span className="tf-badge" style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8' }}>+1 💎</span>
               <span className="tf-badge" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>+3 🏆 Lig</span>
             </div>
           </div>
@@ -545,7 +545,7 @@ export const TypeFlowPracticeHub: React.FC<TypeFlowPracticeHubProps> = ({
               <span className="tf-badge" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', fontWeight: 800 }}>
                 🔋 +1 ENERJİ ŞARJ
               </span>
-              <span className="tf-badge" style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8' }}>+10 💎</span>
+              <span className="tf-badge" style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8' }}>+1 💎</span>
               <span className="tf-badge" style={{ background: 'rgba(168, 85, 247, 0.1)', color: '#a855f7' }}>+40 XP</span>
             </div>
           </div>
