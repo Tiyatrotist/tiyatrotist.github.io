@@ -35,7 +35,7 @@ export const GOOGLE_ADSENSE_CONFIG: GoogleAdSenseConfig = {
   clientId:
     typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_ADSENSE_CLIENT_ID
       ? process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID
-      : 'ca-pub-8882049102481920',
+      : 'ca-pub-7828284439187298',
   enabled: true,
   slots: {
     banner: '8172635490',

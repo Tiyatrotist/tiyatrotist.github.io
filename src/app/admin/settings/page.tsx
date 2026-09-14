@@ -233,7 +233,7 @@ export default function SettingsPage() {
               <input
                 type="text"
                 className="admin-input"
-                defaultValue={typeof window !== 'undefined' ? (localStorage.getItem('tf_adsense_client_id') || 'ca-pub-8882049102481920') : 'ca-pub-8882049102481920'}
+                defaultValue={typeof window !== 'undefined' ? (localStorage.getItem('tf_adsense_client_id') || 'ca-pub-7828284439187298') : 'ca-pub-7828284439187298'}
                 placeholder="ca-pub-XXXXXXXXXXXXXXXX"
                 onBlur={(e) => {
                   const val = e.target.value.trim();
@@ -257,7 +257,7 @@ export default function SettingsPage() {
             </div>
           </div>
           <div style={{ marginTop: '0.6rem', fontSize: '0.68rem', color: 'rgba(255,255,255,0.35)', fontFamily: 'monospace' }}>
-            ✓ public/ads.txt dosyası aktif: google.com, pub-8882049102481920, DIRECT, f08c47fec0942fa0
+            ✓ public/ads.txt dosyası aktif: google.com, pub-7828284439187298, DIRECT, f08c47fec0942fa0
           </div>
         </div>
 

@@ -51,7 +51,8 @@
 - [ ] GitHub Repo Ayarları -> Pages sekmesinde Custom Domain'in (`tiyatrotist.com.tr`) onaylanması ve "Enforce HTTPS" kutucuğunun işaretlenmesi
 
 ### 2. GOOGLE ADSENSE (GitHub Pages & Özel Domain)
-- [x] Kök `public/ads.txt` dosyasının oluşturulması ve derlemede (`out/ads.txt`) sunulması
+- [x] Kök `public/ads.txt` dosyasının gerçek AdSense yayıncı satırıyla (`google.com, pub-7828284439187298, DIRECT, f08c47fec0942fa0`) güncellenmesi
+- [x] Varsayılan AdSense istemci ID'sinin (`ca-pub-7828284439187298`) yapılandırılması (`src/config/ads.ts` & Admin Panel)
 - [x] Admin panelinden AdSense Yayıncı ID ve Slot ID ayarlarının dinamik yönetimi
 - [x] TypeFlow içerisinde AdSense reklam kutuları ve odak enerjisi ödül entegrasyonu
 - [ ] Domain bağlandıktan sonra `https://tiyatrotist.com.tr` adresinin Google AdSense paneline eklenmesi
