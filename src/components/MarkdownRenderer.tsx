@@ -315,18 +315,22 @@ export default function MarkdownRenderer({ content, className }: MarkdownRendere
           if (line.startsWith('# ')) {
             flushQuote(`quote-${blockIndex}-${lineIdx}`);
             flushList(`list-${blockIndex}-${lineIdx}`);
+            const text = line.slice(2).trim();
+            const headingId = text.toLowerCase().replace(/[^a-z0-9ğüşıöç\s-]/g, '').replace(/\s+/g, '-');
             elements.push(
               <h1
                 key={`h1-${blockIndex}-${lineIdx}`}
+                id={headingId}
                 style={{
                   fontSize: '1.75rem',
                   fontWeight: 600,
                   color: '#ffffff',
                   margin: '2.5rem 0 1rem 0',
                   letterSpacing: '-0.02em',
+                  scrollMarginTop: '100px',
                 }}
               >
-                {renderInline(line.slice(2))}
+                {renderInline(text)}
               </h1>
             );
             return;
@@ -336,18 +340,22 @@ export default function MarkdownRenderer({ content, className }: MarkdownRendere
           if (line.startsWith('## ')) {
             flushQuote(`quote-${blockIndex}-${lineIdx}`);
             flushList(`list-${blockIndex}-${lineIdx}`);
+            const text = line.slice(3).trim();
+            const headingId = text.toLowerCase().replace(/[^a-z0-9ğüşıöç\s-]/g, '').replace(/\s+/g, '-');
             elements.push(
               <h2
                 key={`h2-${blockIndex}-${lineIdx}`}
+                id={headingId}
                 style={{
                   fontSize: '1.35rem',
                   fontWeight: 600,
                   color: '#ffffff',
                   margin: '2rem 0 0.85rem 0',
                   letterSpacing: '-0.01em',
+                  scrollMarginTop: '100px',
                 }}
               >
-                {renderInline(line.slice(3))}
+                {renderInline(text)}
               </h2>
             );
             return;
@@ -357,17 +365,21 @@ export default function MarkdownRenderer({ content, className }: MarkdownRendere
           if (line.startsWith('### ')) {
             flushQuote(`quote-${blockIndex}-${lineIdx}`);
             flushList(`list-${blockIndex}-${lineIdx}`);
+            const text = line.slice(4).trim();
+            const headingId = text.toLowerCase().replace(/[^a-z0-9ğüşıöç\s-]/g, '').replace(/\s+/g, '-');
             elements.push(
               <h3
                 key={`h3-${blockIndex}-${lineIdx}`}
+                id={headingId}
                 style={{
                   fontSize: '1.15rem',
                   fontWeight: 500,
                   color: '#ffffff',
                   margin: '1.5rem 0 0.65rem 0',
+                  scrollMarginTop: '100px',
                 }}
               >
-                {renderInline(line.slice(4))}
+                {renderInline(text)}
               </h3>
             );
             return;

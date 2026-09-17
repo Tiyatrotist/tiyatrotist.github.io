@@ -29,9 +29,9 @@ export default function Footer({ lang, dict }: FooterProps) {
     { label: dict.nav.contact, path: `/${lang}/contact` },
   ];
 
-  const triggerAperture = () => {
+  const triggerTerminal = () => {
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('open-aperture-terminal'));
+      window.dispatchEvent(new CustomEvent('open-tiyatrotist-terminal'));
     }
   };
 
@@ -66,31 +66,51 @@ export default function Footer({ lang, dict }: FooterProps) {
           ))}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
           <p className="site-footer__copy">{dict.footer.copy}</p>
-          <button
-            onClick={triggerAperture}
+          <a
+            href="/rss.xml"
+            target="_blank"
+            rel="noopener noreferrer"
             style={{
               fontFamily: 'monospace',
               fontSize: '0.65rem',
-              color: 'rgba(255, 255, 255, 0.25)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              color: 'rgba(255, 255, 255, 0.35)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              padding: '0.15rem 0.4rem',
+              borderRadius: '3px',
+              textDecoration: 'none',
+              transition: 'all 0.25s ease',
+            }}
+            title="RSS 2.0 Feed"
+            data-cursor="expand"
+          >
+            [ RSS ]
+          </a>
+          <button
+            onClick={triggerTerminal}
+            style={{
+              fontFamily: 'monospace',
+              fontSize: '0.65rem',
+              color: 'rgba(255, 255, 255, 0.35)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
               padding: '0.15rem 0.4rem',
               borderRadius: '3px',
               cursor: 'pointer',
+              background: 'none',
               transition: 'all 0.25s ease',
             }}
-            title="Press ` or type 'portal' / 'cake' / Konami code"
+            title="Monokrom Terminali Aç (~ / Ctrl+~)"
           >
-            [ SYS_INIT ]
+            [ SYS_CLI ]
           </button>
           <Link
             href="/admin"
             style={{
               fontFamily: 'monospace',
               fontSize: '0.65rem',
-              color: 'rgba(255, 255, 255, 0.25)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              color: 'rgba(255, 255, 255, 0.35)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
               padding: '0.15rem 0.4rem',
               borderRadius: '3px',
               textDecoration: 'none',

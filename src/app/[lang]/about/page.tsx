@@ -37,7 +37,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
               data-cursor="expand"
               title="Admin About & Timeline Editor"
             >
-              [ ⚙ ADMİN DÜZENLE ]
+              [ ADMİN DÜZENLE ]
             </Link>
           </div>
           <h1 className="page-title">{a.title}</h1>

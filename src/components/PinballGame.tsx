@@ -752,7 +752,7 @@ export default function PinballGame() {
       {/* Secret Message Toast */}
       {secretMessage && (
         <div className="pinball-secret-toast">
-          <span>✨ {secretMessage}</span>
+          <span>[ SECRET ] {secretMessage}</span>
         </div>
       )}
 

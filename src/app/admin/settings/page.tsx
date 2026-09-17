@@ -204,7 +204,7 @@ export default function SettingsPage() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
             <div>
               <div style={{ fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.1em', color: '#38bdf8', marginBottom: '0.2rem' }}>
-                📢 GOOGLE ADSENSE REKLAM AYARLARI
+                GOOGLE ADSENSE REKLAM AYARLARI
               </div>
               <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.45)' }}>
                 TypeFlow ve genel sitede gösterilecek Google AdSense yayıncı kimliğini ve reklam durumunu yönetin.
@@ -256,12 +256,78 @@ export default function SettingsPage() {
               />
             </div>
           </div>
-          <div style={{ marginTop: '0.6rem', fontSize: '0.68rem', color: 'rgba(255,255,255,0.35)', fontFamily: 'monospace' }}>
+          {/* Blog AdSense Sub-section */}
+          <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid rgba(56, 189, 248, 0.15)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+              <div>
+                <div style={{ fontSize: '0.72rem', fontWeight: 600, color: '#e2e8f0' }}>
+                  Blog Reklamları (Yazı İçi &amp; Blog Akışı)
+                </div>
+                <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)' }}>
+                  Blog yazı detaylarında ve blog liste akışında Google AdSense bannerlarını göster.
+                </div>
+              </div>
+              <label className="admin-toggle" aria-label="Blog Reklamlarını Aç / Kapat">
+                <input
+                  type="checkbox"
+                  defaultChecked={typeof window !== 'undefined' ? (localStorage.getItem('blog_ads_enabled') !== 'false') : true}
+                  onChange={(e) => {
+                    if (typeof window !== 'undefined') {
+                      localStorage.setItem('blog_ads_enabled', String(e.target.checked));
+                    }
+                    setSuccess(e.target.checked ? 'Blog reklamları aktif edildi.' : 'Blog reklamları duraklatıldı.');
+                  }}
+                />
+                <span className="admin-toggle-slider" />
+              </label>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.68rem', color: 'rgba(255,255,255,0.6)', marginBottom: '0.35rem' }}>
+                  Blog Yazı İçi Slot ID (In-Article)
+                </label>
+                <input
+                  type="text"
+                  className="admin-input"
+                  defaultValue={typeof window !== 'undefined' ? (localStorage.getItem('blog_ads_slot_in_article') || '6453829102') : '6453829102'}
+                  placeholder="örn. 6453829102"
+                  onBlur={(e) => {
+                    const val = e.target.value.trim();
+                    if (val && typeof window !== 'undefined') {
+                      localStorage.setItem('blog_ads_slot_in_article', val);
+                      setSuccess('Blog Yazı İçi Slot ID kaydedildi.');
+                    }
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.68rem', color: 'rgba(255,255,255,0.6)', marginBottom: '0.35rem' }}>
+                  Blog Liste İçi Slot ID (In-Feed)
+                </label>
+                <input
+                  type="text"
+                  className="admin-input"
+                  defaultValue={typeof window !== 'undefined' ? (localStorage.getItem('blog_ads_slot_in_feed') || '5342718091') : '5342718091'}
+                  placeholder="örn. 5342718091"
+                  onBlur={(e) => {
+                    const val = e.target.value.trim();
+                    if (val && typeof window !== 'undefined') {
+                      localStorage.setItem('blog_ads_slot_in_feed', val);
+                      setSuccess('Blog Liste İçi Slot ID kaydedildi.');
+                    }
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div style={{ marginTop: '0.75rem', fontSize: '0.68rem', color: 'rgba(255,255,255,0.35)', fontFamily: 'monospace' }}>
             ✓ public/ads.txt dosyası aktif: google.com, pub-7828284439187298, DIRECT, f08c47fec0942fa0
           </div>
         </div>
 
-        {/* 💳 Payment Gateways Configuration (Stripe, PayTR, FAST Wire) */}
+        {/* Payment Gateways Configuration (Stripe, PayTR, FAST Wire) */}
         <div style={{
           marginTop: '1.5rem',
           padding: '1.25rem',
@@ -270,7 +336,7 @@ export default function SettingsPage() {
           background: 'rgba(255,255,255,0.02)',
         }}>
           <div style={{ fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.1em', color: '#10b981', marginBottom: '0.2rem' }}>
-            💳 ÖDEME ALTYAPISI (STRIPE / PAYTR / FAST HAVALE)
+            ÖDEME ALTYAPISI (STRIPE / PAYTR / FAST HAVALE)
           </div>
           <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.45)', marginBottom: '1rem' }}>
             Canlı Stripe Checkout bağlantılarınızı, PayTR ödeme linkinizi ve FAST/Havale hesap bilgilerinizi yönetin.
@@ -341,7 +407,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* 📥 Pending Wire Orders (Havale / FAST Bildirimleri) */}
+        {/* Pending Wire Orders (Havale / FAST Bildirimleri) */}
         <div style={{
           marginTop: '1.5rem',
           padding: '1.25rem',
@@ -352,7 +418,7 @@ export default function SettingsPage() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
             <div>
               <div style={{ fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.1em', color: '#f59e0b', marginBottom: '0.2rem' }}>
-                📥 BEKLEYEN HAVALE / FAST ÖDEME BİLDİRİMLERİ ({pendingOrders.filter((o) => o.status === 'pending_verification').length})
+                BEKLEYEN HAVALE / FAST ÖDEME BİLDİRİMLERİ ({pendingOrders.filter((o) => o.status === 'pending_verification').length})
               </div>
               <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.45)' }}>
                 Kullanıcıların TypeFlow üzerinden bildirdiği banka dekontları ve FAST transferleri.
@@ -371,7 +437,7 @@ export default function SettingsPage() {
                 cursor: 'pointer',
               }}
             >
-              🔄 Yenile
+              Yenile
             </button>
           </div>
 
@@ -423,7 +489,7 @@ export default function SettingsPage() {
                           background: order.status === 'approved' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
                           color: order.status === 'approved' ? '#10b981' : '#f59e0b',
                         }}>
-                          {order.status === 'approved' ? '✓ ONAYLANDI' : '⏳ İNCELENİYOR'}
+                          {order.status === 'approved' ? '✓ ONAYLANDI' : 'İNCELENİYOR'}
                         </span>
                       </td>
                       <td style={{ padding: '0.5rem', textAlign: 'right' }}>

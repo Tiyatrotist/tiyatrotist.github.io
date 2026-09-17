@@ -7,6 +7,7 @@
 'use client';
 
 import React from 'react';
+import { FileText, BookOpen, Terminal, Check } from 'lucide-react';
 import { Locale } from '@/dictionaries';
 import { TypeFlowMode, WordCountOption, TimeOption } from './types';
 
@@ -52,8 +53,9 @@ export default function TypeFlowControls({
             className={`tf-pill ${mode === 'words' ? 'active' : ''}`}
             onClick={() => onModeChange('words')}
             title={isTr ? "Sık kullanılan kelimeler" : "Frequent words"}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
           >
-            <span>●</span>
+            <FileText size={13} />
             <span>{isTr ? 'Kelimeler' : 'Words'}</span>
           </button>
 
@@ -61,8 +63,9 @@ export default function TypeFlowControls({
             className={`tf-pill ${mode === 'story' ? 'active' : ''}`}
             onClick={() => onModeChange('story')}
             title={isTr ? "Algoritmik dinamik hikaye modu" : "Dynamic narrative story"}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
           >
-            <span>📖</span>
+            <BookOpen size={13} />
             <span>{isTr ? 'Hikaye' : 'Story'}</span>
           </button>
 
@@ -70,8 +73,9 @@ export default function TypeFlowControls({
             className={`tf-pill ${mode === 'dev' ? 'active' : ''}`}
             onClick={() => onModeChange('dev')}
             title={isTr ? "PowerShell, Terminal ve Kod komutları" : "PowerShell, CLI & Code commands"}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
           >
-            <span>⚡</span>
+            <Terminal size={13} />
             <span>{isTr ? 'Kod & CLI' : 'Dev / CLI'}</span>
           </button>
         </div>
@@ -142,9 +146,7 @@ export default function TypeFlowControls({
               }}
             >
               <span>Aa</span>
-              <span style={{ fontSize: '0.68rem', opacity: 0.8 }}>
-                {caseSensitive ? '✓' : '○'}
-              </span>
+              {caseSensitive && <Check size={11} strokeWidth={3} />}
             </button>
           )}
 
@@ -160,12 +162,13 @@ export default function TypeFlowControls({
               style={{
                 borderColor: includePunctuation ? 'var(--tf-accent)' : 'rgba(255,255,255,0.1)',
                 opacity: includePunctuation ? 1 : 0.75,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
               }}
             >
               <span>!?</span>
-              <span style={{ fontSize: '0.68rem', opacity: 0.8 }}>
-                {includePunctuation ? '✓' : '○'}
-              </span>
+              {includePunctuation && <Check size={11} strokeWidth={3} />}
             </button>
           )}
         </div>

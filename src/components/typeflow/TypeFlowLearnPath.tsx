@@ -7,9 +7,37 @@
 'use client';
 
 import React, { useState } from 'react';
+import {
+  Check,
+  Lock,
+  Star,
+  Map,
+  Zap,
+  Gem,
+  Gauge,
+  Target,
+  Play,
+  RotateCcw,
+  X,
+  Battery,
+  Award,
+  Flag,
+  Waves,
+  ArrowUp,
+  Edit3,
+  Hash,
+  Rocket,
+  BookOpen,
+  Code2,
+  Trophy,
+  Crown,
+  ShoppingBag,
+} from 'lucide-react';
 import { Locale } from '@/dictionaries';
 import { Unit, Lesson, UserProfile } from './types';
 import { getUnitsForLang } from './duolingoData';
+
+const UNIT_ICONS = [Flag, Zap, Waves, ArrowUp, Edit3, Hash, Rocket, BookOpen, Code2, Trophy];
 
 interface TypeFlowLearnPathProps {
   lang: Locale;
@@ -70,8 +98,9 @@ export default function TypeFlowLearnPath({
     <div className="tf-path-wrapper">
       {/* 1. Header Banner */}
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        <h2 style={{ fontSize: '1.8rem', fontWeight: 800, margin: '0 0 0.4rem 0' }}>
-          {isTr ? '🗺️ Daktilo Akademisi' : '🗺️ Typing Academy'}
+        <h2 style={{ fontSize: '1.8rem', fontWeight: 800, margin: '0 0 0.4rem 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+          <Map size={24} color="#38bdf8" />
+          <span>{isTr ? 'Daktilo Akademisi' : 'Typing Academy'}</span>
         </h2>
         <p style={{ color: 'var(--tf-text-secondary)', margin: 0, fontSize: '0.95rem' }}>
           {isTr
@@ -82,6 +111,8 @@ export default function TypeFlowLearnPath({
 
       {/* 2. Units Loop */}
       {units.map((unit, unitIdx) => {
+        const UnitIconComp = UNIT_ICONS[unitIdx % UNIT_ICONS.length] || Trophy;
+
         return (
           <div key={unit.id} className="tf-unit-card">
             {/* Unit Header */}
@@ -91,8 +122,8 @@ export default function TypeFlowLearnPath({
                 <h3 className="tf-unit-title">{unit.title}</h3>
                 <p className="tf-unit-desc">{unit.description}</p>
               </div>
-              <div style={{ fontSize: '1.8rem' }}>
-                {['🏁', '⚡', '🌊', '⇧', '✍️', '🔢', '🚀', '📖', '💻', '👑'][unitIdx] || '🏆'}
+              <div style={{ color: 'var(--tf-accent)', display: 'flex', alignItems: 'center' }}>
+                <UnitIconComp size={32} />
               </div>
             </div>
 
@@ -140,14 +171,20 @@ export default function TypeFlowLearnPath({
                         title={lesson.title}
                         aria-label={lesson.title}
                       >
-                        {isCompleted ? '✓' : isLocked ? '🔒' : lesson.icon}
+                        {isCompleted ? (
+                          <Check size={22} color="#fff" strokeWidth={3} />
+                        ) : isLocked ? (
+                          <Lock size={18} color="#64748b" />
+                        ) : (
+                          <Play size={18} color="#fff" fill="#fff" />
+                        )}
                       </button>
 
                       {/* Stars Rating */}
-                      <div className="tf-node-stars">
-                        <span>{userStars >= 1 ? '⭐' : '☆'}</span>
-                        <span>{userStars >= 2 ? '⭐' : '☆'}</span>
-                        <span>{userStars >= 3 ? '⭐' : '☆'}</span>
+                      <div className="tf-node-stars" style={{ display: 'flex', gap: '3px', justifyContent: 'center' }}>
+                        <Star size={13} fill={userStars >= 1 ? '#eab308' : 'none'} color={userStars >= 1 ? '#eab308' : '#475569'} />
+                        <Star size={13} fill={userStars >= 2 ? '#eab308' : 'none'} color={userStars >= 2 ? '#eab308' : '#475569'} />
+                        <Star size={13} fill={userStars >= 3 ? '#eab308' : 'none'} color={userStars >= 3 ? '#eab308' : '#475569'} />
                       </div>
 
                       {/* Lesson Short Label */}
@@ -174,11 +211,14 @@ export default function TypeFlowLearnPath({
               className="tf-lesson-modal-close tf-btn-pushable"
               onClick={() => setSelectedLesson(null)}
               aria-label={isTr ? "Kapat" : "Close"}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
-              ✕
+              <X size={16} />
             </button>
 
-            <div className="tf-lesson-modal-icon">{selectedLesson.icon}</div>
+            <div className="tf-lesson-modal-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Play size={28} color="#38bdf8" fill="#38bdf8" />
+            </div>
             <h3 className="tf-lesson-modal-title">{selectedLesson.title}</h3>
             <p className="tf-lesson-modal-desc">
               {selectedLesson.description}
@@ -229,8 +269,9 @@ export default function TypeFlowLearnPath({
               </div>
               <div className="tf-lesson-meta-item">
                 <span className="tf-lesson-meta-lbl">{isTr ? 'ÖDÜL' : 'REWARD'}</span>
-                <span className="tf-lesson-meta-val reward">
-                  +{profile.isPremium ? selectedLesson.xpReward * 2 : selectedLesson.xpReward} XP / +{selectedLesson.gemReward} 💎
+                <span className="tf-lesson-meta-val reward" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <span>+{profile.isPremium ? selectedLesson.xpReward * 2 : selectedLesson.xpReward} XP / +{selectedLesson.gemReward}</span>
+                  <Gem size={12} color="#38bdf8" />
                   {profile.isPremium && <span style={{ color: '#f59e0b', marginLeft: '4px', fontSize: '0.72rem' }}>(2X PRO)</span>}
                 </span>
               </div>
@@ -239,11 +280,11 @@ export default function TypeFlowLearnPath({
             {/* Completed Badge Indicator */}
             {profile.completedLessons?.[selectedLesson.id] > 0 && (
               <div style={{ margin: '0.75rem 0', padding: '0.6rem 0.8rem', background: 'rgba(34, 197, 94, 0.12)', border: '1px solid #22c55e', borderRadius: '10px', textAlign: 'center', fontSize: '0.85rem', color: '#16a34a', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                <span>✓</span>
+                <Check size={16} />
                 <span>
                   {isTr
-                    ? `Bu ders tamamlandı (${profile.completedLessons[selectedLesson.id]} / 3 ⭐). Hızınızı pekiştirmek için tekrar oynayabilirsiniz!`
-                    : `Completed (${profile.completedLessons[selectedLesson.id]} / 3 ⭐). Replay anytime to beat your score!`}
+                    ? `Bu ders tamamlandı (${profile.completedLessons[selectedLesson.id]} / 3 Yıldız). Hızınızı pekiştirmek için tekrar oynayabilirsiniz!`
+                    : `Completed (${profile.completedLessons[selectedLesson.id]} / 3 Stars). Replay anytime to beat your score!`}
                 </span>
               </div>
             )}
@@ -251,34 +292,39 @@ export default function TypeFlowLearnPath({
             {/* Battery Depleted Warning or Launch */}
             {isBatteryEmpty ? (
               <div className="tf-lesson-hearts-empty">
-                <p>
-                  {isTr
-                    ? '🔋 Odak Bataryan tükendi! Teknoloji reklamı izleyerek hemen +1 enerji şarj edebilir veya Super\'a geçebilirsin.'
-                    : '🔋 Focus battery depleted! Watch a tech sponsor break to recharge +1 energy or upgrade to Super.'}
+                <p style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                  <Battery size={16} color="#ef4444" />
+                  <span>
+                    {isTr
+                      ? 'Odak Bataryan tükendi! Teknoloji reklamı izleyerek hemen +1 enerji şarj edebilir veya Super\'a geçebilirsin.'
+                      : 'Focus battery depleted! Watch a tech sponsor break to recharge +1 energy or upgrade to Super.'}
+                  </span>
                 </p>
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
                   {onOpenAdModal && (
                     <button
                       className="tf-lesson-shop-btn tf-btn-pushable"
-                      style={{ background: '#3b82f6', color: '#fff', border: 'none' }}
+                      style={{ background: '#3b82f6', color: '#fff', border: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                       onClick={() => {
                         setSelectedLesson(null);
                         onOpenAdModal();
                       }}
                     >
-                      ⚡ {isTr ? 'Reklam İzle (+1 Enerji)' : 'Watch Ad (+1 Energy)'}
+                      <Zap size={14} />
+                      <span>{isTr ? 'Reklam İzle (+1 Enerji)' : 'Watch Ad (+1 Energy)'}</span>
                     </button>
                   )}
                   {onOpenSuperModal && (
                     <button
                       className="tf-lesson-shop-btn tf-btn-pushable"
-                      style={{ background: 'linear-gradient(135deg, #f59e0b, #eab308)', color: '#000', border: 'none' }}
+                      style={{ background: 'linear-gradient(135deg, #f59e0b, #eab308)', color: '#000', border: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                       onClick={() => {
                         setSelectedLesson(null);
                         onOpenSuperModal();
                       }}
                     >
-                      👑 {isTr ? 'Super\'a Geç (Sınırsız ♾️)' : 'Get Super (Unlimited ♾️)'}
+                      <Crown size={14} />
+                      <span>{isTr ? 'Super\'a Geç (Sınırsız)' : 'Get Super (Unlimited)'}</span>
                     </button>
                   )}
                   <button
@@ -287,8 +333,10 @@ export default function TypeFlowLearnPath({
                       setSelectedLesson(null);
                       onOpenShop();
                     }}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                   >
-                    🛍️ {isTr ? 'Mağazada Doldur' : 'Shop Refill'}
+                    <ShoppingBag size={14} />
+                    <span>{isTr ? 'Mağazada Doldur' : 'Shop Refill'}</span>
                   </button>
                 </div>
               </div>
@@ -303,10 +351,19 @@ export default function TypeFlowLearnPath({
                 <button
                   className="tf-lesson-launch-btn tf-btn-pushable"
                   onClick={handleLaunch}
+                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                 >
-                  {profile.completedLessons?.[selectedLesson.id] > 0
-                    ? (isTr ? '↺ Dersi Tekrarla' : '↺ Replay Lesson')
-                    : (isTr ? '▶ Dersi Başlat' : '▶ Start Lesson')}
+                  {profile.completedLessons?.[selectedLesson.id] > 0 ? (
+                    <>
+                      <RotateCcw size={15} />
+                      <span>{isTr ? 'Dersi Tekrarla' : 'Replay Lesson'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play size={15} fill="currentColor" />
+                      <span>{isTr ? 'Dersi Başlat' : 'Start Lesson'}</span>
+                    </>
+                  )}
                 </button>
               </div>
             )}

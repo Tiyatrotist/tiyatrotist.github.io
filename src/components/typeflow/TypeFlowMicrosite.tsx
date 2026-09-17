@@ -62,20 +62,20 @@ interface TypeFlowMicrositeProps {
 }
 
 const DEFAULT_PROFILE: UserProfile = {
-  id: 'bugra_tiyatrotist',
-  username: 'BugraTiyatrotist',
-  bio: 'Tiyatrotist kurucusu Buğra. Sahnede tirad atan, kod başında daktilo tuşlayan tiyatro ve yazılım aşığı.',
+  id: 'guest_user',
+  username: 'Daktilocu',
+  bio: 'Hızlı ve ritmik on parmak daktilo pratiği.',
   isGuest: true,
-  avatar: '🎭',
-  level: 3,
-  xp: 450,
-  streakDays: 4,
-  lastActiveDate: '2026-01-01',
-  dailyTestsCompleted: 2,
+  avatar: '⚡',
+  level: 1,
+  xp: 0,
+  streakDays: 0,
+  lastActiveDate: '',
+  dailyTestsCompleted: 0,
   dailyGoal: 3,
-  totalTests: 18,
-  avgWpm: 78,
-  topWpm: 96,
+  totalTests: 0,
+  avgWpm: 0,
+  topWpm: 0,
   keyStats: {},
 
   // Odak Enerjisi (Focus Battery 🔋) & Super TypeFlow
@@ -746,52 +746,18 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
         passed,
       });
 
-      if (passed) {
-        if (totalStages > 1 && activeLessonStage < totalStages) {
-          // Multi-stage lesson: Intermediate stage completed — auto-advance to next stage
-          stars = 1;
-          earnedXp = Math.round((activeLesson.xpReward / totalStages) * (profile.isPremium ? 2 : 1));
-          earnedGems += 1; // +1 gem for intermediate stage
-          // Schedule auto-advance to next stage after result is shown briefly
-          const nextStage = activeLessonStage + 1;
-          setTimeout(() => {
-            addToast(
-              lang === 'tr'
-                ? `✅ Aşama ${activeLessonStage} tamamlandı! Aşama ${nextStage}'e geçiliyor...`
-                : `✅ Stage ${activeLessonStage} complete! Advancing to Stage ${nextStage}...`,
-              'success'
-            );
-            handleStartLesson(activeLesson!, nextStage);
-          }, 2500);
-        } else {
-          // Final stage or single-stage lesson passed: award mastery stars!
-          stars = 1;
-          if (finalWpm >= targetMinWpm + 5 && finalAcc >= 94) stars = 2;
-          if (finalWpm >= targetMinWpm + 10 && finalAcc >= 97) stars = 3;
-          earnedXp = activeLesson.xpReward * (profile.isPremium ? 2 : 1);
-          earnedGems += activeLesson.gemReward;
-          console.debug('[TypeFlow:Lesson] Full lesson completed! Stars awarded:', stars, 'XP:', earnedXp, 'Gems:', earnedGems);
-        }
-      } else {
-        // Failed stage/test: target criteria not met
-        stars = 0;
-        // Failed stage/test: deduct 1 Focus Battery cell if not premium
-        if (!profile.isPremium) {
-          setProfile((prev) => {
-            const curEnergy = prev.energy ?? prev.hearts ?? 5;
-            const newEnergy = Math.max(0, curEnergy - 1);
-            const updated = { ...prev, energy: newEnergy, hearts: newEnergy };
-            try { localStorage.setItem('tf_user_profile', JSON.stringify(updated)); } catch {}
-            console.debug('[TypeFlow:Energy] Deducted 1 Focus Battery. Remaining:', newEnergy);
-            // Record energy deduction time for passive recharge
-            try { localStorage.setItem('tf_last_energy_time', String(Date.now())); } catch {}
-            if (newEnergy === 0) {
-              setIsAdBreakModalOpen(true);
-            }
-            return updated;
-          });
-        }
+      // Lesson Completion Logic:
+      // Completing all words of a lesson awards completion and at least 1 star!
+      stars = 1;
+      if (finalWpm >= targetMinWpm && finalAcc >= targetMinAcc) {
+        stars = 2;
       }
+      if (finalWpm >= targetMinWpm + 5 && finalAcc >= 94) {
+        stars = 3;
+      }
+      earnedXp = activeLesson.xpReward * (profile.isPremium ? 2 : 1);
+      earnedGems += activeLesson.gemReward;
+      console.debug('[TypeFlow:Lesson] Full lesson completed! Stars awarded:', stars, 'XP:', earnedXp, 'Gems:', earnedGems);
     } else {
       // Audit Fix #3: Add drill-specific rewards from activeDrillConfig
       if (activeDrillConfig) {
@@ -836,15 +802,11 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
       );
     }
 
-    // Record lesson completion when final stage passed
+    // Record lesson completion whenever lesson test is completed
     const newCompletedLessons = { ...(profile.completedLessons || {}) };
     if (isLesson && activeLesson && stars > 0) {
-      const totalStages = activeLesson.stages && activeLesson.stages.length > 0 ? activeLesson.stages.length : 1;
-      const isFinalStage = activeLessonStage >= totalStages;
-      if (isFinalStage) {
-        newCompletedLessons[activeLesson.id] = Math.max(newCompletedLessons[activeLesson.id] || 0, stars);
-        console.debug('[TypeFlow:Lesson] Saved completion for lesson:', activeLesson.id, 'Stars:', newCompletedLessons[activeLesson.id]);
-      }
+      newCompletedLessons[activeLesson.id] = Math.max(newCompletedLessons[activeLesson.id] || 0, stars);
+      console.debug('[TypeFlow:Lesson] Saved completion for lesson:', activeLesson.id, 'Stars:', newCompletedLessons[activeLesson.id]);
     }
 
     // Merge session keyStats into lifetime heatmap
@@ -1124,28 +1086,8 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
       setLiveStreak(0);
       soundEngine.playKey(true, true);
 
-      // Lesson 3-Mistakes Limit (Item 15)
       if (mode === 'lesson') {
-        const nextMistakes = lessonMistakes + 1;
-        setLessonMistakes(nextMistakes);
-        if (nextMistakes >= 3) {
-          console.debug('[TypeFlow:Lesson] 3 mistakes reached! Failing lesson.');
-          if (!profile.isPremium) {
-            setProfile((prev) => {
-              const curEnergy = prev.energy ?? prev.hearts ?? 5;
-              const newEnergy = Math.max(0, curEnergy - 1);
-              const updated = { ...prev, energy: newEnergy, hearts: newEnergy };
-              try { localStorage.setItem('tf_user_profile', JSON.stringify(updated)); } catch {}
-              if (newEnergy === 0) {
-                setIsAdBreakModalOpen(true);
-              }
-              return updated;
-            });
-          }
-          setIsLessonFailed(true);
-          setTestStatus('completed');
-          return;
-        }
+        setLessonMistakes((m) => m + 1);
       }
     }
 
@@ -1714,6 +1656,10 @@ export default function TypeFlowMicrosite({ lang: initialLang }: TypeFlowMicrosi
         }}
         onOpenAdModal={handleTriggerAdBreak}
         onCancelSubscription={handleCancelSubscription}
+        onOpenAuth={() => {
+          setIsProfileDrawerOpen(false);
+          setIsAuthModalOpen(true);
+        }}
       />
 
       {/* 9. User Auth & Profile Customization Modal */}

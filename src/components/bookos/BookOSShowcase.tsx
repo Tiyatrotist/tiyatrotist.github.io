@@ -152,7 +152,7 @@ export default function BookOSShowcase({ dict }: BookOSShowcaseProps) {
           className={`bookos-btn ${activeTab === 'editor' ? 'bookos-btn--primary' : 'bookos-btn--secondary'}`}
           style={{ padding: '0.5rem 1.25rem', fontSize: '0.8rem' }}
         >
-          {b.tabEditor} ⚡ (Canlı Editör)
+          {b.tabEditor} (Canlı Editör)
         </button>
         <button
           onClick={() => handleTabChange('monitor')}
@@ -279,7 +279,7 @@ export default function BookOSShowcase({ dict }: BookOSShowcaseProps) {
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'var(--bookos-text-muted)', fontFamily: 'var(--bookos-mono)' }}>
                 <span>Kelime: {wordCount} | Karakter: {guestNote.length}</span>
-                <span>Markdown & LaTeX Desteği Aktif ⚡</span>
+                <span>Markdown & LaTeX Desteği Aktif</span>
               </div>
             </div>
           )}
@@ -295,7 +295,7 @@ export default function BookOSShowcase({ dict }: BookOSShowcaseProps) {
                   className="bookos-btn bookos-btn--primary"
                   style={{ padding: '0.35rem 0.85rem', fontSize: '0.75rem' }}
                 >
-                  {isBenchmarking ? 'Tanılama Çalışıyor…' : '⚡ Çekirdek Tanılama Benchmarkı Çalıştır'}
+                  {isBenchmarking ? 'Tanılama Çalışıyor…' : 'Çekirdek Tanılama Benchmarkı Çalıştır'}
                 </button>
               </div>
 

@@ -12,6 +12,36 @@ import { Locale } from '@/dictionaries';
 import { UserProfile, LeagueTier, LeagueMember } from './types';
 import { LEAGUE_TIERS } from './duolingoData';
 import { supabase } from '@/lib/supabase';
+import {
+  Shield,
+  ShieldCheck,
+  Trophy,
+  Gem,
+  Crown,
+  Medal,
+  Clock,
+  AlertCircle,
+  Zap,
+  Keyboard,
+  Check,
+} from 'lucide-react';
+
+function getTierIcon(tierId: LeagueTier, size: number = 24) {
+  switch (tierId) {
+    case 'bronze':
+      return <Shield size={size} style={{ color: '#cd7f32' }} />;
+    case 'silver':
+      return <ShieldCheck size={size} style={{ color: '#94a3b8' }} />;
+    case 'gold':
+      return <Trophy size={size} style={{ color: '#f59e0b' }} />;
+    case 'sapphire':
+      return <Gem size={size} style={{ color: '#38bdf8' }} />;
+    case 'diamond':
+      return <Crown size={size} style={{ color: '#a855f7' }} />;
+    default:
+      return <Medal size={size} style={{ color: '#f59e0b' }} />;
+  }
+}
 
 interface TypeFlowLeaguesProps {
   lang: Locale;
@@ -198,7 +228,9 @@ export default function TypeFlowLeagues({
     <div className="tf-leagues-wrapper">
       {/* 1. League Hero Banner */}
       <div className="tf-leagues-header-card">
-        <div style={{ fontSize: '3rem', marginBottom: '0.4rem' }}>{currentTierInfo.icon}</div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.6rem' }}>
+          {getTierIcon(currentTierInfo.id, 48)}
+        </div>
         <h2 style={{ fontSize: '1.75rem', fontWeight: 800, margin: '0 0 0.35rem 0' }}>
           {isTr ? currentTierInfo.nameTr : currentTierInfo.nameEn}
         </h2>
@@ -223,7 +255,7 @@ export default function TypeFlowLeagues({
             fontFamily: 'var(--tf-font-mono)',
           }}
         >
-          <span>⏳</span>
+          <Clock size={14} style={{ color: '#f59e0b' }} />
           <span style={{ color: 'var(--tf-text-secondary)' }}>
             {isTr ? 'Haftalık Lig Bitişine:' : 'League Resets In:'}
           </span>
@@ -244,8 +276,9 @@ export default function TypeFlowLeagues({
                 key={tier.id}
                 className={`tf-tier-pill ${selectedTier === tier.id ? 'active' : ''}`}
                 onClick={() => setSelectedTier(tier.id)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
               >
-                <span>{tier.icon}</span>
+                {getTierIcon(tier.id, 16)}
                 <span>{isTr ? tier.nameTr : tier.nameEn}</span>
                 {isUserCurrent && (
                   <span
@@ -288,18 +321,21 @@ export default function TypeFlowLeagues({
             <div style={{ fontSize: '0.78rem', color: 'var(--tf-text-muted)', fontFamily: 'var(--tf-font-mono)' }}>
               {isTr ? 'SENİN MEVCUT LİG DURUMUN' : 'YOUR CURRENT LEAGUE STATUS'}
             </div>
-            <div style={{ fontSize: '1.1rem', fontWeight: 800, marginTop: '0.2rem' }}>
+            <div style={{ fontSize: '1.1rem', fontWeight: 800, marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
               {userRankInActiveTier <= 3 && (profile.weeklyXp || 0) > 0 ? (
-                <span style={{ color: '#10b981' }}>
-                  🟢 {isTr ? `Sıran: #${userRankInActiveTier} (Terfi Hattındasın!)` : `Rank: #${userRankInActiveTier} (Promotion Zone!)`}
+                <span style={{ color: '#10b981', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }} />
+                  {isTr ? `Sıran: #${userRankInActiveTier} (Terfi Hattındasın!)` : `Rank: #${userRankInActiveTier} (Promotion Zone!)`}
                 </span>
               ) : (profile.weeklyXp || 0) === 0 ? (
-                <span style={{ color: '#f59e0b' }}>
-                  ⚠️ {isTr ? 'Bu hafta henüz XP kazanmadın' : 'No XP earned yet this week'}
+                <span style={{ color: '#f59e0b', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <AlertCircle size={15} />
+                  {isTr ? 'Bu hafta henüz XP kazanmadın' : 'No XP earned yet this week'}
                 </span>
               ) : (
-                <span style={{ color: 'var(--tf-text-secondary)' }}>
-                  ⚪ {isTr ? `Sıran: #${userRankInActiveTier} (Güvenli Bölge)` : `Rank: #${userRankInActiveTier} (Safe Zone)`}
+                <span style={{ color: 'var(--tf-text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: 'var(--tf-text-muted)' }} />
+                  {isTr ? `Sıran: #${userRankInActiveTier} (Güvenli Bölge)` : `Rank: #${userRankInActiveTier} (Safe Zone)`}
                 </span>
               )}
             </div>
@@ -323,9 +359,13 @@ export default function TypeFlowLeagues({
                 fontSize: '0.85rem',
                 padding: '0.5rem 1rem',
                 border: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
               }}
             >
-              ⚡ {isTr ? 'XP Topla' : 'Earn XP'}
+              <Zap size={14} />
+              <span>{isTr ? 'XP Topla' : 'Earn XP'}</span>
             </button>
           </div>
         </div>
@@ -343,7 +383,7 @@ export default function TypeFlowLeagues({
             gap: '1rem',
           }}
         >
-          <span style={{ fontSize: '2rem' }}>{currentTierInfo.icon}</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center' }}>{getTierIcon(currentTierInfo.id, 36)}</span>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: '0.95rem', fontWeight: 700 }}>
               {isTr ? `${currentTierInfo.nameTr} Önizlemesi` : `${currentTierInfo.nameEn} Preview`}
@@ -372,18 +412,22 @@ export default function TypeFlowLeagues({
       {/* 3. League Standings Table */}
       <div className="tf-league-table-card">
         {/* Promotion Zone Tag */}
-        <div className="tf-zone-divider promo">
-          {isTr ? '🟢 YÜKSELME HATTI (İLK 3 BİR ÜST LİGE GEÇER)' : '🟢 PROMOTION ZONE (TOP 3 ADVANCE)'}
+        <div className="tf-zone-divider promo" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }} />
+          <span>{isTr ? 'YÜKSELME HATTI (İLK 3 BİR ÜST LİGE GEÇER)' : 'PROMOTION ZONE (TOP 3 ADVANCE)'}</span>
         </div>
 
         {isLoading ? (
-          <div style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--tf-text-muted)' }}>
-            ⏳ {isTr ? 'Gerçek lig katılımcıları yükleniyor...' : 'Loading real league participants...'}
+          <div style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--tf-text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            <Clock size={16} />
+            <span>{isTr ? 'Gerçek lig katılımcıları yükleniyor...' : 'Loading real league participants...'}</span>
           </div>
         ) : displayedMembers.length === 0 ? (
           /* Honest empty state when no real players have populated this tier */
           <div style={{ padding: '3rem 1.5rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '2.5rem', marginBottom: '0.6rem' }}>🏆</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.8rem' }}>
+              <Trophy size={48} style={{ color: '#f59e0b' }} />
+            </div>
             <h4 style={{ margin: '0 0 0.4rem 0', fontSize: '1.1rem', fontWeight: 700 }}>
               {isTr ? 'Bu Ligde Henüz Katılımcı Yok' : 'No Contenders in This League Yet'}
             </h4>
@@ -419,8 +463,16 @@ export default function TypeFlowLeagues({
                   }
                 >
                   {/* Rank / Medal */}
-                  <div className="tf-league-rank">
-                    {member.rank === 1 ? '🥇' : member.rank === 2 ? '🥈' : member.rank === 3 ? '🥉' : `#${member.rank}`}
+                  <div className="tf-league-rank" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {member.rank === 1 ? (
+                      <Medal size={20} style={{ color: '#f59e0b' }} />
+                    ) : member.rank === 2 ? (
+                      <Medal size={20} style={{ color: '#94a3b8' }} />
+                    ) : member.rank === 3 ? (
+                      <Medal size={20} style={{ color: '#cd7f32' }} />
+                    ) : (
+                      `#${member.rank}`
+                    )}
                   </div>
 
                   {/* Avatar & User */}
@@ -466,8 +518,9 @@ export default function TypeFlowLeagues({
 
                 {/* Demotion Zone Divider before bottom items if cohort has over 5 members */}
                 {idx === displayedMembers.length - 3 && displayedMembers.length > 5 && (
-                  <div className="tf-zone-divider demo">
-                    {isTr ? '🔴 DÜŞME HATTI (SON 2 BİR ALT LİGE DÜŞER)' : '🔴 RELEGATION ZONE (BOTTOM 2 DEMOTED)'}
+                  <div className="tf-zone-divider demo" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444' }} />
+                    <span>{isTr ? 'DÜŞME HATTI (SON 2 BİR ALT LİGE DÜŞER)' : 'RELEGATION ZONE (BOTTOM 2 DEMOTED)'}</span>
                   </div>
                 )}
               </React.Fragment>
@@ -481,9 +534,10 @@ export default function TypeFlowLeagues({
         <button
           className="tf-btn tf-btn-pushable"
           onClick={onBackToTest}
-          style={{ background: 'var(--tf-surface-elevated)', border: '1px solid var(--tf-border)' }}
+          style={{ background: 'var(--tf-surface-elevated)', border: '1px solid var(--tf-border)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
         >
-          {isTr ? '⌨️ Pratik Yaparak XP Topla' : '⌨️ Practice to Earn XP'}
+          <Keyboard size={15} />
+          <span>{isTr ? 'Pratik Yaparak XP Topla' : 'Practice to Earn XP'}</span>
         </button>
       </div>
     </div>

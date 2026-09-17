@@ -28,7 +28,7 @@ export const PROJECT_TEMPLATES: Record<ProjectTemplateKey, ProjectTemplateDef> =
     badge: 'STORYTELLING',
     description_tr: 'Büyük medya alanları, güçlü tipografi ve akıcı hikaye anlatımı.',
     description_en: 'Large media, typography and scroll-driven storytelling.',
-    icon: '🎬',
+    icon: '[ CINE ]',
     sections: [
       {
         id: 'cine-hero',
@@ -91,8 +91,8 @@ export const PROJECT_TEMPLATES: Record<ProjectTemplateKey, ProjectTemplateDef> =
           tag_tr: '[ ÖZELLİKLER ]',
           tag_en: '[ FEATURES ]',
           features: [
-            { icon: '✨', title_tr: 'Akıcı Geçişler', title_en: 'Fluid Motion', description_tr: 'Donanım hızlandırmalı pürüzsüz animasyonlar.', description_en: 'Hardware accelerated smooth animations.' },
-            { icon: '🎨', title_tr: 'Monokrom Estetik', title_en: 'Monochrome Aesthetic', description_tr: 'Gözü yormayan minimalist tipografik düzen.', description_en: 'Eye-friendly minimalist typographic layout.' },
+            { icon: '[ + ]', title_tr: 'Akıcı Geçişler', title_en: 'Fluid Motion', description_tr: 'Donanım hızlandırmalı pürüzsüz animasyonlar.', description_en: 'Hardware accelerated smooth animations.' },
+            { icon: '[ • ]', title_tr: 'Monokrom Estetik', title_en: 'Monochrome Aesthetic', description_tr: 'Gözü yormayan minimalist tipografik düzen.', description_en: 'Eye-friendly minimalist typographic layout.' },
           ],
         },
       },
@@ -153,7 +153,7 @@ export const PROJECT_TEMPLATES: Record<ProjectTemplateKey, ProjectTemplateDef> =
     badge: 'SOFTWARE SHOWCASE',
     description_tr: 'Yazılım ve uygulama tanıtımı, arayüz vitrini ve yapılandırılmış özellikler.',
     description_en: 'Software-focused showcase with structured feature sections.',
-    icon: '🚀',
+    icon: '[ PROD ]',
     sections: [
       {
         id: 'prod-hero',
@@ -220,8 +220,8 @@ export const PROJECT_TEMPLATES: Record<ProjectTemplateKey, ProjectTemplateDef> =
           tag_tr: '[ ÖZELLİKLER ]',
           tag_en: '[ FEATURES ]',
           features: [
-            { icon: '⚡', title_tr: 'Hafif Çekirdek', title_en: 'Lightweight Core', description_tr: '< 24KB paket boyutu ve ultra hızlı başlatma.', description_en: '< 24KB bundle size and ultra-fast startup.' },
-            { icon: '🔒', title_tr: 'Yalıtılmış Bellek', title_en: 'Isolated Sandbox', description_tr: 'Güvenli süreç mimarisi.', description_en: 'Secure process sandbox architecture.' },
+            { icon: '[ CORE ]', title_tr: 'Hafif Çekirdek', title_en: 'Lightweight Core', description_tr: '< 24KB paket boyutu ve ultra hızlı başlatma.', description_en: '< 24KB bundle size and ultra-fast startup.' },
+            { icon: '[ SEC ]', title_tr: 'Yalıtılmış Bellek', title_en: 'Isolated Sandbox', description_tr: 'Güvenli süreç mimarisi.', description_en: 'Secure process sandbox architecture.' },
           ],
         },
       },
@@ -279,7 +279,7 @@ export const PROJECT_TEMPLATES: Record<ProjectTemplateKey, ProjectTemplateDef> =
     badge: 'ESSENTIAL',
     description_tr: 'Sade tipografi, medya ve temel proje bilgileri.',
     description_en: 'Simple typography, media and essential project information.',
-    icon: '📐',
+    icon: '[ MIN ]',
     sections: [
       {
         id: 'min-hero',

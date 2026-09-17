@@ -7,8 +7,10 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
+import BlogAdBanner from '@/components/blog/BlogAdBanner';
+import NewsletterSubscribe from '@/components/NewsletterSubscribe';
 import { Locale, Dictionary } from '@/dictionaries';
 import { BlogPostItem } from '@/types/blog';
 
@@ -156,7 +158,7 @@ export default function BlogListView({ posts, lang, dict }: BlogListViewProps) {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {filtered.map((post) => {
+          {filtered.map((post, idx) => {
             const displayTitle = (lang === 'tr' ? post.title_tr : post.title_en) || post.title_tr || post.title_en || post.slug;
             const displayExcerpt = (lang === 'tr' ? post.excerpt_tr : post.excerpt_en) || post.excerpt_tr || post.excerpt_en || '';
             const readTime = (lang === 'tr' ? post.read_time_tr : post.read_time_en) || (lang === 'tr' ? '4 dk okuma' : '4 min read');
@@ -169,121 +171,133 @@ export default function BlogListView({ posts, lang, dict }: BlogListViewProps) {
               : '';
 
             return (
-              <Link
-                key={post.slug}
-                href={`/${lang}/blog/${post.slug}`}
-                className="blog-card-item"
-                data-cursor="expand"
-                style={{
-                  display: 'block',
-                  textDecoration: 'none',
-                  padding: '2rem',
-                  background: 'rgba(255, 255, 255, 0.02)',
-                  border: post.featured ? '1px solid rgba(255, 255, 255, 0.22)' : '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: '6px',
-                  transition: 'border-color 0.3s ease, background 0.3s ease, transform 0.2s ease',
-                }}
-              >
-                {/* Meta Top Bar */}
-                <div
+              <React.Fragment key={post.slug}>
+                <Link
+                  href={`/${lang}/blog/${post.slug}`}
+                  className="blog-card-item"
+                  data-cursor="expand"
                   style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '0.5rem',
-                    marginBottom: '0.85rem',
+                    display: 'block',
+                    textDecoration: 'none',
+                    padding: '2rem',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    border: post.featured ? '1px solid rgba(255, 255, 255, 0.22)' : '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '6px',
+                    transition: 'border-color 0.3s ease, background 0.3s ease, transform 0.2s ease',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-                    <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: 'rgba(255,255,255,0.45)', letterSpacing: '0.1em' }}>
-                      {dateStr}
-                    </span>
-                    <span style={{ color: 'rgba(255,255,255,0.2)' }}>•</span>
-                    <span style={{ fontSize: '0.7rem', fontFamily: 'monospace', color: 'rgba(255,255,255,0.45)' }}>
-                      {readTime}
-                    </span>
-                  </div>
-
-                  {post.featured && (
-                    <span
-                      style={{
-                        fontSize: '0.65rem',
-                        fontFamily: 'monospace',
-                        letterSpacing: '0.1em',
-                        color: '#000000',
-                        background: '#ffffff',
-                        padding: '0.15rem 0.5rem',
-                        borderRadius: '2px',
-                        fontWeight: 600,
-                      }}
-                    >
-                      ★ {b.featured}
-                    </span>
-                  )}
-                </div>
-
-                {/* Title */}
-                <h2
-                  style={{
-                    fontSize: '1.35rem',
-                    fontWeight: 600,
-                    color: '#ffffff',
-                    margin: '0 0 0.75rem 0',
-                    lineHeight: 1.35,
-                    letterSpacing: '-0.01em',
-                  }}
-                >
-                  {displayTitle}
-                </h2>
-
-                {/* Excerpt */}
-                {displayExcerpt && (
-                  <p
-                    style={{
-                      fontSize: '0.9rem',
-                      color: 'rgba(255, 255, 255, 0.65)',
-                      margin: '0 0 1.25rem 0',
-                      lineHeight: 1.65,
-                    }}
-                  >
-                    {displayExcerpt}
-                  </p>
-                )}
-
-                {/* Tags Bottom Bar */}
-                {post.tags && post.tags.length > 0 && (
+                  {/* Meta Top Bar */}
                   <div
                     style={{
                       display: 'flex',
                       flexWrap: 'wrap',
-                      gap: '0.4rem',
-                      paddingTop: '0.85rem',
-                      borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '0.5rem',
+                      marginBottom: '0.85rem',
                     }}
                   >
-                    {post.tags.map((tag) => (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                      <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: 'rgba(255,255,255,0.45)', letterSpacing: '0.1em' }}>
+                        {dateStr}
+                      </span>
+                      <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: 'rgba(255,255,255,0.3)' }}>
+                        // {readTime}
+                      </span>
+                    </div>
+
+                    {post.featured && (
                       <span
-                        key={tag}
                         style={{
                           fontSize: '0.65rem',
                           fontFamily: 'monospace',
-                          color: 'rgba(255, 255, 255, 0.4)',
-                          background: 'rgba(255, 255, 255, 0.03)',
-                          padding: '0.15rem 0.45rem',
+                          letterSpacing: '0.12em',
+                          color: '#000000',
+                          background: '#ffffff',
+                          padding: '0.15rem 0.5rem',
                           borderRadius: '2px',
+                          fontWeight: 700,
                         }}
                       >
-                        #{tag}
+                        [ {b.featured.toUpperCase()} ]
                       </span>
-                    ))}
+                    )}
                   </div>
+
+                  {/* Title */}
+                  <h2
+                    style={{
+                      fontSize: '1.45rem',
+                      fontWeight: 500,
+                      color: '#ffffff',
+                      marginBottom: '0.75rem',
+                      lineHeight: 1.35,
+                      letterSpacing: '-0.01em',
+                    }}
+                  >
+                    {displayTitle}
+                  </h2>
+
+                  {/* Excerpt */}
+                  {displayExcerpt && (
+                    <p
+                      style={{
+                        fontSize: '0.85rem',
+                        color: 'rgba(255, 255, 255, 0.65)',
+                        lineHeight: 1.6,
+                        marginBottom: '1.25rem',
+                      }}
+                    >
+                      {displayExcerpt}
+                    </p>
+                  )}
+
+                  {/* Tags Bottom Bar */}
+                  {post.tags && post.tags.length > 0 && (
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: '0.4rem',
+                        paddingTop: '0.85rem',
+                        borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+                      }}
+                    >
+                      {post.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          style={{
+                            fontSize: '0.65rem',
+                            fontFamily: 'monospace',
+                            color: 'rgba(255, 255, 255, 0.4)',
+                            background: 'rgba(255, 255, 255, 0.03)',
+                            padding: '0.15rem 0.45rem',
+                            borderRadius: '2px',
+                          }}
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </Link>
+
+                {/* In-Feed Google AdSense Slot after 2nd post */}
+                {idx === 1 && (
+                  <BlogAdBanner lang={lang} variant="in-feed" key="blog-in-feed-ad-main" />
                 )}
-              </Link>
+                {/* Additional in-feed ad every 4 posts on long lists */}
+                {idx > 1 && (idx + 1) % 4 === 0 && idx !== filtered.length - 1 && (
+                  <BlogAdBanner lang={lang} variant="in-feed" key={`blog-in-feed-ad-${idx}`} />
+                )}
+              </React.Fragment>
             );
           })}
         </div>
       )}
+
+      {/* Newsletter Subscription Box */}
+      <NewsletterSubscribe lang={lang} />
     </div>
   );
 }

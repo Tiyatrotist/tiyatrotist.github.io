@@ -32,6 +32,13 @@ const icons = {
       <rect x="14" y="14" width="7" height="7" rx="1" />
     </svg>
   ),
+  analytics: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <line x1="18" y1="20" x2="18" y2="10" />
+      <line x1="12" y1="20" x2="12" y2="4" />
+      <line x1="6" y1="20" x2="6" y2="14" />
+    </svg>
+  ),
   pages: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
@@ -146,6 +153,15 @@ export default function Sidebar({ dict, open, onClose }: SidebarProps) {
             >
               {icons.dashboard}
               <span>{dict.nav.dashboard}</span>
+            </Link>
+            <Link
+              href="/admin/analytics"
+              className={`admin-nav-link ${isLinkActive('/admin/analytics') ? 'active' : ''}`}
+              onClick={onClose}
+              aria-current={isLinkActive('/admin/analytics') ? 'page' : undefined}
+            >
+              {icons.analytics}
+              <span>{dict.nav.analytics}</span>
             </Link>
           </div>
 

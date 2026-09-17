@@ -57,7 +57,7 @@ export default function BookOSHero({ dict }: BookOSHeroProps) {
               <span>⧉</span> {b.tabEditor}
             </div>
             <div className="bookos-sidebar__item">
-              <span>⚡</span> {b.tabMonitor}
+              <span>◈</span> {b.tabMonitor}
             </div>
 
             <span className="bookos-sidebar__group-title" style={{ marginTop: '1rem' }}>SYSTEM STATE</span>

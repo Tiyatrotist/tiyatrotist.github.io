@@ -1206,3 +1206,20 @@ button {
     transform: translateX(4px) !important;
   }
 }
+
+/* Blog Detail & Table of Contents Responsive Styles */
+@media (max-width: 900px) {
+  .blog-detail-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+
+  .blog-toc-desktop {
+    display: none !important;
+  }
+
+  .blog-toc-mobile {
+    display: block !important;
+  }
+}
+

@@ -2,6 +2,10 @@ import type { Metadata } from 'next';
 import CustomCursor from '@/components/CustomCursor';
 import GlobalDotCanvas from '@/components/GlobalDotCanvas';
 import PortalEasterEgg from '@/components/PortalEasterEgg';
+import TiyatrotistTerminal from '@/components/TiyatrotistTerminal';
+import CommandPalette from '@/components/CommandPalette';
+import PageViewTracker from '@/components/PageViewTracker';
+import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import MaintenancePage from '@/app/maintenance/page';
 import MaintenanceGuard from '@/components/MaintenanceGuard';
 import { SITE_CONFIG } from '@/config/site';
@@ -53,6 +57,11 @@ export default async function LangLayout({ children, params }: LangLayoutProps) 
       <GlobalDotCanvas />
       <CustomCursor />
       <PortalEasterEgg />
+      <TiyatrotistTerminal />
+      <CommandPalette />
+      <PageViewTracker />
+      <PWAInstallPrompt />
+
       <MaintenanceGuard lang={validLang}>
         {children}
       </MaintenanceGuard>

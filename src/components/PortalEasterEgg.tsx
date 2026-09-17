@@ -59,7 +59,7 @@ export default function PortalEasterEgg() {
   useEffect(() => {
     /* eslint-disable no-console */
     console.log(
-      '%c🍰 APERTURE SCIENCE ENRICHMENT CENTER 🍰',
+      '%c[ APERTURE SCIENCE ENRICHMENT CENTER ]',
       'color: #ff6a00; font-weight: bold; font-size: 16px; text-shadow: 0 0 5px rgba(255,106,0,0.5);'
     );
     console.log(

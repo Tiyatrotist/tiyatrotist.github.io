@@ -23,6 +23,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* RSS 2.0 Feeds */}
+        <link rel="alternate" type="application/rss+xml" title="TIYATROTIST RSS Feed" href="/rss.xml" />
+        <link rel="alternate" type="application/rss+xml" title="TIYATROTIST RSS Feed (TR)" href="/tr/rss.xml" />
+        <link rel="alternate" type="application/rss+xml" title="TIYATROTIST RSS Feed (EN)" href="/en/rss.xml" />
+
         {/* Google AdSense Official Script Integration */}
         <Script
           id="google-adsense-script"

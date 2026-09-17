@@ -46,8 +46,8 @@ export default async function ProjectsPage({ params }: ProjectsPageProps) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.35rem' }}>
                   <h2 className="project-card-title" style={{ margin: 0 }}>{project.title}</h2>
                   {project.featured && (
-                    <span style={{ fontSize: '0.65rem', padding: '0.15rem 0.45rem', borderRadius: '4px', background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.3)', fontWeight: 600 }}>
-                      ★ {currentLang === 'tr' ? 'ÖNE ÇIKAN' : 'FEATURED'}
+                    <span style={{ fontSize: '0.62rem', padding: '0.15rem 0.5rem', borderRadius: '2px', background: '#ffffff', color: '#000000', fontWeight: 700, fontFamily: 'monospace', letterSpacing: '0.1em' }}>
+                      [ {currentLang === 'tr' ? 'ÖNE ÇIKAN' : 'FEATURED'} ]
                     </span>
                   )}
                   <span style={{ fontSize: '0.68rem', fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)', marginLeft: 'auto' }}>

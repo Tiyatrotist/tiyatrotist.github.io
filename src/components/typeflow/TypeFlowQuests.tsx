@@ -13,6 +13,72 @@ import { Locale } from '@/dictionaries';
 import { UserProfile } from './types';
 import { getDailyQuests, getAchievementsList } from './duolingoData';
 import { TypeFlowGoogleAd } from './TypeFlowGoogleAd';
+import {
+  Target,
+  Gem,
+  Gift,
+  Medal,
+  Lock,
+  Check,
+  Zap,
+  Keyboard,
+  Map,
+  Trophy,
+  Rocket,
+  Flame,
+  ShieldCheck,
+  Award,
+  Code2,
+  Crown,
+  Sprout,
+  Crosshair,
+} from 'lucide-react';
+
+function renderQuestIcon(questId: string) {
+  switch (questId) {
+    case 'quest-xp':
+      return <Zap size={24} style={{ color: '#a855f7' }} />;
+    case 'quest-tests':
+      return <Keyboard size={24} style={{ color: '#38bdf8' }} />;
+    case 'quest-lesson':
+      return <Map size={24} style={{ color: '#10b981' }} />;
+    case 'quest-accuracy':
+      return <Target size={24} style={{ color: '#f59e0b' }} />;
+    default:
+      return <Target size={24} style={{ color: '#38bdf8' }} />;
+  }
+}
+
+function renderAchievementIcon(achId: string) {
+  switch (achId) {
+    case 'first-step':
+      return <Sprout size={28} style={{ color: '#10b981' }} />;
+    case 'sniper-acc':
+      return <Crosshair size={28} style={{ color: '#38bdf8' }} />;
+    case 'speed-demon':
+      return <Zap size={28} style={{ color: '#f59e0b' }} />;
+    case 'speed-master':
+      return <Rocket size={28} style={{ color: '#ef4444' }} />;
+    case 'light-speed':
+      return <Zap size={28} style={{ color: '#38bdf8' }} />;
+    case 'hypersonic':
+      return <Crown size={28} style={{ color: '#a855f7' }} />;
+    case 'fire-keeper':
+      return <Flame size={28} style={{ color: '#f97316' }} />;
+    case 'unbreakable-streak':
+      return <ShieldCheck size={28} style={{ color: '#10b981' }} />;
+    case 'century-club':
+      return <Award size={28} style={{ color: '#fbbf24' }} />;
+    case 'typing-titan':
+      return <Trophy size={28} style={{ color: '#f59e0b' }} />;
+    case 'code-ninja':
+      return <Code2 size={28} style={{ color: '#06b6d4' }} />;
+    case 'gem-hoarder':
+      return <Gem size={28} style={{ color: '#38bdf8' }} />;
+    default:
+      return <Medal size={28} style={{ color: '#f59e0b' }} />;
+  }
+}
 
 interface TypeFlowQuestsProps {
   lang: Locale;
@@ -99,8 +165,9 @@ export default function TypeFlowQuests({
         gap: '1rem'
       }}>
         <div>
-          <span className="tf-badge" style={{ marginBottom: '0.4rem', display: 'inline-block' }}>
-            🎯 {isTr ? 'GÖREV & BAŞARIM MERKEZİ' : 'QUEST & BADGE CENTER'}
+          <span className="tf-badge" style={{ marginBottom: '0.4rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <Target size={14} style={{ color: 'var(--tf-accent)' }} />
+            <span>{isTr ? 'GÖREV & BAŞARIM MERKEZİ' : 'QUEST & BADGE CENTER'}</span>
           </span>
           <h2 style={{ fontSize: '1.6rem', fontWeight: 800, margin: '0 0 0.35rem 0' }}>
             {isTr ? 'Günlük Hedeflerini Tamamla' : 'Conquer Your Daily Goals'}
@@ -130,8 +197,8 @@ export default function TypeFlowQuests({
       </div>
 
       {/* 2. DAILY QUESTS SECTION */}
-      <div className="tf-section-heading" style={{ marginBottom: '1rem' }}>
-        <span>🎯</span>
+      <div className="tf-section-heading" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <Target size={18} style={{ color: '#38bdf8' }} />
         <span>{isTr ? 'Günün Görevleri' : 'Daily Quests'}</span>
         <span style={{ fontSize: '0.75rem', color: 'var(--tf-text-muted)', marginLeft: 'auto', fontFamily: 'var(--tf-font-mono)' }}>
           {isTr ? 'Her gece 00:00\'da yenilenir' : 'Resets daily at 00:00'}
@@ -145,7 +212,9 @@ export default function TypeFlowQuests({
 
           return (
             <div key={quest.id} className="tf-quest-item" style={{ borderRadius: '12px' }}>
-              <div className="tf-quest-icon" style={{ fontSize: '2rem' }}>{quest.icon}</div>
+              <div className="tf-quest-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '48px', height: '48px', borderRadius: '12px', background: 'var(--tf-surface-elevated)' }}>
+                {renderQuestIcon(quest.id)}
+              </div>
               <div className="tf-quest-body">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
                   <div className="tf-quest-title" style={{ fontSize: '1rem', fontWeight: 700 }}>
@@ -162,16 +231,21 @@ export default function TypeFlowQuests({
                 </div>
 
                 {/* Rewards preview */}
-                <div style={{ display: 'flex', gap: '0.6rem', marginTop: '0.45rem', fontSize: '0.75rem', fontFamily: 'var(--tf-font-mono)' }}>
-                  <span style={{ color: '#a855f7' }}>+{quest.xpReward} XP</span>
-                  <span style={{ color: '#38bdf8' }}>+{quest.gemReward} 💎</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginTop: '0.45rem', fontSize: '0.75rem', fontFamily: 'var(--tf-font-mono)' }}>
+                  <span style={{ color: '#a855f7', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                    <Zap size={12} />+{quest.xpReward} XP
+                  </span>
+                  <span style={{ color: '#38bdf8', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                    <Gem size={12} />+{quest.gemReward}
+                  </span>
                 </div>
               </div>
 
               {/* Claim Action */}
               {isClaimed ? (
-                <button className="tf-quest-claim-btn claimed" disabled style={{ minWidth: '100px' }}>
-                  {isTr ? 'Alındı ✓' : 'Claimed ✓'}
+                <button className="tf-quest-claim-btn claimed" disabled style={{ minWidth: '100px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                  <Check size={14} />
+                  <span>{isTr ? 'Alındı' : 'Claimed'}</span>
                 </button>
               ) : (
                 <button
@@ -184,9 +258,14 @@ export default function TypeFlowQuests({
                     cursor: quest.isCompleted ? 'pointer' : 'not-allowed',
                     background: quest.isCompleted ? 'linear-gradient(135deg, #10b981, #059669)' : undefined,
                     color: quest.isCompleted ? '#fff' : undefined,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
                   }}
                 >
-                  {isTr ? 'Ödülü Al 🎁' : 'Claim 🎁'}
+                  <Gift size={15} />
+                  <span>{isTr ? 'Ödülü Al' : 'Claim'}</span>
                 </button>
               )}
             </div>
@@ -195,8 +274,8 @@ export default function TypeFlowQuests({
       </div>
 
       {/* 3. PERMANENT ACHIEVEMENTS SHOWROOM */}
-      <div className="tf-section-heading" style={{ marginBottom: '1rem' }}>
-        <span>🏅</span>
+      <div className="tf-section-heading" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <Medal size={18} style={{ color: '#f59e0b' }} />
         <span>{isTr ? 'Başarımlar ve Rozet Vitrini' : 'Permanent Achievements & Badges'}</span>
       </div>
 
@@ -214,8 +293,8 @@ export default function TypeFlowQuests({
                 padding: '1.25rem',
               }}
             >
-              <div className="tf-achievement-badge" style={{ fontSize: '2rem' }}>
-                {ach.isUnlocked ? ach.icon : '🔒'}
+              <div className="tf-achievement-badge" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '52px', height: '52px', borderRadius: '12px', background: ach.isUnlocked ? 'rgba(245, 158, 11, 0.1)' : 'var(--tf-surface-elevated)' }}>
+                {ach.isUnlocked ? renderAchievementIcon(ach.id) : <Lock size={24} style={{ color: 'var(--tf-text-muted)' }} />}
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
@@ -227,20 +306,33 @@ export default function TypeFlowQuests({
                     fontFamily: 'var(--tf-font-mono)',
                     color: '#38bdf8',
                     background: 'rgba(56, 189, 248, 0.1)',
-                    padding: '2px 6px',
+                    padding: '3px 8px',
                     borderRadius: '6px',
                     fontWeight: 700,
-                    whiteSpace: 'nowrap'
+                    whiteSpace: 'nowrap',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '3px',
                   }}>
-                    +{ach.rewardGems} 💎
+                    <Gem size={11} />+{ach.rewardGems}
                   </span>
                 </div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--tf-text-secondary)', marginTop: '0.25rem', lineHeight: 1.4 }}>
                   {ach.description}
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
-                  <div style={{ fontSize: '0.72rem', color: ach.isUnlocked ? '#10b981' : 'var(--tf-text-muted)', fontFamily: 'var(--tf-font-mono)', fontWeight: 700 }}>
-                    {ach.isUnlocked ? (isTr ? '✓ KİLİT AÇILDI' : '✓ UNLOCKED') : (isTr ? 'KİLİTLİ' : 'LOCKED')}
+                  <div style={{ fontSize: '0.72rem', color: ach.isUnlocked ? '#10b981' : 'var(--tf-text-muted)', fontFamily: 'var(--tf-font-mono)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    {ach.isUnlocked ? (
+                      <>
+                        <Check size={12} strokeWidth={3} />
+                        <span>{isTr ? 'KİLİT AÇILDI' : 'UNLOCKED'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lock size={12} />
+                        <span>{isTr ? 'KİLİTLİ' : 'LOCKED'}</span>
+                      </>
+                    )}
                   </div>
                   {!ach.isUnlocked && (
                     <div style={{ fontSize: '0.72rem', color: 'var(--tf-text-muted)', fontFamily: 'var(--tf-font-mono)' }}>

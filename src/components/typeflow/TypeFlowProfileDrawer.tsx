@@ -12,6 +12,39 @@ import { Locale } from '@/dictionaries';
 import { TypeFlowTheme, SoundType, UserProfile, SaaSTab } from './types';
 import { soundEngine } from './TypeFlowSoundEngine';
 import { supabase } from '@/lib/supabase';
+import {
+  User,
+  Palette,
+  Volume2,
+  VolumeX,
+  Globe,
+  Keyboard,
+  Target,
+  BarChart3,
+  Flame,
+  Gem,
+  BatteryCharging,
+  Crown,
+  Settings,
+  Check,
+  Lock,
+  Edit2,
+  Music,
+  Zap,
+  Sparkles,
+  Trophy,
+  Shield,
+  ShieldCheck,
+  X,
+  AlertTriangle,
+  ChevronRight,
+  LogOut,
+  Infinity as InfinityIcon,
+  Cloud,
+  Trash2,
+  ArrowLeft,
+  Sliders,
+} from 'lucide-react';
 
 interface TypeFlowProfileDrawerProps {
   isOpen: boolean;
@@ -31,6 +64,7 @@ interface TypeFlowProfileDrawerProps {
   onOpenSuperModal?: () => void;
   onOpenAdModal?: () => void;
   onCancelSubscription?: () => void;
+  onOpenAuth?: () => void;
 }
 
 type DrawerView = 'main' | 'themes' | 'sound' | 'lang' | 'typing' | 'goals' | 'account';
@@ -45,13 +79,28 @@ const THEMES_CONFIG: { id: TypeFlowTheme; nameTr: string; nameEn: string; bg: st
   { id: 'cyber', nameTr: 'Cyberpunk Neon (Siyan)', nameEn: 'Cyberpunk Neon', bg: '#030712', surface: '#111d3e', accent: '#22d3ee' },
 ];
 
-const SOUNDS_CONFIG: { id: SoundType; nameTr: string; nameEn: string; icon: string }[] = [
-  { id: 'thock', nameTr: 'Thock (Linear)', nameEn: 'Thock (Linear)', icon: '⌨️' },
-  { id: 'clicky', nameTr: 'Clicky (Model M)', nameEn: 'Clicky (Model M)', icon: '🔊' },
-  { id: 'tactile', nameTr: 'Tactile (Panda)', nameEn: 'Tactile (Panda)', icon: '🐼' },
-  { id: 'synth', nameTr: 'Synth (80s Melodi)', nameEn: 'Synth (80s Chime)', icon: '🎹' },
-  { id: 'off', nameTr: 'Sessiz (Kapalı)', nameEn: 'Muted (Off)', icon: '🔇' },
+const SOUNDS_CONFIG: { id: SoundType; nameTr: string; nameEn: string }[] = [
+  { id: 'thock', nameTr: 'Thock (Linear)', nameEn: 'Thock (Linear)' },
+  { id: 'clicky', nameTr: 'Clicky (Model M)', nameEn: 'Clicky (Model M)' },
+  { id: 'tactile', nameTr: 'Tactile (Panda)', nameEn: 'Tactile (Panda)' },
+  { id: 'synth', nameTr: 'Synth (80s Melodi)', nameEn: 'Synth (80s Chime)' },
+  { id: 'off', nameTr: 'Sessiz (Kapalı)', nameEn: 'Muted (Off)' },
 ];
+
+function getSoundIcon(id: SoundType) {
+  switch (id) {
+    case 'thock':
+      return <Keyboard size={16} />;
+    case 'clicky':
+      return <Volume2 size={16} />;
+    case 'tactile':
+      return <Zap size={16} />;
+    case 'synth':
+      return <Music size={16} />;
+    case 'off':
+      return <VolumeX size={16} />;
+  }
+}
 
 const AVATAR_OPTIONS = ['⚡', '🤖', '👾', '🚀', '🔥', '🦊', '🐱', '💀', '🛡', '🌐', '🎯', '💎'];
 
@@ -73,6 +122,7 @@ export default function TypeFlowProfileDrawer({
   onOpenSuperModal,
   onOpenAdModal,
   onCancelSubscription,
+  onOpenAuth,
 }: TypeFlowProfileDrawerProps) {
   const isTr = lang === 'tr';
 
@@ -251,26 +301,26 @@ export default function TypeFlowProfileDrawer({
         {/* Drawer Header (Back button if in sub-view, Close button always) */}
         <div className="tf-drawer-header">
           {currentView === 'main' ? (
-            <div className="tf-drawer-header-left">
-              <span className="tf-drawer-icon">👤</span>
+            <div className="tf-drawer-header-left" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <User size={18} style={{ color: 'var(--tf-accent)' }} />
               <h3 className="tf-drawer-title">{isTr ? 'PROFİL VE AYARLAR' : 'PROFILE & SETTINGS'}</h3>
             </div>
           ) : (
-            <button className="tf-drawer-back-btn" onClick={() => setCurrentView('main')}>
-              <span>←</span>
+            <button className="tf-drawer-back-btn" onClick={() => setCurrentView('main')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <ArrowLeft size={14} />
               <span>{isTr ? 'Menüye Dön' : 'Back to Menu'}</span>
             </button>
           )}
 
-          <button className="tf-drawer-close-btn" onClick={onClose} aria-label="Close drawer">
-            ✕
+          <button className="tf-drawer-close-btn" onClick={onClose} aria-label="Close drawer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <X size={16} />
           </button>
         </div>
 
         {/* Feedback Alert Toast */}
         {feedbackMsg && (
-          <div className="tf-drawer-toast">
-            <span>✨</span>
+          <div className="tf-drawer-toast" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Sparkles size={14} style={{ color: '#fbbf24' }} />
             <span>{feedbackMsg}</span>
           </div>
         )}
@@ -290,7 +340,9 @@ export default function TypeFlowProfileDrawer({
                 <div className="tf-drawer-avatar-wrap">
                   <div className="tf-drawer-avatar-btn">
                     <span className="tf-drawer-avatar" suppressHydrationWarning>{profile.avatar}</span>
-                    <span className="tf-drawer-avatar-badge">⚙️</span>
+                    <span className="tf-drawer-avatar-badge" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Settings size={10} />
+                    </span>
                   </div>
 
                   <div className="tf-drawer-user-meta">
@@ -299,8 +351,12 @@ export default function TypeFlowProfileDrawer({
                     </div>
 
                     <div className="tf-drawer-badges-row">
-                      <span className="tf-drawer-level-badge">⚡ {isTr ? `Seviye ${profile.level}` : `Level ${profile.level}`}</span>
-                      <span className="tf-drawer-status-pill">{profile.isGuest ? (isTr ? 'Misafir' : 'Guest') : 'Cloud ✓'}</span>
+                      <span className="tf-drawer-level-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Zap size={11} /> {isTr ? `Seviye ${profile.level}` : `Level ${profile.level}`}
+                      </span>
+                      <span className="tf-drawer-status-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                        {profile.isGuest ? (isTr ? 'Misafir' : 'Guest') : (<><Check size={11} strokeWidth={3} /> Cloud</>)}
+                      </span>
                     </div>
                   </div>
 
@@ -321,12 +377,16 @@ export default function TypeFlowProfileDrawer({
                 {/* Quick 3 Stats */}
                 <div className="tf-drawer-stats-grid">
                   <div className="tf-drawer-stat-item">
-                    <span className="tf-stat-icon">🔥</span>
+                    <span className="tf-stat-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Flame size={16} style={{ color: '#f97316' }} />
+                    </span>
                     <span className="tf-stat-val">{profile.streakDays}</span>
                     <span className="tf-stat-lbl">{isTr ? 'Gün' : 'Days'}</span>
                   </div>
                   <div className="tf-drawer-stat-item" onClick={(e) => { e.stopPropagation(); onOpenShop(); }} style={{ cursor: 'pointer' }}>
-                    <span className="tf-stat-icon">💎</span>
+                    <span className="tf-stat-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Gem size={16} style={{ color: '#38bdf8' }} />
+                    </span>
                     <span className="tf-stat-val">{profile.gems || 0}</span>
                     <span className="tf-stat-lbl">{isTr ? 'Elmas' : 'Gems'}</span>
                   </div>
@@ -339,16 +399,21 @@ export default function TypeFlowProfileDrawer({
                     }}
                     style={{ cursor: 'pointer' }}
                   >
-                    <span className="tf-stat-icon">🔋</span>
-                    <span className="tf-stat-val">
-                      {profile.isPremium ? '♾️' : `${profile.energy ?? profile.hearts ?? 5}/5`}
+                    <span className="tf-stat-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <BatteryCharging size={16} style={{ color: '#10b981' }} />
+                    </span>
+                    <span className="tf-stat-val" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                      {profile.isPremium ? <InfinityIcon size={16} style={{ color: '#10b981' }} /> : `${profile.energy ?? profile.hearts ?? 5}/5`}
                     </span>
                     <span className="tf-stat-lbl">{isTr ? 'Enerji' : 'Battery'}</span>
                   </div>
                 </div>
 
                 <div className="tf-profile-card-cta">
-                  <span>⚙️ {isTr ? 'Hesap ve Profil Ayarlarını Yönet' : 'Manage Account & Profile'}</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <Settings size={14} />
+                    <span>{isTr ? 'Hesap ve Profil Ayarlarını Yönet' : 'Manage Account & Profile'}</span>
+                  </span>
                   <span>›</span>
                 </div>
               </div>
@@ -371,17 +436,19 @@ export default function TypeFlowProfileDrawer({
                   onClick={() => onOpenSuperModal?.()}
                 >
                   <div className="tf-menu-item-left">
-                    <span className="tf-menu-item-icon" style={{ fontSize: '1.4rem' }}>👑</span>
+                    <span className="tf-menu-item-icon" style={{ display: 'flex', alignItems: 'center' }}>
+                      <Crown size={22} style={{ color: '#fbbf24' }} />
+                    </span>
                     <div className="tf-menu-item-info">
                       <span className="tf-menu-item-title" style={{ color: '#fbbf24', fontWeight: 800 }}>
                         {profile.isPremium
-                          ? (isTr ? 'Super TypeFlow (Aktif ✨)' : 'Super TypeFlow (Active ✨)')
+                          ? (isTr ? 'Super TypeFlow (Aktif)' : 'Super TypeFlow (Active)')
                           : (isTr ? 'Super TypeFlow Pro\'ya Yükselt' : 'Upgrade to Super TypeFlow Pro')}
                       </span>
                       <span className="tf-menu-item-desc">
                         {isTr
-                          ? 'Sınırsız enerji ♾️, sıfır reklam 🚫, 2X XP'
-                          : 'Unlimited energy ♾️, zero ads 🚫, 2X XP boost'}
+                          ? 'Sınırsız enerji, sıfır reklam, 2X XP'
+                          : 'Unlimited energy, zero ads, 2X XP boost'}
                       </span>
                     </div>
                   </div>
@@ -393,7 +460,9 @@ export default function TypeFlowProfileDrawer({
                 {/* 1. Görünüm & Temalar */}
                 <button className="tf-menu-item" onClick={() => setCurrentView('themes')}>
                   <div className="tf-menu-item-left">
-                    <span className="tf-menu-item-icon">🎨</span>
+                    <span className="tf-menu-item-icon" style={{ display: 'flex', alignItems: 'center' }}>
+                      <Palette size={20} style={{ color: 'var(--tf-accent)' }} />
+                    </span>
                     <div className="tf-menu-item-info">
                       <span className="tf-menu-item-title">{isTr ? 'Görünüm & Temalar' : 'Themes & Appearance'}</span>
                       <span className="tf-menu-item-desc">{isTr ? 'Renk paleti ve karanlık mod' : 'Color palette and aesthetics'}</span>
@@ -410,7 +479,9 @@ export default function TypeFlowProfileDrawer({
                 {/* 2. Ses & Akustik */}
                 <button className="tf-menu-item" onClick={() => setCurrentView('sound')}>
                   <div className="tf-menu-item-left">
-                    <span className="tf-menu-item-icon">🔊</span>
+                    <span className="tf-menu-item-icon" style={{ display: 'flex', alignItems: 'center' }}>
+                      <Volume2 size={20} style={{ color: '#38bdf8' }} />
+                    </span>
                     <div className="tf-menu-item-info">
                       <span className="tf-menu-item-title">{isTr ? 'Ses & Akustik' : 'Sound & Audio'}</span>
                       <span className="tf-menu-item-desc">{isTr ? 'Mekanik tuş sesleri ve volüm' : 'Mechanical switch acoustics'}</span>
@@ -427,7 +498,9 @@ export default function TypeFlowProfileDrawer({
                 {/* 3. Dil Seçimi */}
                 <button className="tf-menu-item" onClick={() => setCurrentView('lang')}>
                   <div className="tf-menu-item-left">
-                    <span className="tf-menu-item-icon">🌐</span>
+                    <span className="tf-menu-item-icon" style={{ display: 'flex', alignItems: 'center' }}>
+                      <Globe size={20} style={{ color: '#10b981' }} />
+                    </span>
                     <div className="tf-menu-item-info">
                       <span className="tf-menu-item-title">{isTr ? 'Dil (Language)' : 'Language'}</span>
                       <span className="tf-menu-item-desc">{isTr ? 'Arayüz dili' : 'Interface language'}</span>
@@ -435,7 +508,7 @@ export default function TypeFlowProfileDrawer({
                   </div>
                   <div className="tf-menu-item-right">
                     <span className="tf-menu-badge">
-                      {isTr ? '🇹🇷 Türkçe' : '🇬🇧 English'}
+                      {isTr ? 'TR Türkçe' : 'EN English'}
                     </span>
                     <span className="tf-menu-chevron">›</span>
                   </div>
@@ -444,7 +517,9 @@ export default function TypeFlowProfileDrawer({
                 {/* 4. Yazım & Caret */}
                 <button className="tf-menu-item" onClick={() => setCurrentView('typing')}>
                   <div className="tf-menu-item-left">
-                    <span className="tf-menu-item-icon">⌨️</span>
+                    <span className="tf-menu-item-icon" style={{ display: 'flex', alignItems: 'center' }}>
+                      <Keyboard size={20} style={{ color: '#a855f7' }} />
+                    </span>
                     <div className="tf-menu-item-info">
                       <span className="tf-menu-item-title">{isTr ? 'Yazım & Caret' : 'Typing & Caret'}</span>
                       <span className="tf-menu-item-desc">{isTr ? 'İmleç tipi, hızlı restart ve hata' : 'Caret, shortcuts & alerts'}</span>
@@ -468,7 +543,9 @@ export default function TypeFlowProfileDrawer({
                 {/* 5. Günlük Hedef & Lig */}
                 <button className="tf-menu-item" onClick={() => setCurrentView('goals')}>
                   <div className="tf-menu-item-left">
-                    <span className="tf-menu-item-icon">🎯</span>
+                    <span className="tf-menu-item-icon" style={{ display: 'flex', alignItems: 'center' }}>
+                      <Target size={20} style={{ color: '#f59e0b' }} />
+                    </span>
                     <div className="tf-menu-item-info">
                       <span className="tf-menu-item-title">{isTr ? 'Hedefler & Lig' : 'Goals & League'}</span>
                       <span className="tf-menu-item-desc">{isTr ? 'Günlük test kotası ve lig sıralaması' : 'Daily quota & weekly leagues'}</span>
@@ -488,7 +565,9 @@ export default function TypeFlowProfileDrawer({
                   onClick={() => onNavigateTab('profile')}
                 >
                   <div className="tf-menu-item-left">
-                    <span className="tf-menu-item-icon">📊</span>
+                    <span className="tf-menu-item-icon" style={{ display: 'flex', alignItems: 'center' }}>
+                      <BarChart3 size={20} style={{ color: '#06b6d4' }} />
+                    </span>
                     <div className="tf-menu-item-info">
                       <span className="tf-menu-item-title">{isTr ? 'Profil & Isı Haritası' : 'Profile & Heatmap'}</span>
                       <span className="tf-menu-item-desc">{isTr ? 'Tuş doğruluk dağılımı ve geçmiş' : 'Key heatmap & score history'}</span>
@@ -509,15 +588,17 @@ export default function TypeFlowProfileDrawer({
                 {/* 7. Profil ve Hesap Ayarları (Bulut + Silme dahil) */}
                 <button className="tf-menu-item" onClick={() => setCurrentView('account')}>
                   <div className="tf-menu-item-left">
-                    <span className="tf-menu-item-icon">👤</span>
+                    <span className="tf-menu-item-icon" style={{ display: 'flex', alignItems: 'center' }}>
+                      <User size={20} style={{ color: '#8b5cf6' }} />
+                    </span>
                     <div className="tf-menu-item-info">
                       <span className="tf-menu-item-title">{isTr ? 'Profil, Hesap & Silme' : 'Profile, Account & Reset'}</span>
                       <span className="tf-menu-item-desc">{isTr ? 'Avatar, bulut hesabı ve hesap silme' : 'Avatar, cloud sync & account deletion'}</span>
                     </div>
                   </div>
                   <div className="tf-menu-item-right">
-                    <span className="tf-menu-badge">
-                      {profile.isGuest ? (isTr ? 'Misafir' : 'Guest') : 'Cloud ✓'}
+                    <span className="tf-menu-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                      {profile.isGuest ? (isTr ? 'Misafir' : 'Guest') : (<><Check size={11} strokeWidth={3} /> Cloud</>)}
                     </span>
                     <span className="tf-menu-chevron">›</span>
                   </div>
@@ -536,7 +617,10 @@ export default function TypeFlowProfileDrawer({
           {currentView === 'themes' && (
             <div className="tf-submenu-container">
               <div className="tf-submenu-header">
-                <h4 className="tf-submenu-title">🎨 {isTr ? 'Görünüm & Temalar' : 'Themes & Appearance'}</h4>
+                <h4 className="tf-submenu-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Palette size={18} style={{ color: 'var(--tf-accent)' }} />
+                  <span>{isTr ? 'Görünüm & Temalar' : 'Themes & Appearance'}</span>
+                </h4>
                 <p className="tf-submenu-desc">
                   {isTr ? 'Platform genelinde kullanılacak renk paletini seçin:' : 'Choose your desired visual palette:'}
                 </p>
@@ -565,7 +649,11 @@ export default function TypeFlowProfileDrawer({
 
                       <div className="tf-drawer-theme-info">
                         <div className="tf-drawer-theme-name">{isTr ? t.nameTr : t.nameEn}</div>
-                        {isActive && <span className="tf-theme-active-tag">✓ {isTr ? 'Aktif' : 'Active'}</span>}
+                        {isActive && (
+                          <span className="tf-theme-active-tag" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                            <Check size={11} strokeWidth={3} /> {isTr ? 'Aktif' : 'Active'}
+                          </span>
+                        )}
                         {!isUnlocked && (
                           <button
                             className="tf-theme-unlock-tag"
@@ -573,8 +661,9 @@ export default function TypeFlowProfileDrawer({
                               e.stopPropagation();
                               onOpenShop();
                             }}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                           >
-                            🔒 120 💎 {isTr ? 'Aç' : 'Unlock'}
+                            <Lock size={11} /> 120 <Gem size={11} /> {isTr ? 'Aç' : 'Unlock'}
                           </button>
                         )}
                       </div>
@@ -591,7 +680,10 @@ export default function TypeFlowProfileDrawer({
           {currentView === 'sound' && (
             <div className="tf-submenu-container">
               <div className="tf-submenu-header">
-                <h4 className="tf-submenu-title">🔊 {isTr ? 'Ses & Mekanik Akustik' : 'Sound & Acoustics'}</h4>
+                <h4 className="tf-submenu-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Volume2 size={18} style={{ color: '#38bdf8' }} />
+                  <span>{isTr ? 'Ses & Mekanik Akustik' : 'Sound & Acoustics'}</span>
+                </h4>
                 <p className="tf-submenu-desc">
                   {isTr ? 'Her tuş vuruşunda çalınacak mekanik switch akustiğini belirleyin:' : 'Select mechanical switch audio acoustics:'}
                 </p>
@@ -611,8 +703,10 @@ export default function TypeFlowProfileDrawer({
                         showNotice(`${isTr ? s.nameTr : s.nameEn} ${isTr ? 'seçildi' : 'selected'}`);
                       }}
                     >
-                      <div className="tf-sound-left">
-                        <span className="tf-sound-icon">{s.icon}</span>
+                      <div className="tf-sound-left" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span className="tf-sound-icon" style={{ display: 'flex', alignItems: 'center' }}>
+                          {getSoundIcon(s.id)}
+                        </span>
                         <span className="tf-sound-name">{isTr ? s.nameTr : s.nameEn}</span>
                       </div>
 
@@ -625,8 +719,10 @@ export default function TypeFlowProfileDrawer({
                               handleTestSound(s.id);
                             }}
                             title={isTr ? "Sesi Dinle" : "Audition Sound"}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                           >
-                            🎵 {isTr ? 'Dene' : 'Test'}
+                            <Volume2 size={12} />
+                            <span>{isTr ? 'Dene' : 'Test'}</span>
                           </button>
                         )}
                         {isSelected && <span className="tf-sound-active-bullet">●</span>}
@@ -663,7 +759,10 @@ export default function TypeFlowProfileDrawer({
           {currentView === 'lang' && (
             <div className="tf-submenu-container">
               <div className="tf-submenu-header">
-                <h4 className="tf-submenu-title">🌐 {isTr ? 'Dil Seçimi (Language)' : 'Language Selection'}</h4>
+                <h4 className="tf-submenu-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Globe size={18} style={{ color: '#10b981' }} />
+                  <span>{isTr ? 'Dil Seçimi (Language)' : 'Language Selection'}</span>
+                </h4>
                 <p className="tf-submenu-desc">
                   {isTr ? 'Arayüz ve menü dilini seçin:' : 'Choose interface and curriculum language:'}
                 </p>
@@ -677,12 +776,12 @@ export default function TypeFlowProfileDrawer({
                     showNotice('Türkçe seçildi');
                   }}
                 >
-                  <span className="tf-lang-card-flag">🇹🇷</span>
+                  <span className="tf-lang-card-flag" style={{ fontFamily: 'var(--tf-font-mono)', fontWeight: 800, fontSize: '0.85rem', color: '#10b981' }}>TR</span>
                   <div className="tf-lang-card-info">
                     <span className="tf-lang-card-title">Türkçe</span>
                     <span className="tf-lang-card-sub">Varsayılan dil ve Türkçe içerikler</span>
                   </div>
-                  {lang === 'tr' && <span className="tf-lang-check">✓</span>}
+                  {lang === 'tr' && <span className="tf-lang-check"><Check size={14} strokeWidth={3} /></span>}
                 </div>
 
                 <div
@@ -692,12 +791,12 @@ export default function TypeFlowProfileDrawer({
                     showNotice('English selected');
                   }}
                 >
-                  <span className="tf-lang-card-flag">🇬🇧</span>
+                  <span className="tf-lang-card-flag" style={{ fontFamily: 'var(--tf-font-mono)', fontWeight: 800, fontSize: '0.85rem', color: '#38bdf8' }}>EN</span>
                   <div className="tf-lang-card-info">
                     <span className="tf-lang-card-title">English</span>
                     <span className="tf-lang-card-sub">International interface & english words</span>
                   </div>
-                  {lang === 'en' && <span className="tf-lang-check">✓</span>}
+                  {lang === 'en' && <span className="tf-lang-check"><Check size={14} strokeWidth={3} /></span>}
                 </div>
               </div>
             </div>
@@ -709,7 +808,10 @@ export default function TypeFlowProfileDrawer({
           {currentView === 'typing' && (
             <div className="tf-submenu-container">
               <div className="tf-submenu-header">
-                <h4 className="tf-submenu-title">⌨️ {isTr ? 'Yazım & Caret Tercihleri' : 'Typing & Caret'}</h4>
+                <h4 className="tf-submenu-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Keyboard size={18} style={{ color: '#a855f7' }} />
+                  <span>{isTr ? 'Yazım & Caret Tercihleri' : 'Typing & Caret'}</span>
+                </h4>
                 <p className="tf-submenu-desc">
                   {isTr ? 'Yazım alanı imleci ve ergonomik kısayolları özelleştirin:' : 'Customize typing caret style and ergonomic shortcuts:'}
                 </p>
@@ -799,7 +901,10 @@ export default function TypeFlowProfileDrawer({
           {currentView === 'goals' && (
             <div className="tf-submenu-container">
               <div className="tf-submenu-header">
-                <h4 className="tf-submenu-title">🎯 {isTr ? 'Günlük Hedef & Lig' : 'Daily Goals & League'}</h4>
+                <h4 className="tf-submenu-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Target size={18} style={{ color: '#f59e0b' }} />
+                  <span>{isTr ? 'Günlük Hedef & Lig' : 'Daily Goals & League'}</span>
+                </h4>
                 <p className="tf-submenu-desc">
                   {isTr ? 'Serinizi korumak için günlük tamamlamanız gereken pratik sayısı:' : 'Daily tests target to maintain your streak:'}
                 </p>
@@ -821,14 +926,16 @@ export default function TypeFlowProfileDrawer({
 
               {/* Current League Status */}
               <div className="tf-drawer-league-box" style={{ marginTop: '1.25rem' }}>
-                <span className="tf-league-badge-icon">🏆</span>
+                <span className="tf-league-badge-icon" style={{ display: 'flex', alignItems: 'center' }}>
+                  <Trophy size={28} style={{ color: '#f59e0b' }} />
+                </span>
                 <div>
-                  <div className="tf-league-badge-name">
-                    {profile.league === 'bronze' && (isTr ? '🥉 Bronz Lig' : '🥉 Bronze League')}
-                    {profile.league === 'silver' && (isTr ? '🥈 Gümüş Lig' : '🥈 Silver League')}
-                    {profile.league === 'gold' && (isTr ? '🥇 Altın Lig' : '🥇 Gold League')}
-                    {profile.league === 'sapphire' && (isTr ? '💎 Safir Lig' : '💎 Sapphire League')}
-                    {profile.league === 'diamond' && (isTr ? '👑 Elmas Lig' : '👑 Diamond League')}
+                  <div className="tf-league-badge-name" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {profile.league === 'bronze' && (<><Shield size={16} style={{ color: '#cd7f32' }} /> <span>{isTr ? 'Bronz Lig' : 'Bronze League'}</span></>)}
+                    {profile.league === 'silver' && (<><ShieldCheck size={16} style={{ color: '#94a3b8' }} /> <span>{isTr ? 'Gümüş Lig' : 'Silver League'}</span></>)}
+                    {profile.league === 'gold' && (<><Trophy size={16} style={{ color: '#f59e0b' }} /> <span>{isTr ? 'Altın Lig' : 'Gold League'}</span></>)}
+                    {profile.league === 'sapphire' && (<><Gem size={16} style={{ color: '#38bdf8' }} /> <span>{isTr ? 'Safir Lig' : 'Sapphire League'}</span></>)}
+                    {profile.league === 'diamond' && (<><Crown size={16} style={{ color: '#a855f7' }} /> <span>{isTr ? 'Elmas Lig' : 'Diamond League'}</span></>)}
                   </div>
                   <div className="tf-league-badge-sub">
                     {isTr ? 'Haftalık sıralama her Pazar gece yarısı yenilenir.' : 'Leaderboard resets weekly on Sunday.'}
@@ -844,7 +951,10 @@ export default function TypeFlowProfileDrawer({
           {currentView === 'account' && (
             <div className="tf-submenu-container">
               <div className="tf-submenu-header">
-                <h4 className="tf-submenu-title">👤 {isTr ? 'Profil ve Hesap Ayarları' : 'Profile & Account Settings'}</h4>
+                <h4 className="tf-submenu-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <User size={18} style={{ color: '#8b5cf6' }} />
+                  <span>{isTr ? 'Profil ve Hesap Ayarları' : 'Profile & Account Settings'}</span>
+                </h4>
                 <p className="tf-submenu-desc">
                   {isTr
                     ? 'Takma adınızı, avatarınızı ve bulut hesabınızı yönetin:'
@@ -855,7 +965,7 @@ export default function TypeFlowProfileDrawer({
               {/* Section 1: Profile & Avatar Details */}
               <div className="tf-account-section-card">
                 <h5 className="tf-account-card-heading">
-                  <span>🎨</span>
+                  <User size={16} style={{ color: 'var(--tf-accent)' }} />
                   <span>{isTr ? 'Profil Detayları & Avatar' : 'Profile Details & Avatar'}</span>
                 </h5>
 
@@ -866,7 +976,9 @@ export default function TypeFlowProfileDrawer({
                     title={isTr ? "Avatarı Değiştir" : "Change Avatar"}
                   >
                     <span className="tf-drawer-avatar" suppressHydrationWarning>{profile.avatar}</span>
-                    <span className="tf-drawer-avatar-badge">✎</span>
+                    <span className="tf-drawer-avatar-badge" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Edit2 size={10} />
+                    </span>
                   </button>
 
                   <div className="tf-drawer-user-meta">
@@ -880,8 +992,12 @@ export default function TypeFlowProfileDrawer({
                           maxLength={18}
                           autoFocus
                         />
-                        <button type="submit" className="tf-drawer-name-save-btn">✓</button>
-                        <button type="button" className="tf-drawer-name-cancel-btn" onClick={() => setIsEditingName(false)}>✕</button>
+                        <button type="submit" className="tf-drawer-name-save-btn" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Check size={12} strokeWidth={3} />
+                        </button>
+                        <button type="button" className="tf-drawer-name-cancel-btn" onClick={() => setIsEditingName(false)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <X size={12} />
+                        </button>
                       </form>
                     ) : (
                       <div className="tf-drawer-name-row">
@@ -890,15 +1006,20 @@ export default function TypeFlowProfileDrawer({
                           className="tf-drawer-edit-name-btn"
                           onClick={() => setIsEditingName(true)}
                           title={isTr ? "Takma adı düzenle" : "Edit nickname"}
+                          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                         >
-                          ✎
+                          <Edit2 size={12} />
                         </button>
                       </div>
                     )}
 
                     <div className="tf-drawer-badges-row">
-                      <span className="tf-drawer-level-badge">⚡ {isTr ? `Seviye ${profile.level}` : `Level ${profile.level}`}</span>
-                      <span className="tf-drawer-status-pill">{profile.isGuest ? (isTr ? 'Misafir' : 'Guest') : 'Cloud ✓'}</span>
+                      <span className="tf-drawer-level-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Zap size={11} /> {isTr ? `Seviye ${profile.level}` : `Level ${profile.level}`}
+                      </span>
+                      <span className="tf-drawer-status-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                        {profile.isGuest ? (isTr ? 'Misafir' : 'Guest') : (<><Check size={11} strokeWidth={3} /> Cloud</>)}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -925,7 +1046,7 @@ export default function TypeFlowProfileDrawer({
               {/* Section 1.5: Subscription & Free Trial Management */}
               <div className="tf-account-section-card" style={{ border: '1px solid rgba(234, 179, 8, 0.3)', background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.05), rgba(56, 189, 248, 0.04))' }}>
                 <h5 className="tf-account-card-heading">
-                  <span>👑</span>
+                  <Crown size={16} style={{ color: '#fbbf24' }} />
                   <span>{isTr ? 'Abonelik & Üyelik Planı' : 'Subscription & Membership'}</span>
                 </h5>
 
@@ -935,8 +1056,8 @@ export default function TypeFlowProfileDrawer({
                     <strong style={{ color: profile.isPremium ? '#10b981' : 'var(--tf-text-primary)' }}>
                       {profile.isPremium
                         ? (profile.subscriptionStatus === 'trialing'
-                            ? (isTr ? '✨ 7 Günlük Ücretsiz Deneme' : '✨ 7-Day Free Trial')
-                            : 'Super TypeFlow Pro 👑')
+                            ? (isTr ? '7 Günlük Ücretsiz Deneme' : '7-Day Free Trial')
+                            : 'Super TypeFlow Pro')
                         : (isTr ? 'Ücretsiz Plan (Temel)' : 'Free Tier (Basic)')}
                     </strong>
                   </div>
@@ -1007,9 +1128,10 @@ export default function TypeFlowProfileDrawer({
                     type="button"
                     className="tf-btn-primary tf-btn-pushable"
                     onClick={() => onOpenSuperModal?.()}
-                    style={{ width: '100%', fontSize: '0.8rem', padding: '0.65rem' }}
+                    style={{ width: '100%', fontSize: '0.8rem', padding: '0.65rem', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                   >
-                    👑 {isTr ? 'Super TypeFlow Pro\'ya Geç' : 'Upgrade to Super TypeFlow'}
+                    <Crown size={15} />
+                    <span>{isTr ? 'Super TypeFlow Pro\'ya Geç' : 'Upgrade to Super TypeFlow'}</span>
                   </button>
                 )}
               </div>
@@ -1017,87 +1139,87 @@ export default function TypeFlowProfileDrawer({
               {/* Section 2: Cloud Account & Supabase */}
               <div className="tf-account-section-card">
                 <h5 className="tf-account-card-heading">
-                  <span>☁️</span>
+                  <Cloud size={16} style={{ color: '#38bdf8' }} />
                   <span>{isTr ? 'Bulut Senkronizasyonu (Supabase)' : 'Cloud Account Sync'}</span>
                 </h5>
 
                 {profile.isGuest ? (
-                  <div className="tf-drawer-auth-box">
-                    <p className="tf-auth-desc">
+                  <div className="tf-drawer-auth-box" style={{ textAlign: 'center', padding: '0.75rem 0' }}>
+                    <p className="tf-auth-desc" style={{ marginBottom: '1rem', lineHeight: 1.6, fontSize: '0.86rem' }}>
                       {isTr
-                        ? 'Skorlarınızı ve serinizi kaybetmemek için bulut hesabınızı bağlayın.'
-                        : 'Connect a cloud account to preserve your streaks across devices.'}
+                        ? 'İlerlemenizi, serinizi ve lig sıralamanızı buluta kaydetmek için giriş yapın veya yeni hesap oluşturun.'
+                        : 'Sign in or create an account to preserve your stats, streaks, and league rank across devices.'}
                     </p>
 
-                    <form onSubmit={handleAuthSubmit} className="tf-drawer-auth-form">
-                      <input
-                        type="email"
-                        placeholder="E-posta / Email"
-                        className="tf-auth-input"
-                        value={authEmail}
-                        onChange={(e) => setAuthEmail(e.target.value)}
-                        required
-                      />
-                      <input
-                        type="password"
-                        placeholder="Şifre / Password (min 6)"
-                        className="tf-auth-input"
-                        value={authPassword}
-                        onChange={(e) => setAuthPassword(e.target.value)}
-                        minLength={6}
-                        required
-                      />
-
-                      {authFeedback && (
-                        <div className={`tf-auth-feedback ${authFeedback.isError ? 'error' : 'success'}`}>
-                          {authFeedback.msg}
-                        </div>
-                      )}
-
-                      <div className="tf-auth-actions">
-                        <button type="submit" className="tf-auth-submit-btn" disabled={authLoading}>
-                          {authLoading
-                            ? (isTr ? 'İşleniyor...' : 'Processing...')
-                            : isSignUp
-                            ? (isTr ? 'Kayıt Ol' : 'Register')
-                            : (isTr ? 'Giriş Yap' : 'Sign In')}
-                        </button>
-                        <button
-                          type="button"
-                          className="tf-auth-switch-btn"
-                          onClick={() => setIsSignUp(!isSignUp)}
-                        >
-                          {isSignUp
-                            ? (isTr ? 'Giriş Yap' : 'Sign In')
-                            : (isTr ? 'Yeni Hesap Aç' : 'Sign Up')}
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                ) : (
-                  <div className="tf-auth-logged-in">
-                    <div className="tf-auth-email-line">
-                      <span>✓ {isTr ? 'Bağlı Hesap:' : 'Connected Account:'}</span>
-                      <strong>{profile.email || profile.username}</strong>
-                    </div>
                     <button
-                      className="tf-auth-signout-btn"
-                      onClick={async () => {
-                        await supabase.auth.signOut();
-                        onProfileUpdate({ ...profile, isGuest: true, email: undefined });
-                        showNotice(isTr ? 'Çıkış yapıldı' : 'Signed out');
+                      type="button"
+                      className="tf-btn-primary tf-btn-pushable"
+                      onClick={() => {
+                        onClose();
+                        onOpenAuth?.();
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '0.85rem 1.25rem',
+                        fontSize: '0.92rem',
+                        fontWeight: 800,
+                        background: 'linear-gradient(135deg, var(--tf-accent), #3b82f6)',
+                        color: '#000',
+                        border: 'none',
+                        borderRadius: '10px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
                       }}
                     >
-                      {isTr ? 'Hesaptan Çıkış Yap' : 'Sign Out'}
+                      <Sparkles size={16} />
+                      <span>{isTr ? 'Giriş Yap / Hesap Oluştur' : 'Sign In / Create Account'}</span>
                     </button>
+                  </div>
+                ) : (
+                  <div className="tf-auth-logged-in" style={{ padding: '0.5rem 0' }}>
+                    <div className="tf-auth-email-line" style={{ marginBottom: '1rem', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10b981', padding: '0.65rem 0.85rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Check size={14} style={{ color: '#10b981' }} strokeWidth={3} />
+                      <span style={{ color: '#10b981', fontWeight: 800 }}>{isTr ? 'Giriş Yapıldı:' : 'Signed In:'}</span>{' '}
+                      <strong>{profile.email || profile.username}</strong>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        className="tf-ctrl-btn tf-btn-pushable"
+                        onClick={() => {
+                          onClose();
+                          onOpenAuth?.();
+                        }}
+                        style={{ flex: 1, padding: '0.65rem', fontSize: '0.82rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                      >
+                        <Settings size={14} />
+                        <span>{isTr ? 'Hesabı Yönet' : 'Manage Account'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="tf-auth-signout-btn"
+                        onClick={async () => {
+                          await supabase.auth.signOut();
+                          onProfileUpdate({ ...profile, isGuest: true, email: undefined });
+                          showNotice(isTr ? 'Çıkış yapıldı' : 'Signed out');
+                        }}
+                        style={{ padding: '0.65rem 1rem', fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                      >
+                        <LogOut size={13} />
+                        <span>{isTr ? 'Çıkış Yap' : 'Sign Out'}</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
 
               {/* Section 3: Account Deletion & Data Wipe (Right Underneath Account Details) */}
               <div className="tf-account-section-card danger">
-                <h5 className="tf-account-card-heading danger">
-                  <span>⚠️</span>
+                <h5 className="tf-account-card-heading danger" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <AlertTriangle size={16} style={{ color: '#ef4444' }} />
                   <span>{isTr ? 'Hesap Silme & Verileri Sıfırlama' : 'Account Deletion & Data Reset'}</span>
                 </h5>
 
@@ -1112,8 +1234,10 @@ export default function TypeFlowProfileDrawer({
                   <button
                     className="tf-account-delete-btn"
                     onClick={() => setShowDeleteConfirm(true)}
+                    style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                   >
-                    🗑️ {isTr ? 'Hesabı ve Tüm Verileri Sil' : 'Delete Account & Reset Data'}
+                    <Trash2 size={14} />
+                    <span>{isTr ? 'Hesabı ve Tüm Verileri Sil' : 'Delete Account & Reset Data'}</span>
                   </button>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem' }}>
@@ -1124,8 +1248,9 @@ export default function TypeFlowProfileDrawer({
                       padding: '0.75rem 1rem',
                       textAlign: 'center',
                     }}>
-                      <p style={{ color: '#fca5a5', fontSize: '0.82rem', fontWeight: 700, margin: '0 0 0.25rem 0' }}>
-                        {isTr ? '⚠️ Bu işlem GERİ ALINAMAZ!' : '⚠️ This action is IRREVERSIBLE!'}
+                      <p style={{ color: '#fca5a5', fontSize: '0.82rem', fontWeight: 700, margin: '0 0 0.25rem 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                        <AlertTriangle size={14} />
+                        <span>{isTr ? 'Bu işlem GERİ ALINAMAZ!' : 'This action is IRREVERSIBLE!'}</span>
                       </p>
                       <p style={{ color: '#ef4444', fontSize: '0.75rem', margin: 0, fontFamily: 'var(--tf-font-mono)' }}>
                         {isTr
@@ -1136,10 +1261,11 @@ export default function TypeFlowProfileDrawer({
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <button
                         className="tf-account-delete-btn"
-                        style={{ flex: 1, background: '#dc2626', fontWeight: 900 }}
+                        style={{ flex: 1, background: '#dc2626', fontWeight: 900, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                         onClick={handleResetData}
                       >
-                        {isTr ? '🗑️ EVET, SİL' : '🗑️ YES, DELETE'}
+                        <Trash2 size={14} />
+                        <span>{isTr ? 'EVET, SİL' : 'YES, DELETE'}</span>
                       </button>
                       <button
                         className="tf-account-delete-btn"
@@ -1148,10 +1274,15 @@ export default function TypeFlowProfileDrawer({
                           background: 'var(--tf-surface-elevated)',
                           color: 'var(--tf-text-secondary)',
                           border: '1px solid var(--tf-border)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
                         }}
                         onClick={() => setShowDeleteConfirm(false)}
                       >
-                        {isTr ? '← Vazgeç' : '← Cancel'}
+                        <ArrowLeft size={14} />
+                        <span>{isTr ? 'Vazgeç' : 'Cancel'}</span>
                       </button>
                     </div>
                   </div>

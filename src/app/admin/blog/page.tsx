@@ -207,7 +207,7 @@ CREATE POLICY "Authenticated users full access to blog posts" ON public.blog_pos
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff', fontWeight: 500, fontSize: '0.9rem' }}>
-            <span>⚡</span>
+            <span style={{ fontWeight: 800, fontFamily: 'monospace' }}>[!]</span>
             <span>Supabase Veritabanı Bildirimi: blog_posts Tablosu Bulunamadı</span>
           </div>
           <p style={{ color: 'rgba(255, 255, 255, 0.65)', fontSize: '0.82rem', lineHeight: 1.5, margin: 0 }}>
@@ -220,7 +220,7 @@ CREATE POLICY "Authenticated users full access to blog posts" ON public.blog_pos
               onClick={handleCopyMigration}
               style={{ border: '1px solid rgba(255,255,255,0.3)' }}
             >
-              {copiedSql ? '✓ SQL Kopyalandı' : '📋 SQL Migration Kodunu Kopyala'}
+              {copiedSql ? '✓ SQL Kopyalandı' : 'SQL Migration Kodunu Kopyala'}
             </button>
           </div>
         </div>

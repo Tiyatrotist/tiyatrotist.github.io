@@ -111,4 +111,9 @@
 - [x] ~~Teknik anahtar kelimelerin (`TypeFlow`, `BookOS`, `Tiyatrotist`, kod blokları, linkler) korunması ve geri açılması için `tokenizer.ts` optimizasyonu~~
 - [x] ~~Tüm Admin sayfalarındaki çeviri butonlarına (`TranslationAction.tsx`) canlı çeviri durumu, sağlayıcı rozeti ve başarı bildiriminin eklenmesi~~
 
-
+
+- [x] ~~Ayrıca Bloglara sesi güzel bir podcast çözümüde geliştirelim.~~
+- [x] ~~Ayrıca kod yazarken ASLA EMOJİ KULLANMA ayrıca like sistemi olmamış blog kısmına el atman lazım.~~
+- [x] ~~Sitede yeni eklenen şeyler bizim dil sistemimize uymuyor~~
+- [x] ~~sandbox çok kötü geliştirilmesi lazım.~~
+- [x] ~~Blogdaki yorum ve beğenme sistemi olmamış şimdilik kaldıralım.~~

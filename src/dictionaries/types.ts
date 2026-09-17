@@ -166,4 +166,88 @@ export interface Dictionary {
     storyMode: string;
     devMode: string;
   };
+  commandPalette: {
+    placeholder: string;
+    categories: {
+      pages: string;
+      projects: string;
+      labs: string;
+      blog: string;
+      actions: string;
+    };
+    shortcuts: {
+      navigate: string;
+      select: string;
+      exit: string;
+    };
+    actions: {
+      openTerminal: string;
+      openTerminalSub: string;
+      switchLang: string;
+      switchLangSub: string;
+      matrixPulse: string;
+      matrixPulseSub: string;
+    };
+  };
+  terminal: {
+    bootTitle: string;
+    bootStatus: string;
+    helpTip: string;
+    helpTitle: string;
+    unknownCmd: string;
+  };
+  sandbox: {
+    tag: string;
+    title: string;
+    subtitle: string;
+    modes: {
+      galaxy: string;
+      flow: string;
+      network: string;
+      vortex: string;
+      sand: string;
+    };
+    tools: {
+      attract: string;
+      repel: string;
+      spawn: string;
+      connect: string;
+    };
+    gravity: {
+      down: string;
+      up: string;
+      zero: string;
+      vortex: string;
+    };
+    controls: {
+      particles: string;
+      speed: string;
+      brush: string;
+      play: string;
+      pause: string;
+      clear: string;
+      snapshot: string;
+      fullscreen: string;
+    };
+  };
+  offline: {
+    tag: string;
+    title: string;
+    subtitle: string;
+    cliBtn: string;
+    gameBtn: string;
+    retryBtn: string;
+  };
+  podcast: {
+    tag: string;
+    listenBtn: string;
+    pauseBtn: string;
+    resumeBtn: string;
+    playing: string;
+    paused: string;
+    speed: string;
+    readTime: string;
+    voiceNotice: string;
+  };
 }
+

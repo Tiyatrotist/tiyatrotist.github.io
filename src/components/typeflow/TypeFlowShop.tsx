@@ -8,6 +8,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { ShoppingBag, Gem, CreditCard, ShoppingCart, Check, Zap, ArrowUpRight } from 'lucide-react';
 import { Locale } from '@/dictionaries';
 import { UserProfile, ShopItem, TypeFlowTheme, SoundType } from './types';
 import { getShopCatalog } from './duolingoData';
@@ -109,8 +110,9 @@ export default function TypeFlowShop({
         gap: '1rem'
       }}>
         <div>
-          <h2 style={{ fontSize: '1.6rem', fontWeight: 800, margin: '0 0 0.35rem 0' }}>
-            {isTr ? '🛍️ TypeFlow Mağazası' : '🛍️ TypeFlow Shop'}
+          <h2 style={{ fontSize: '1.6rem', fontWeight: 800, margin: '0 0 0.35rem 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ShoppingBag size={22} color="#38bdf8" />
+            <span>{isTr ? 'TypeFlow Mağazası' : 'TypeFlow Shop'}</span>
           </h2>
           <p style={{ color: 'var(--tf-text-secondary)', margin: 0, fontSize: '0.9rem' }}>
             {isTr
@@ -124,8 +126,9 @@ export default function TypeFlowShop({
           <div style={{ fontSize: '0.75rem', color: '#38bdf8', fontWeight: 700, fontFamily: 'var(--tf-font-mono)' }}>
             {isTr ? 'MEVCUT BAKİYEN' : 'CURRENT BALANCE'}
           </div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#38bdf8' }}>
-            {profile.gems || 0} 💎
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#38bdf8', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+            <span>{profile.gems || 0}</span>
+            <Gem size={18} />
           </div>
         </div>
       </div>
@@ -150,7 +153,7 @@ export default function TypeFlowShop({
       {/* 2. REAL MONEY PACKAGES SECTION (₺ / TL) */}
       <div className="tf-section-heading" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span>💳</span>
+          <CreditCard size={16} />
           <span>{isTr ? 'Gerçek Para ile Satın Alım Paketleri (₺ / TL)' : 'Direct In-App Packages (USD / EUR)'}</span>
         </div>
         {onGoToCheckout && (
@@ -168,9 +171,14 @@ export default function TypeFlowShop({
               fontSize: '0.78rem',
               fontWeight: 800,
               cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
             }}
           >
-            💳 {isTr ? 'Ödeme Sayfasına Git ↗' : 'Go to Checkout ↗'}
+            <CreditCard size={13} />
+            <span>{isTr ? 'Ödeme Sayfasına Git' : 'Go to Checkout'}</span>
+            <ArrowUpRight size={13} />
           </button>
         )}
       </div>
@@ -238,17 +246,22 @@ export default function TypeFlowShop({
                 background: pkg.isSuper ? 'linear-gradient(135deg, #f59e0b, #eab308)' : '#10b981',
                 color: pkg.isSuper ? '#000' : '#fff',
                 border: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
               }}
             >
-              🛒 {isTr ? `${pkg.priceTr} ile Satın Al` : `Buy for ${pkg.priceEn}`}
+              <ShoppingCart size={14} />
+              <span>{isTr ? `${pkg.priceTr} ile Satın Al` : `Buy for ${pkg.priceEn}`}</span>
             </button>
           </div>
         ))}
       </div>
 
       {/* 3. VIRTUAL GEMS SHOP SECTION */}
-      <div className="tf-section-heading" style={{ marginBottom: '1rem' }}>
-        <span>💎</span>
+      <div className="tf-section-heading" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <Gem size={16} color="#38bdf8" />
         <span>{isTr ? 'Elmas ile Alınabilir Öğeler & Temalar' : 'Gem Exchange: Utilities & Themes'}</span>
       </div>
 
@@ -268,10 +281,9 @@ export default function TypeFlowShop({
           return (
             <div key={item.id} className="tf-shop-card">
               <div className="tf-shop-top">
-                <div className="tf-shop-icon">{item.icon}</div>
                 <div className="tf-shop-info">
-                  <h4>{item.name}</h4>
-                  <p>{item.description}</p>
+                  <h4 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '0.25rem' }}>{item.name}</h4>
+                  <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--tf-text-secondary)' }}>{item.description}</p>
                 </div>
               </div>
 
@@ -294,16 +306,19 @@ export default function TypeFlowShop({
                       if (item.category === 'theme' && item.value) onSelectTheme(item.value as TypeFlowTheme);
                       if (item.category === 'sound' && item.value) onSelectSound(item.value as SoundType);
                     }}
+                    style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                   >
-                    ✓ {isTr ? 'Seçildi / Sahipsin' : 'Active / Owned'}
+                    <Check size={13} />
+                    <span>{isTr ? 'Seçildi / Sahipsin' : 'Active / Owned'}</span>
                   </button>
                 ) : (
                   <button
                     className={`tf-shop-buy-btn tf-btn-pushable ${!canAfford ? 'disabled' : ''}`}
                     onClick={() => handleBuyWithGems(item)}
                     disabled={!canAfford}
+                    style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                   >
-                    <span>💎</span>
+                    <Gem size={13} />
                     <span>{item.cost} {isTr ? 'Elmas' : 'Gems'}</span>
                   </button>
                 )}

@@ -155,6 +155,34 @@ export default function Header({ lang, dict }: HeaderProps) {
               EN
             </Link>
           </div>
+
+          {/* Spotlight Command Palette Quick Trigger Button */}
+          <button
+            type="button"
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('open-command-palette'));
+            }}
+            className="site-header__cmd-btn"
+            title="Komut Paletini Aç (Ctrl+K)"
+            data-cursor="expand"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid rgba(255, 255, 255, 0.16)',
+              borderRadius: '4px',
+              padding: '0.2rem 0.45rem',
+              color: 'rgba(255, 255, 255, 0.7)',
+              fontFamily: 'ui-monospace, monospace',
+              fontSize: '0.65rem',
+              cursor: 'pointer',
+              marginLeft: '0.4rem',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <span>⌘K</span>
+          </button>
         </nav>
 
         {/* Mobile Hamburger Button */}
@@ -218,6 +246,32 @@ export default function Header({ lang, dict }: HeaderProps) {
               EN
             </Link>
           </div>
+
+          {/* Command Palette Button for Mobile */}
+          <button
+            type="button"
+            onClick={() => {
+              setMobileMenuOpen(false);
+              window.dispatchEvent(new CustomEvent('open-command-palette'));
+            }}
+            style={{
+              marginTop: '1.5rem',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '6px',
+              padding: '0.65rem 1.25rem',
+              color: '#ffffff',
+              fontFamily: 'monospace',
+              fontSize: '0.8rem',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+            }}
+          >
+            <span>⌘K</span>
+            <span>{lang === 'tr' ? 'Komut Paleti & Arama' : 'Command Palette & Search'}</span>
+          </button>
         </nav>
       </div>
     </>

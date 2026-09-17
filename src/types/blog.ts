@@ -18,6 +18,8 @@ export interface BlogPostItem {
   read_time_en?: string;
   published: boolean;
   featured: boolean;
+  likes_count?: number;
+  views_count?: number;
   published_at?: string;
   created_at?: string;
   updated_at?: string;

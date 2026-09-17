@@ -67,6 +67,26 @@ export const SYSTEM_PROJECTS: SystemProject[] = [
     created_at: '2026-08-28T18:27:01.897Z',
     updated_at: '2026-08-28T18:27:01.897Z',
   },
+  {
+    id: 'proj-sandbox-01',
+    slug: 'sandbox',
+    name: 'Particle Sandbox',
+    published: true,
+    featured: true,
+    short_description_tr: 'İnteraktif monokrom parçacık fiziği laboratuvarı, yerçekimi vektörleri, akışkanlar mekaniği ve generatif çizim tuvali.',
+    short_description_en: 'Interactive monochrome particle physics laboratory, gravitational vectors, fluid dynamics, and generative canvas.',
+    description_tr: 'Particle Sandbox; 60 FPS HTML5 Canvas ve 2D vektörel fizik motoru üzerinde çalışan; kum tanecikleri, viskoz sıvılar, kozmik yıldızlar ve matrix karakterlerini gerçek zamanlı yerçekimi, ters yerçekimi, sıfır-G ve kara delik (vortex) alanlarıyla simüle eden interaktif bir dijital fizik laboratuvarıdır.',
+    description_en: 'Particle Sandbox is an interactive digital physics laboratory running at 60 FPS on HTML5 Canvas, simulating sand grains, viscous fluids, cosmic stars, and matrix glyphs under customizable gravitational vectors, zero-G, and vortex black-hole force fields.',
+    github_url: 'https://github.com/Tiyatrotist/tiyatrotist.github.io',
+    website_url: '/sandbox',
+    accent_color: '#ffffff',
+    latestRelease: 'v1.0.0 (stable)',
+    releaseChannel: 'stable',
+    year: '2026',
+    tags: ['PHYSICS SIMULATION', 'CANVAS', 'INTERACTIVE', 'MONOCHROME'],
+    created_at: '2026-09-17T12:00:00.000Z',
+    updated_at: '2026-09-17T12:00:00.000Z',
+  },
 ];
 
 /**

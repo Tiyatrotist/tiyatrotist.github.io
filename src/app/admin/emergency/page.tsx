@@ -157,7 +157,7 @@ export default function EmergencyPage() {
       {/* Warning Notice Box */}
       <div className="admin-emergency-notice">
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
-          <span style={{ fontSize: '1.1rem' }}>⚠️</span>
+          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#e74c3c', fontFamily: 'monospace' }}>[!]</span>
           <h3 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#e74c3c', textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>
             {dict.emergency.warningTitle}
           </h3>

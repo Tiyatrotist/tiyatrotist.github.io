@@ -119,7 +119,7 @@ export default function TranslationAction({
       case 'MISSING_TURKISH':
         return <span className="admin-badge admin-badge-draft" style={{ fontSize: '0.6rem' }}>EKSİK TÜRKÇE</span>;
       case 'OUTDATED':
-        return <span className="admin-badge admin-badge-featured" style={{ fontSize: '0.6rem' }}>⚠️ ÇEVİRİ ESKİ OLABİLİR</span>;
+        return <span className="admin-badge admin-badge-featured" style={{ fontSize: '0.6rem' }}>[!] ÇEVİRİ ESKİ OLABİLİR</span>;
       default:
         return null;
     }

@@ -10,6 +10,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { Crown, Info, Clock, CheckCircle2, Sparkles, Battery, Gem } from 'lucide-react';
 import { Locale } from '@/dictionaries';
 import { UserProfile } from './types';
 import { GOOGLE_ADSENSE_CONFIG, getActiveAdSenseClientId, isAdSenseEnabled } from '@/config/ads';
@@ -71,9 +72,9 @@ export const TypeFlowGoogleAd: React.FC<TypeFlowGoogleAdProps> = ({
               className="tf-adchoices-icon"
               title={isTr ? 'Reklam Tercihleri (AdChoices)' : 'AdChoices'}
               onClick={() => window.open('https://www.google.com/ads/preferences/', '_blank')}
-              style={{ cursor: 'pointer', color: '#38bdf8', fontSize: '0.75rem' }}
+              style={{ cursor: 'pointer', color: '#38bdf8', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center' }}
             >
-              ⓘ
+              <Info size={12} />
             </span>
             <span style={{ fontSize: '0.62rem', color: 'var(--tf-text-muted)', fontFamily: 'var(--tf-font-mono)', opacity: 0.65 }}>
               // {activeClientId}
@@ -98,7 +99,8 @@ export const TypeFlowGoogleAd: React.FC<TypeFlowGoogleAdProps> = ({
                   gap: '4px',
                 }}
               >
-                👑 {isTr ? 'Reklamsız Kullan (Super)' : 'Remove Ads'}
+                <Crown size={13} />
+                <span>{isTr ? 'Reklamsız Kullan (Super)' : 'Remove Ads'}</span>
               </button>
             )}
           </div>
@@ -154,33 +156,6 @@ export const TypeFlowGoogleAd: React.FC<TypeFlowGoogleAdProps> = ({
                   : 'Official Google Ads will render automatically here upon domain approval.'}
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Optional Rewarded Energy Claim Trigger */}
-        {onRewardClaim && (
-          <div style={{ marginTop: '0.75rem', display: 'flex', justifyContent: 'flex-end' }}>
-            <button
-              type="button"
-              className="tf-btn-pushable"
-              onClick={() => setIsRewardedModalOpen(true)}
-              style={{
-                background: 'linear-gradient(135deg, #10b981, #059669)',
-                color: '#fff',
-                border: '1px solid #10b981',
-                padding: '0.45rem 0.85rem',
-                borderRadius: '6px',
-                fontFamily: 'var(--tf-font-mono)',
-                fontSize: '0.75rem',
-                fontWeight: 800,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-              }}
-            >
-              ⚡ {isTr ? 'Reklam İzle & Odak Enerjisi Doldur (+2 🔋 & +15 💎)' : 'Watch Ad & Recharge Energy (+2 🔋 & +15 💎)'}
-            </button>
           </div>
         )}
       </div>
@@ -295,8 +270,18 @@ function GoogleRewardedAdModal({
             </span>
           </div>
 
-          <div style={{ fontFamily: 'var(--tf-font-mono)', fontSize: '0.8rem', fontWeight: 800, color: countdown > 0 ? '#f59e0b' : '#10b981' }}>
-            {countdown > 0 ? `⏱️ ${countdown}s` : '✓ TAMAMLANDI'}
+          <div style={{ fontFamily: 'var(--tf-font-mono)', fontSize: '0.8rem', fontWeight: 800, color: countdown > 0 ? '#f59e0b' : '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {countdown > 0 ? (
+              <>
+                <Clock size={14} />
+                <span>{countdown}s</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle2 size={14} />
+                <span>{isTr ? 'TAMAMLANDI' : 'COMPLETED'}</span>
+              </>
+            )}
           </div>
         </div>
 
@@ -324,7 +309,9 @@ function GoogleRewardedAdModal({
           />
 
           <div style={{ position: 'absolute', zIndex: 0, textAlign: 'center', padding: '1rem' }}>
-            <div style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>📢</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem', color: '#38bdf8' }}>
+              <Sparkles size={32} />
+            </div>
             <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#e2e8f0', marginBottom: '0.25rem' }}>
               {isTr ? 'Google Ödüllü Reklam Alanı' : 'Google Rewarded Ad Space'}
             </div>
@@ -346,16 +333,18 @@ function GoogleRewardedAdModal({
             padding: '0.85rem 1rem',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <span style={{ fontSize: '1.4rem' }}>{isRewardReady ? '🎉' : '🔋'}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ color: isRewardReady ? '#10b981' : '#38bdf8', display: 'flex' }}>
+              {isRewardReady ? <Sparkles size={22} /> : <Battery size={22} />}
+            </div>
             <div>
               <div style={{ fontWeight: 800, fontSize: '0.88rem', color: isRewardReady ? '#10b981' : '#fff' }}>
                 {isRewardReady
                   ? (isTr ? 'Ödülünüz Hazır!' : 'Reward Ready!')
                   : (isTr ? 'Ödül İçin Bekleyin' : 'Please wait for reward')}
               </div>
-              <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
-                +2 Odak Enerjisi (🔋) & +15 Elmas (💎)
+              <div style={{ fontSize: '0.72rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span>+2 Odak Enerjisi & +15 Elmas</span>
               </div>
             </div>
           </div>

@@ -9,6 +9,22 @@
 
 import React from 'react';
 import Link from 'next/link';
+import {
+  ArrowLeft,
+  Map,
+  Keyboard,
+  Trophy,
+  Target,
+  ShoppingBag,
+  Flame,
+  Gem,
+  BatteryCharging,
+  Infinity as InfinityIcon,
+  Crown,
+  Settings,
+  User,
+  Zap,
+} from 'lucide-react';
 import { Locale } from '@/dictionaries';
 import { TypeFlowTheme, SoundType, SaaSTab, UserProfile } from './types';
 
@@ -66,7 +82,7 @@ export default function TypeFlowHeader({
           className="tf-back-link"
           title={isTr ? "Projeler sayfasına dön" : "Back to projects"}
         >
-          <span>←</span>
+          <ArrowLeft size={14} />
           <span>{isTr ? 'PROJELER' : 'PROJECTS'}</span>
         </Link>
 
@@ -84,7 +100,7 @@ export default function TypeFlowHeader({
           onClick={() => onTabChange('path')}
           title={isTr ? "Daktilo Akademisi" : "Learn Path"}
         >
-          <span>🗺️</span>
+          <Map size={15} />
           <span>{isTr ? 'Öğren' : 'Learn'}</span>
         </button>
 
@@ -93,7 +109,7 @@ export default function TypeFlowHeader({
           onClick={() => onTabChange('test')}
           title={isTr ? "Serbest Yazım Pratiği" : "Free Practice"}
         >
-          <span>⌨️</span>
+          <Keyboard size={15} />
           <span>{isTr ? 'Pratik' : 'Practice'}</span>
         </button>
 
@@ -102,7 +118,7 @@ export default function TypeFlowHeader({
           onClick={() => onTabChange('leagues')}
           title={isTr ? "Haftalık Ligler" : "Weekly Leagues"}
         >
-          <span>🏆</span>
+          <Trophy size={15} />
           <span>{isTr ? 'Ligler' : 'Leagues'}</span>
         </button>
 
@@ -111,7 +127,7 @@ export default function TypeFlowHeader({
           onClick={() => onTabChange('quests')}
           title={isTr ? "Günlük Görevler & Başarımlar" : "Daily Quests & Badges"}
         >
-          <span>🎯</span>
+          <Target size={15} />
           <span>{isTr ? 'Görevler' : 'Quests'}</span>
         </button>
 
@@ -120,7 +136,7 @@ export default function TypeFlowHeader({
           onClick={() => onTabChange('shop')}
           title={isTr ? "Elmas Mağazası" : "Gem Shop"}
         >
-          <span>🛍️</span>
+          <ShoppingBag size={15} />
           <span>{isTr ? 'Mağaza' : 'Shop'}</span>
         </button>
       </div>
@@ -134,7 +150,7 @@ export default function TypeFlowHeader({
             className="tf-duo-pill pill-streak"
             title={isTr ? `${profile.streakDays} Günlük Seri` : `${profile.streakDays} Day Streak`}
           >
-            <span>🔥</span>
+            <Flame size={14} color="#f97316" />
             <span>{profile.streakDays}</span>
           </div>
 
@@ -149,7 +165,7 @@ export default function TypeFlowHeader({
             aria-label={isTr ? `${profile.gems || 0} Elmas — Mağazaya git` : `${profile.gems || 0} Gems — Go to shop`}
             style={{ cursor: 'pointer' }}
           >
-            <span>💎</span>
+            <Gem size={14} color="#38bdf8" />
             <span>{profile.gems || 0}</span>
           </div>
 
@@ -184,11 +200,11 @@ export default function TypeFlowHeader({
             aria-label={isTr ? 'Odak Enerjisi' : 'Focus Energy'}
             style={{ cursor: 'pointer' }}
           >
-            <span>🔋</span>
-            <span>{profile.isPremium ? '♾️' : (profile.energy ?? profile.hearts ?? 5)}</span>
+            {profile.isPremium ? <InfinityIcon size={14} color="#10b981" /> : <BatteryCharging size={14} color="#10b981" />}
+            <span>{profile.isPremium ? 'PRO' : (profile.energy ?? profile.hearts ?? 5)}</span>
           </div>
 
-          {/* Audit Fix #9: Daily Goal Progress Pill */}
+          {/* Daily Goal Progress Pill */}
           <div
             className={`tf-daily-goal-pill ${profile.dailyTestsCompleted >= profile.dailyGoal ? 'goal-complete' : ''}`}
             title={
@@ -197,7 +213,7 @@ export default function TypeFlowHeader({
                 : `Daily Goal: ${profile.dailyTestsCompleted}/${profile.dailyGoal} tests`
             }
           >
-            <span>🎯</span>
+            <Target size={13} />
             <span>{profile.dailyTestsCompleted}/{profile.dailyGoal}</span>
             <div className="tf-daily-goal-bar">
               <div
@@ -225,7 +241,7 @@ export default function TypeFlowHeader({
                       : (isTr ? "Super TypeFlow Üyeliği Aktif" : "Super TypeFlow Active")
                   }
                 >
-                  <span>👑</span>
+                  <Crown size={14} color="#eab308" />
                   <span>{isTrial ? (isTr ? `DENEME (${trialDaysLeft}g)` : `TRIAL (${trialDaysLeft}d)`) : 'SUPER'}</span>
                 </div>
               );
@@ -237,7 +253,7 @@ export default function TypeFlowHeader({
               onClick={onOpenSuperModal}
               title={isTr ? "Super TypeFlow'a Yükselt (Reklamsız & Sınırsız)" : "Upgrade to Super TypeFlow"}
             >
-              <span>👑</span>
+              <Crown size={14} />
               <span>SUPER</span>
             </button>
           )}
@@ -250,9 +266,16 @@ export default function TypeFlowHeader({
           title={isTr ? `${profile.username} — Profil & Ayarlar` : `${profile.username} — Profile & Settings`}
           aria-label="Open profile and settings drawer"
         >
-          <span className="tf-user-avatar" suppressHydrationWarning>{profile.avatar}</span>
-          <span className="tf-user-level-badge" suppressHydrationWarning>⚡ L{profile.level}</span>
-          <span className="tf-drawer-burger-icon">⚙️</span>
+          <span className="tf-user-avatar" suppressHydrationWarning>
+            <User size={14} />
+          </span>
+          <span className="tf-user-level-badge" suppressHydrationWarning style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+            <Zap size={10} />
+            <span>L{profile.level}</span>
+          </span>
+          <span className="tf-drawer-burger-icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
+            <Settings size={14} />
+          </span>
         </button>
       </div>
     </header>

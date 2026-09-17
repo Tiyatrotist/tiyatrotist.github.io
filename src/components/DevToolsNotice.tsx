@@ -6,7 +6,7 @@ export default function DevToolsNotice() {
   useEffect(() => {
     /* eslint-disable no-console */
     console.log(
-      '%c👀 Nice try. I saw you cheating 👀',
+      '%c[!] TIYATROTIST // DEVELOPER CONSOLE DETECTED',
       'color: #ffffff; background: #000000; font-size: 14px; font-weight: bold; padding: 6px 12px; border: 1px solid #333; border-radius: 4px;'
     );
     console.log(

@@ -10,6 +10,7 @@ export type AdminLocale = 'tr' | 'en';
 export interface AdminDict {
   nav: {
     dashboard: string;
+    analytics: string;
     content: string;
     pages: string;
     projects: string;
@@ -300,6 +301,7 @@ export interface AdminDict {
 export const adminTr: AdminDict = {
   nav: {
     dashboard: 'Gösterge Paneli',
+    analytics: 'Analitik & İstatistik',
     content: 'İÇERİK',
     pages: 'Sayfalar',
     projects: 'Projeler',
@@ -452,8 +454,8 @@ export const adminTr: AdminDict = {
     published: 'Yayında',
     draft: 'Taslak',
     featured: 'Öne Çıkan',
-    tabTr: '🇹🇷 Türkçe',
-    tabEn: '🇬🇧 English',
+    tabTr: '[TR] Türkçe',
+    tabEn: '[EN] English',
     metadata: 'Yazı Ayarları',
     save: 'Yazıyı Kaydet',
     saving: 'Kaydediliyor…',
@@ -590,6 +592,7 @@ export const adminTr: AdminDict = {
 export const adminEn: AdminDict = {
   nav: {
     dashboard: 'Dashboard',
+    analytics: 'Analytics & Metrics',
     content: 'CONTENT',
     pages: 'Pages',
     projects: 'Projects',
@@ -742,8 +745,8 @@ export const adminEn: AdminDict = {
     published: 'Published',
     draft: 'Draft',
     featured: 'Featured',
-    tabTr: '🇹🇷 Turkish',
-    tabEn: '🇬🇧 English',
+    tabTr: '[TR] Turkish',
+    tabEn: '[EN] English',
     metadata: 'Post Settings',
     save: 'Save Post',
     saving: 'Saving…',

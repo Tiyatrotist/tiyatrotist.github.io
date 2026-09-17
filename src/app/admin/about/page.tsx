@@ -564,7 +564,7 @@ export default function AboutPage() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
                   <h4 style={{ margin: '0 0 0.35rem', color: '#ffffff', fontSize: '0.85rem' }}>
-                    ⚙ {dict.about.sqlNoticeTitle}
+                    {dict.about.sqlNoticeTitle}
                   </h4>
                   <p style={{ margin: 0, color: 'rgba(255,255,255,0.6)', fontSize: '0.75rem', lineHeight: 1.5 }}>
                     {dict.about.sqlNoticeDesc}

@@ -107,7 +107,7 @@ export default function MaintenanceGuard({ children, lang }: MaintenanceGuardPro
           role="alert"
         >
           <span>
-            ⚠ <strong>{lang === 'tr' ? 'BAKIM MODU AKTİF' : 'MAINTENANCE MODE ACTIVE'}</strong> —{' '}
+            [!] <strong>{lang === 'tr' ? 'BAKIM MODU AKTİF' : 'MAINTENANCE MODE ACTIVE'}</strong> —{' '}
             {lang === 'tr'
               ? 'Site ziyaretçilere kapalıdır. Yönetici olarak görüntülüyorsunuz.'
               : 'Website is closed to visitors. Viewing as administrator.'}

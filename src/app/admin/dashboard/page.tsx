@@ -299,7 +299,7 @@ export default function DashboardPage() {
               className="admin-btn admin-btn-ghost admin-btn-sm"
               style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
             >
-              🔄 Olayları Yenile
+              Olayları Yenile
             </button>
           </div>
 
@@ -402,7 +402,7 @@ export default function DashboardPage() {
                       </td>
                       <td style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap' }}>
                         <span style={{ color: evt.is_guest ? '#f59e0b' : '#10b981', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                          <span>{evt.is_guest ? '⚡ Misafir' : '👤 Kayıtlı'}</span>
+                          <span>{evt.is_guest ? '[ Misafir ]' : '[ Kayıtlı ]'}</span>
                           <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>
                             ({evt.user_identifier})
                           </span>

@@ -8,10 +8,15 @@
  * - Pure monochrome aesthetic matching Tiyatrotist design guidelines.
  */
 
+import BlogReadingProgress from '@/components/blog/BlogReadingProgress';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import BlogAdBanner from '@/components/blog/BlogAdBanner';
+import BlogTableOfContents from '@/components/blog/BlogTableOfContents';
+import BlogAudioPlayer from '@/components/blog/BlogAudioPlayer';
+import NewsletterSubscribe from '@/components/NewsletterSubscribe';
 import { Locale, getDictionary } from '@/dictionaries';
 import { supabase } from '@/lib/supabase';
 import { BlogPostItem } from '@/types/blog';
@@ -86,6 +91,8 @@ export default async function BlogPostDetailPage({ params }: BlogPostDetailPageP
         read_time_en: '4 min read',
         published: data.published,
         featured: data.featured || false,
+        likes_count: data.likes_count || 0,
+        views_count: data.views_count || 0,
         published_at: data.published_at || data.created_at,
       };
 
@@ -154,8 +161,11 @@ export default async function BlogPostDetailPage({ params }: BlogPostDetailPageP
 
   return (
     <main className="main-container">
+      {/* Top Editorial Reading Progress Bar */}
+      <BlogReadingProgress />
+
       <Header lang={currentLang} dict={dict} />
-      <div className="page-container" style={{ maxWidth: '840px' }}>
+      <div className="page-container" style={{ maxWidth: '1080px' }}>
         {/* Back navigation */}
         <nav style={{ marginBottom: '1.5rem' }}>
           <Link
@@ -187,15 +197,15 @@ export default async function BlogPostDetailPage({ params }: BlogPostDetailPageP
                 style={{
                   fontSize: '0.65rem',
                   fontFamily: 'monospace',
-                  letterSpacing: '0.1em',
+                  letterSpacing: '0.12em',
                   color: '#000000',
                   background: '#ffffff',
                   padding: '0.15rem 0.5rem',
                   borderRadius: '2px',
-                  fontWeight: 600,
+                  fontWeight: 700,
                 }}
               >
-                ★ {b.featured}
+                [ {b.featured.toUpperCase()} ]
               </span>
             )}
           </div>
@@ -228,10 +238,113 @@ export default async function BlogPostDetailPage({ params }: BlogPostDetailPageP
           </div>
         )}
 
-        {/* Article Body (Rendered with MarkdownRenderer) */}
-        <article className="blog-article-body" style={{ minHeight: '300px' }}>
-          <MarkdownRenderer content={displayContent} />
-        </article>
+        {/* 2-Column Responsive Layout: Article Body + Table of Contents */}
+        <div
+          className="blog-detail-grid"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 1fr) 240px',
+            gap: '3rem',
+            alignItems: 'start',
+          }}
+        >
+          {/* Main Article Column */}
+          <div style={{ minWidth: 0 }}>
+            {/* Editorial Audio Player & Podcast Synthesis */}
+            <BlogAudioPlayer
+              content={displayContent}
+              title={displayTitle}
+              lang={currentLang}
+              estimatedMinutes={4}
+            />
+
+            {/* Article Body (Rendered with MarkdownRenderer) */}
+            <article className="blog-article-body" style={{ minHeight: '300px' }}>
+              <MarkdownRenderer content={displayContent} />
+            </article>
+
+            {/* End of Transmission Architectural Divider */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '4rem 0 2rem 0',
+                position: 'relative',
+              }}
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  right: 0,
+                  height: '1px',
+                  borderTop: '1px dashed rgba(255, 255, 255, 0.12)',
+                }}
+              />
+              <span
+                style={{
+                  position: 'relative',
+                  background: 'var(--color-bg, #0a0a0a)',
+                  padding: '0 1.25rem',
+                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                  fontSize: '0.68rem',
+                  letterSpacing: '0.22em',
+                  color: 'rgba(255, 255, 255, 0.45)',
+                  textTransform: 'uppercase',
+                }}
+              >
+                [ // {currentLang === 'tr' ? 'MAKALE SONU // KAYIT TAMAMLANDI' : 'END OF TRANSMISSION // ARCHIVE LOG CLOSED'} // ]
+              </span>
+            </div>
+
+            {/* Archival Colophon / Metadata Card */}
+            <div
+              style={{
+                padding: '1.25rem 1.5rem',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                background: 'rgba(255, 255, 255, 0.015)',
+                borderRadius: '4px',
+                fontSize: '0.74rem',
+                fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                color: 'rgba(255, 255, 255, 0.55)',
+                lineHeight: 1.6,
+                marginBottom: '2rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.45rem',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <span>
+                  <strong style={{ color: '#ffffff', fontWeight: 600 }}>{currentLang === 'tr' ? 'Yazar:' : 'Author:'}</strong> Buğra // Tiyatrotist
+                </span>
+                <span>
+                  <strong style={{ color: '#ffffff', fontWeight: 600 }}>{currentLang === 'tr' ? 'Kayıt Tarihi:' : 'Recorded:'}</strong> {dateStr}
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <span>
+                  <strong style={{ color: '#ffffff', fontWeight: 600 }}>{currentLang === 'tr' ? 'Lisans:' : 'License:'}</strong> Creative Commons BY-NC 4.0
+                </span>
+                <span>
+                  <strong style={{ color: '#ffffff', fontWeight: 600 }}>{currentLang === 'tr' ? 'Okuma Süresi:' : 'Reading Time:'}</strong> {readTime}
+                </span>
+              </div>
+            </div>
+
+            {/* Official Google AdSense In-Article Banner */}
+            <BlogAdBanner lang={currentLang} variant="in-article" />
+
+            {/* Newsletter Subscription Box */}
+            <NewsletterSubscribe lang={currentLang} />
+          </div>
+
+          {/* Sticky Table of Contents Column */}
+          <div className="blog-toc-column">
+            <BlogTableOfContents content={displayContent} lang={currentLang} />
+          </div>
+        </div>
 
         {/* Post Footer & Related Posts */}
         <div

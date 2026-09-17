@@ -12,7 +12,7 @@
 
 'use client';
 
-import { useEffect, useState, FormEvent, Suspense, useCallback } from 'react';
+import { useEffect, useState, useRef, FormEvent, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -119,6 +119,51 @@ function ProjectWorkspaceContent() {
   const [savingMedia, setSavingMedia] = useState(false);
   const [deleteMediaTarget, setDeleteMediaTarget] = useState<ProjectMediaItem | null>(null);
   const [deletingMedia, setDeletingMedia] = useState(false);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [mediaUploadError, setMediaUploadError] = useState('');
+  const mediaFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleMediaFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingMedia(true);
+    setMediaUploadError('');
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      const isVid = ext === 'mp4' || ext === 'webm' || file.type.startsWith('video/');
+      const safeName = `project-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+      const { error: uploadErr } = await supabase.storage
+        .from('site-media')
+        .upload(safeName, file, { cacheControl: '3600', upsert: false });
+
+      if (uploadErr) {
+        console.debug('[projects/edit] Media upload error:', uploadErr);
+        if (uploadErr.message?.toLowerCase().includes('bucket not found')) {
+          setMediaUploadError(
+            locale === 'tr'
+              ? "Depolama alanı ('site-media') bulunamadı. Lütfen önce Medya Kütüphanesindeki SQL kurulumunu yapın."
+              : "Storage bucket ('site-media') not found. Please complete the SQL setup in Media Library."
+          );
+        } else {
+          setMediaUploadError(uploadErr.message);
+        }
+      } else {
+        const { data } = supabase.storage.from('site-media').getPublicUrl(safeName);
+        if (data?.publicUrl) {
+          setMediaForm((prev) => ({
+            ...prev,
+            media_url: data.publicUrl,
+            media_type: isVid ? 'video' : 'image',
+          }));
+        }
+      }
+    } catch (err: any) {
+      setMediaUploadError(err?.message || 'Yükleme başarısız.');
+    } finally {
+      setUploadingMedia(false);
+      if (e.target) e.target.value = '';
+    }
+  };
 
   // Release Modal state
   const [releaseModalOpen, setReleaseModalOpen] = useState(false);
@@ -661,42 +706,42 @@ function ProjectWorkspaceContent() {
           className={`admin-tab ${activeTab === 'overview' ? 'active' : ''}`}
           onClick={() => setActiveTab('overview')}
         >
-          📌 {dict.projects.tabOverview}
+          {dict.projects.tabOverview}
         </button>
         <button
           type="button"
           className={`admin-tab ${activeTab === 'content' ? 'active' : ''}`}
           onClick={() => setActiveTab('content')}
         >
-          ✍️ {dict.projects.tabContent}
+          {dict.projects.tabContent}
         </button>
         <button
           type="button"
           className={`admin-tab ${activeTab === 'page' ? 'active' : ''}`}
           onClick={() => setActiveTab('page')}
         >
-          📜 Sayfa ({activeTemplate.name_tr})
+          Sayfa ({activeTemplate.name_tr})
         </button>
         <button
           type="button"
           className={`admin-tab ${activeTab === 'media' ? 'active' : ''}`}
           onClick={() => setActiveTab('media')}
         >
-          🖼️ {dict.projects.tabMedia} ({mediaList.length})
+          {dict.projects.tabMedia} ({mediaList.length})
         </button>
         <button
           type="button"
           className={`admin-tab ${activeTab === 'releases' ? 'active' : ''}`}
           onClick={() => setActiveTab('releases')}
         >
-          🚀 {dict.projects.tabReleases} ({releasesList.length})
+          {dict.projects.tabReleases} ({releasesList.length})
         </button>
         <button
           type="button"
           className={`admin-tab ${activeTab === 'settings' ? 'active' : ''}`}
           onClick={() => setActiveTab('settings')}
         >
-          ⚙️ {dict.projects.tabSettings}
+          {dict.projects.tabSettings}
         </button>
       </div>
 
@@ -1033,14 +1078,14 @@ function ProjectWorkspaceContent() {
                         onClick={() => toggleSectionVisible(idx)}
                         style={{ fontSize: '0.7rem' }}
                       >
-                        {isHidden ? '👁️‍🗨️ Gizli' : '👁️ Görünür'}
+                        {isHidden ? 'Gizli' : 'Görünür'}
                       </button>
                       <button
                         type="button"
                         className="admin-btn admin-btn-primary admin-btn-sm"
                         onClick={() => setEditingSection(sec)}
                       >
-                        ✏️ İçeriği Düzenle
+                        İçeriği Düzenle
                       </button>
                     </div>
                   </div>
@@ -1407,15 +1452,65 @@ function ProjectWorkspaceContent() {
           <div className="admin-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
             <h3 className="admin-modal-title">{dict.projects.addMedia}</h3>
             <form onSubmit={handleSaveMedia} className="admin-form">
-              <FormField
-                label={dict.projects.mediaUrl}
-                name="media_url"
-                type="url"
-                value={mediaForm.media_url}
-                onChange={(v) => setMediaForm((prev) => ({ ...prev, media_url: v }))}
-                placeholder="https://..."
-                required
-              />
+              <div>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
+                  <div style={{ flex: 1 }}>
+                    <FormField
+                      label={dict.projects.mediaUrl}
+                      name="media_url"
+                      type="url"
+                      value={mediaForm.media_url}
+                      onChange={(v) => setMediaForm((prev) => ({ ...prev, media_url: v }))}
+                      placeholder="https://..."
+                      required
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn-ghost"
+                    style={{ height: '38px', marginBottom: '1.25rem', whiteSpace: 'nowrap', fontSize: '0.75rem' }}
+                    onClick={() => mediaFileInputRef.current?.click()}
+                    disabled={uploadingMedia}
+                  >
+                    {uploadingMedia ? (locale === 'tr' ? 'Yükleniyor…' : 'Uploading…') : (locale === 'tr' ? 'Dosya Seç' : 'Choose File')}
+                  </button>
+                  <input
+                    ref={mediaFileInputRef}
+                    type="file"
+                    accept="image/*,video/mp4,video/webm"
+                    style={{ display: 'none' }}
+                    onChange={handleMediaFileUpload}
+                  />
+                </div>
+
+                {mediaUploadError && (
+                  <p style={{ color: '#ff4d4f', fontSize: '0.72rem', marginTop: '-0.75rem', marginBottom: '1rem' }}>
+                    {mediaUploadError}
+                  </p>
+                )}
+
+                {mediaForm.media_url && (
+                  <div style={{ marginTop: '-0.5rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    {mediaForm.media_type === 'video' ? (
+                      <video src={mediaForm.media_url} style={{ width: '80px', height: '48px', objectFit: 'cover', borderRadius: '4px' }} muted />
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={mediaForm.media_url}
+                        alt="Medya Önizleme"
+                        style={{ width: '80px', height: '48px', objectFit: 'cover', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)' }}
+                      />
+                    )}
+                    <button
+                      type="button"
+                      className="admin-btn admin-btn-danger admin-btn-sm"
+                      onClick={() => setMediaForm((prev) => ({ ...prev, media_url: '' }))}
+                    >
+                      {locale === 'tr' ? 'Medyayı Kaldır' : 'Remove Media'}
+                    </button>
+                  </div>
+                )}
+              </div>
 
               <FormField
                 label={dict.projects.mediaType}

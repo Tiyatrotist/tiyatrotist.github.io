@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useEffect, FormEvent, Suspense } from 'react';
+import { useState, useEffect, useRef, FormEvent, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -16,6 +16,8 @@ import FormField from '@/components/admin/FormField';
 import LoadingSpinner from '@/components/admin/LoadingSpinner';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
 import TranslationAction from '@/components/admin/TranslationAction';
+import SplitMarkdownEditor from '@/components/admin/SplitMarkdownEditor';
+import ImageCropModal from '@/components/admin/ImageCropModal';
 
 function EditBlogContent() {
   const router = useRouter();
@@ -94,8 +96,55 @@ function EditBlogContent() {
     fetchPost();
   }, [slugParam, dict.common.notFound]);
 
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [coverError, setCoverError] = useState('');
+  const [cropFile, setCropFile] = useState<File | null>(null);
+  const [isCropOpen, setIsCropOpen] = useState(false);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+
   const updateField = (key: string, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCropFile(file);
+    setIsCropOpen(true);
+    if (e.target) e.target.value = '';
+  };
+
+  const uploadOptimizedCover = async (file: File) => {
+    setUploadingCover(true);
+    setCoverError('');
+    try {
+      const safeName = `cover-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.webp`;
+      const { error: uploadErr } = await supabase.storage
+        .from('site-media')
+        .upload(safeName, file, { contentType: 'image/webp', cacheControl: '3600', upsert: false });
+
+      if (uploadErr) {
+        console.debug('[blog/edit] Cover upload error:', uploadErr);
+        if (uploadErr.message?.toLowerCase().includes('bucket not found')) {
+          setCoverError(
+            locale === 'tr'
+              ? "Depolama alanı ('site-media') bulunamadı. Lütfen önce Medya Kütüphanesindeki SQL kurulumunu yapın."
+              : "Storage bucket ('site-media') not found. Please complete the SQL setup in Media Library."
+          );
+        } else {
+          setCoverError(uploadErr.message);
+        }
+      } else {
+        const { data } = supabase.storage.from('site-media').getPublicUrl(safeName);
+        if (data?.publicUrl) {
+          updateField('cover_image', data.publicUrl);
+        }
+      }
+    } catch (err: any) {
+      setCoverError(err?.message || 'Yükleme başarısız.');
+    } finally {
+      setUploadingCover(false);
+    }
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -259,23 +308,23 @@ function EditBlogContent() {
                   />
                 </div>
 
-                <div>
-                  <FormField
+                <div style={{ marginTop: '1.25rem' }}>
+                  <SplitMarkdownEditor
                     label={dict.blog.contentTr}
-                    name="content_tr"
-                    type="textarea"
                     value={form.content_tr}
                     onChange={(v) => updateField('content_tr', v)}
                     placeholder="# Başlık&#10;&#10;Yazı içeriğinizi markdown formatında yazın..."
                   />
-                  <TranslationAction
-                    sourceText={form.content_tr}
-                    targetText={form.content_en}
-                    sourceLang="tr"
-                    targetLang="en"
-                    context="blog post markdown article"
-                    onTranslated={(translated) => updateField('content_en', translated)}
-                  />
+                  <div style={{ marginTop: '0.5rem' }}>
+                    <TranslationAction
+                      sourceText={form.content_tr}
+                      targetText={form.content_en}
+                      sourceLang="tr"
+                      targetLang="en"
+                      context="blog post markdown article"
+                      onTranslated={(translated) => updateField('content_en', translated)}
+                    />
+                  </div>
                 </div>
               </div>
             )}
@@ -320,23 +369,23 @@ function EditBlogContent() {
                   />
                 </div>
 
-                <div>
-                  <FormField
+                <div style={{ marginTop: '1.25rem' }}>
+                  <SplitMarkdownEditor
                     label={dict.blog.contentEn}
-                    name="content_en"
-                    type="textarea"
                     value={form.content_en}
                     onChange={(v) => updateField('content_en', v)}
                     placeholder="# Heading&#10;&#10;Write post content in markdown..."
                   />
-                  <TranslationAction
-                    sourceText={form.content_en}
-                    targetText={form.content_tr}
-                    sourceLang="en"
-                    targetLang="tr"
-                    context="blog post markdown article"
-                    onTranslated={(translated) => updateField('content_tr', translated)}
-                  />
+                  <div style={{ marginTop: '0.5rem' }}>
+                    <TranslationAction
+                      sourceText={form.content_en}
+                      targetText={form.content_tr}
+                      sourceLang="en"
+                      targetLang="tr"
+                      context="blog post markdown article"
+                      onTranslated={(translated) => updateField('content_tr', translated)}
+                    />
+                  </div>
                 </div>
               </div>
             )}
@@ -356,14 +405,68 @@ function EditBlogContent() {
               required
             />
 
-            <FormField
-              label={dict.blog.coverImage}
-              name="cover_image"
-              type="url"
-              value={form.cover_image}
-              onChange={(v) => updateField('cover_image', v)}
-              placeholder={dict.blog.coverImagePlaceholder}
-            />
+            <div>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
+                <div style={{ flex: 1 }}>
+                  <FormField
+                    label={dict.blog.coverImage}
+                    name="cover_image"
+                    type="url"
+                    value={form.cover_image}
+                    onChange={(v) => updateField('cover_image', v)}
+                    placeholder={dict.blog.coverImagePlaceholder}
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="admin-btn admin-btn-ghost"
+                  style={{ height: '38px', marginBottom: '1.25rem', whiteSpace: 'nowrap', fontSize: '0.75rem' }}
+                  onClick={() => coverInputRef.current?.click()}
+                  disabled={uploadingCover}
+                >
+                  {uploadingCover ? (locale === 'tr' ? 'Yükleniyor…' : 'Uploading…') : (locale === 'tr' ? 'Görsel Kırp & Seç' : 'Crop & Choose')}
+                </button>
+                <input
+                  ref={coverInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={handleFileSelect}
+                />
+              </div>
+
+              <ImageCropModal
+                file={cropFile}
+                isOpen={isCropOpen}
+                onClose={() => { setIsCropOpen(false); setCropFile(null); }}
+                onConfirm={uploadOptimizedCover}
+                defaultAspectRatio={16 / 9}
+              />
+
+              {coverError && (
+                <p style={{ color: '#ff4d4f', fontSize: '0.72rem', marginTop: '-0.75rem', marginBottom: '1rem' }}>
+                  {coverError}
+                </p>
+              )}
+
+              {form.cover_image && (
+                <div style={{ marginTop: '-0.5rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={form.cover_image}
+                    alt="Kapak Önizleme"
+                    style={{ width: '80px', height: '48px', objectFit: 'cover', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)' }}
+                  />
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn-danger admin-btn-sm"
+                    onClick={() => updateField('cover_image', '')}
+                  >
+                    {locale === 'tr' ? 'Görseli Kaldır' : 'Remove Image'}
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* Published Switch */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 0', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
