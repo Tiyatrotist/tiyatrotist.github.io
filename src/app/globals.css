@@ -49,18 +49,29 @@ button {
   font: inherit;
 }
 
-/* ─── NATIVE & CUSTOM INTERACTION ───────────────────────────── */
-a,
-button,
-[role="button"],
-summary {
-  cursor: pointer;
-}
+/* ─── GLOBAL CURSOR HIDE (DESKTOP) ───────────────────────────── */
+@media (hover: hover) and (pointer: fine) {
+  html,
+  body,
+  *,
+  *::before,
+  *::after,
+  a,
+  button,
+  input,
+  textarea,
+  select,
+  summary,
+  [role="button"],
+  [data-cursor] {
+    cursor: none !important;
+  }
 
-input,
-textarea,
-select {
-  cursor: text;
+  /* Orta tuş autoscroll sırasında tarayıcı imlecine izin ver */
+  body.is-autoscrolling,
+  body.is-autoscrolling * {
+    cursor: all-scroll !important;
+  }
 }
 
 /* ─── GLOBAL DOT CANVAS ───────────────────────────────────────── */

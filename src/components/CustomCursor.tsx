@@ -35,12 +35,34 @@ export default function CustomCursor() {
       return;
     }
 
-    console.debug('[CustomCursor] Desktop mode — companion cursor enabled');
+    // Masaüstünde tarayıcı imlecini gizle
+    document.documentElement.style.cursor = 'none';
+    document.body.style.cursor = 'none';
+
+    console.debug('[CustomCursor] Desktop mode — custom cursor enabled');
+
+    return () => {
+      document.documentElement.style.cursor = '';
+      document.body.style.cursor = '';
+    };
   }, []);
 
-  // Fare takibi ve animasyon döngüsü
+  // Fare takibi, animasyon döngüsü ve orta tuş (autoscroll) desteği
   useEffect(() => {
     if (isTouch) return;
+
+    // Orta tuş (tekerlek tıklaması) autoscroll desteği
+    const handleMouseDown = (e: MouseEvent) => {
+      if (e.button === 1) {
+        document.body.classList.add('is-autoscrolling');
+      }
+    };
+
+    const handleMouseUp = () => {
+      if (document.body.classList.contains('is-autoscrolling')) {
+        document.body.classList.remove('is-autoscrolling');
+      }
+    };
 
     const handleMouseMove = (e: MouseEvent) => {
       targetRef.current.x = e.clientX;
@@ -109,6 +131,8 @@ export default function CustomCursor() {
     };
 
     window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mouseup', handleMouseUp);
     document.addEventListener('mouseleave', handleMouseLeave);
     document.addEventListener('mouseenter', handleMouseEnter);
     document.addEventListener('mouseover', handleMouseOver);
@@ -118,6 +142,8 @@ export default function CustomCursor() {
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('mouseleave', handleMouseLeave);
       document.removeEventListener('mouseenter', handleMouseEnter);
       document.removeEventListener('mouseover', handleMouseOver);
