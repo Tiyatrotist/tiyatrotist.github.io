@@ -1,6 +1,6 @@
 /**
  * TIYATROTIST — ProjectIntro
- * BookOS project doorway with independent dot typography particle interaction and localized text.
+ * Featured project doorway with dot typography particle interaction and localized text.
  */
 
 'use client';
@@ -21,6 +21,8 @@ export default function ProjectIntro({ lang, dict }: ProjectIntroProps) {
   const engineRef = useRef<DotEngine | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const p = dict.projectIntro;
+  const displayText = 'EDITH';
+  const targetSlug = 'edith';
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -40,7 +42,7 @@ export default function ProjectIntro({ lang, dict }: ProjectIntroProps) {
 
     engineRef.current = engine;
 
-    const layout = textToDots('BookOS', {
+    const layout = textToDots(displayText, {
       fontSize,
       fontWeight: '700',
       gridSpacing,
@@ -56,7 +58,7 @@ export default function ProjectIntro({ lang, dict }: ProjectIntroProps) {
     const handleResize = () => {
       if (!engineRef.current) return;
       engineRef.current.resize();
-      const newLayout = textToDots('BookOS', {
+      const newLayout = textToDots(displayText, {
         fontSize: window.innerWidth < 768 ? 56 : 100,
         fontWeight: '700',
         gridSpacing: window.innerWidth < 768 ? 7 : 5,
@@ -76,7 +78,7 @@ export default function ProjectIntro({ lang, dict }: ProjectIntroProps) {
       engine.destroy();
       engineRef.current = null;
     };
-  }, []);
+  }, [displayText]);
 
   return (
     <section id="projects" className="project-intro" ref={containerRef}>
@@ -85,10 +87,10 @@ export default function ProjectIntro({ lang, dict }: ProjectIntroProps) {
       </div>
 
       <Link
-        href={`/${lang}/projects/bookos`}
+        href={`/${lang}/projects/${targetSlug}`}
         className="project-intro__canvas-container"
         data-cursor="expand"
-        aria-label="View BookOS project"
+        aria-label={`View ${p.title} project`}
       >
         <canvas ref={canvasRef} className="project-intro__canvas" />
       </Link>
@@ -97,7 +99,7 @@ export default function ProjectIntro({ lang, dict }: ProjectIntroProps) {
         <p className="project-intro__desc">{p.description}</p>
 
         <Link
-          href={`/${lang}/projects/bookos`}
+          href={`/${lang}/projects/${targetSlug}`}
           className="project-intro__enter-btn"
           data-cursor="expand"
         >

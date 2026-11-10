@@ -76,7 +76,7 @@ export default function AboutTimeline({ lang, initialMilestones }: AboutTimeline
             marginBottom: '0.75rem',
           }}
         >
-          {isTr ? '[ KRONOLOJİ // DÖNÜM NOKTALARI ]' : '[ TIMELINE // MILESTONES ]'}
+          {isTr ? '[ KRONOLOJİ VE DÖNÜM NOKTALARI ]' : '[ TIMELINE AND MILESTONES ]'}
         </span>
         <h2
           style={{

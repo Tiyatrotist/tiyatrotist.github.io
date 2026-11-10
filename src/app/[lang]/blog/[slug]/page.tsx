@@ -3,47 +3,86 @@
  *
  * Editorial layout with:
  * - High-fidelity zero-dependency Markdown rendering (headers, code blocks, lists, quotes)
- * - Meta information (date, read time, featured badge)
- * - Queries directly from Supabase blog_posts table with zero fake posts
+ * - Meta information (date, calculated reading time, tags)
+ * - Queries unified blog service: local Git-tracked Markdown files merged with Supabase
  * - Pure monochrome aesthetic matching Tiyatrotist design guidelines.
  */
 
+import type { Metadata } from 'next';
 import BlogReadingProgress from '@/components/blog/BlogReadingProgress';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
-import BlogAdBanner from '@/components/blog/BlogAdBanner';
 import BlogTableOfContents from '@/components/blog/BlogTableOfContents';
 import BlogAudioPlayer from '@/components/blog/BlogAudioPlayer';
 import NewsletterSubscribe from '@/components/NewsletterSubscribe';
 import { Locale, getDictionary } from '@/dictionaries';
-import { supabase } from '@/lib/supabase';
-import { BlogPostItem } from '@/types/blog';
+import { getAllBlogPosts, getBlogPostBySlug } from '@/lib/blog-service';
 
 interface BlogPostDetailPageProps {
   params: Promise<{ lang: string; slug: string }>;
 }
 
+export async function generateMetadata({ params }: BlogPostDetailPageProps): Promise<Metadata> {
+  const { lang, slug } = await params;
+  const currentLang = (lang === 'tr' ? 'tr' : 'en') as Locale;
+  const isTr = currentLang === 'tr';
+
+  const post = await getBlogPostBySlug(slug);
+  if (!post) {
+    return {
+      title: 'Yazı Bulunamadı | TIYATROTIST',
+    };
+  }
+
+  const title = (isTr ? post.title_tr : post.title_en) || post.title_tr || post.title_en || post.slug;
+  const description = (isTr ? post.excerpt_tr : post.excerpt_en) || post.excerpt_tr || post.excerpt_en || '';
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `/${currentLang}/blog/${slug}`,
+      languages: {
+        tr: `/tr/blog/${slug}`,
+        en: `/en/blog/${slug}`,
+      },
+    },
+    openGraph: {
+      type: 'article',
+      title: `${title} | TIYATROTIST`,
+      description,
+      url: `https://tiyatrotist.com.tr/${currentLang}/blog/${slug}`,
+      publishedTime: post.published_at || undefined,
+      authors: ['https://tiyatrotist.com.tr'],
+      images: [
+        {
+          url: '/icon.svg',
+          width: 512,
+          height: 512,
+          alt: title,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary',
+      title: `${title} | TIYATROTIST`,
+      description,
+      creator: '@tiyatrotist',
+    },
+  };
+}
+
 export async function generateStaticParams() {
+  const posts = await getAllBlogPosts();
   const staticParams: { lang: string; slug: string }[] = [];
 
-  try {
-    const { data } = await supabase
-      .from('blog_posts')
-      .select('slug')
-      .eq('published', true);
-
-    if (data && data.length > 0) {
-      for (const post of data) {
-        if (post.slug) {
-          staticParams.push({ lang: 'tr', slug: post.slug });
-          staticParams.push({ lang: 'en', slug: post.slug });
-        }
-      }
+  for (const post of posts) {
+    if (post.slug) {
+      staticParams.push({ lang: 'tr', slug: post.slug });
+      staticParams.push({ lang: 'en', slug: post.slug });
     }
-  } catch {
-    // ignore
   }
 
   // Next.js output: 'export' requires at least one path definition per dynamic route
@@ -63,64 +102,9 @@ export default async function BlogPostDetailPage({ params }: BlogPostDetailPageP
 
   console.debug(`[public/blog/slug] Fetching article: ${slug} (${currentLang})`);
 
-  let post: BlogPostItem | null = null;
-  let otherPosts: BlogPostItem[] = [];
-
-  try {
-    const { data, error } = await supabase
-      .from('blog_posts')
-      .select('*')
-      .eq('slug', slug)
-      .eq('published', true)
-      .limit(1)
-      .single();
-
-    if (!error && data) {
-      post = {
-        id: data.id,
-        slug: data.slug,
-        title_tr: data.title_tr || '',
-        title_en: data.title_en || '',
-        excerpt_tr: data.excerpt_tr || '',
-        excerpt_en: data.excerpt_en || '',
-        content_tr: data.content_tr || '',
-        content_en: data.content_en || '',
-        cover_image: data.cover_image,
-        tags: data.tags || ['Tech'],
-        read_time_tr: '4 dk okuma',
-        read_time_en: '4 min read',
-        published: data.published,
-        featured: data.featured || false,
-        likes_count: data.likes_count || 0,
-        views_count: data.views_count || 0,
-        published_at: data.published_at || data.created_at,
-      };
-
-      // Query other published posts for recommendations
-      const { data: recs } = await supabase
-        .from('blog_posts')
-        .select('*')
-        .eq('published', true)
-        .neq('slug', slug)
-        .order('published_at', { ascending: false })
-        .limit(2);
-
-      if (recs) {
-        otherPosts = recs.map((r) => ({
-          id: r.id,
-          slug: r.slug,
-          title_tr: r.title_tr,
-          title_en: r.title_en,
-          excerpt_tr: r.excerpt_tr,
-          excerpt_en: r.excerpt_en,
-          published: r.published,
-          featured: r.featured || false,
-        }));
-      }
-    }
-  } catch (err) {
-    console.debug('[public/blog/slug] Supabase lookup error:', err);
-  }
+  const post = await getBlogPostBySlug(slug);
+  const allPosts = await getAllBlogPosts();
+  const otherPosts = allPosts.filter((p) => p.slug !== slug).slice(0, 2);
 
   // 404 state if article not found
   if (!post) {
@@ -129,7 +113,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostDetailPageP
         <Header lang={currentLang} dict={dict} />
         <div className="page-container" style={{ maxWidth: '800px' }}>
           <header className="page-header">
-            <span className="page-tag">[ 404 // NOT FOUND ]</span>
+            <span className="page-tag">[ 404 ]</span>
             <h1 className="page-title">{b.notFoundTitle}</h1>
             <p className="page-subtitle">{b.notFoundSubtitle}</p>
           </header>
@@ -151,6 +135,10 @@ export default async function BlogPostDetailPage({ params }: BlogPostDetailPageP
   const displayTitle = (currentLang === 'tr' ? post.title_tr : post.title_en) || post.title_tr || post.title_en || post.slug;
   const displayContent = (currentLang === 'tr' ? post.content_tr : post.content_en) || post.content_tr || post.content_en || '';
   const readTime = (currentLang === 'tr' ? post.read_time_tr : post.read_time_en) || (currentLang === 'tr' ? '4 dk okuma' : '4 min read');
+  const parsedMin = parseInt(readTime, 10);
+  const realMinutes = Number.isFinite(parsedMin) && parsedMin > 0
+    ? parsedMin
+    : Math.max(1, Math.ceil(displayContent.split(/\s+/).length / 180));
   const dateStr = post.published_at
     ? new Date(post.published_at).toLocaleDateString(currentLang === 'tr' ? 'tr-TR' : 'en-US', {
         year: 'numeric',
@@ -159,8 +147,36 @@ export default async function BlogPostDetailPage({ params }: BlogPostDetailPageP
       })
     : '';
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'TechArticle',
+    headline: displayTitle,
+    description: (currentLang === 'tr' ? post.excerpt_tr : post.excerpt_en) || '',
+    inLanguage: currentLang === 'tr' ? 'tr-TR' : 'en-US',
+    datePublished: post.published_at || undefined,
+    author: {
+      '@type': 'Person',
+      name: 'Buğra Dere',
+      alternateName: 'Tiyatrotist',
+      url: 'https://tiyatrotist.com.tr',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'TIYATROTIST',
+      url: 'https://tiyatrotist.com.tr',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://tiyatrotist.com.tr/icon.svg',
+      },
+    },
+  };
+
   return (
     <main className="main-container">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Top Editorial Reading Progress Bar */}
       <BlogReadingProgress />
 
@@ -189,8 +205,8 @@ export default async function BlogPostDetailPage({ params }: BlogPostDetailPageP
         {/* Article Header */}
         <header className="page-header" style={{ marginBottom: '2.5rem', gap: '0.75rem' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem' }}>
-            <span className="page-tag" style={{ color: 'rgba(255,255,255,0.45)' }}>
-              [ BLOG // {dateStr} // {readTime.toUpperCase()} ]
+            <span className="page-tag" style={{ color: 'rgba(255,255,255,0.5)' }}>
+              [ BLOG ] • {dateStr} • {readTime}
             </span>
             {post.featured && (
               <span
@@ -255,7 +271,8 @@ export default async function BlogPostDetailPage({ params }: BlogPostDetailPageP
               content={displayContent}
               title={displayTitle}
               lang={currentLang}
-              estimatedMinutes={4}
+              estimatedMinutes={realMinutes}
+              audioSrc={currentLang === 'tr' ? post.audio_url_tr : post.audio_url_en}
             />
 
             {/* Article Body (Rendered with MarkdownRenderer) */}
@@ -263,7 +280,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostDetailPageP
               <MarkdownRenderer content={displayContent} />
             </article>
 
-            {/* End of Transmission Architectural Divider */}
+            {/* Clean End of Article Divider */}
             <div
               style={{
                 display: 'flex',
@@ -294,7 +311,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostDetailPageP
                   textTransform: 'uppercase',
                 }}
               >
-                [ // {currentLang === 'tr' ? 'MAKALE SONU // KAYIT TAMAMLANDI' : 'END OF TRANSMISSION // ARCHIVE LOG CLOSED'} // ]
+                [ {currentLang === 'tr' ? 'MAKALE SONU' : 'END OF ESSAY'} ]
               </span>
             </div>
 
@@ -317,10 +334,10 @@ export default async function BlogPostDetailPage({ params }: BlogPostDetailPageP
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
                 <span>
-                  <strong style={{ color: '#ffffff', fontWeight: 600 }}>{currentLang === 'tr' ? 'Yazar:' : 'Author:'}</strong> Buğra // Tiyatrotist
+                  <strong style={{ color: '#ffffff', fontWeight: 600 }}>{currentLang === 'tr' ? 'Yazar:' : 'Author:'}</strong> Buğra Dere (Tiyatrotist)
                 </span>
                 <span>
-                  <strong style={{ color: '#ffffff', fontWeight: 600 }}>{currentLang === 'tr' ? 'Kayıt Tarihi:' : 'Recorded:'}</strong> {dateStr}
+                  <strong style={{ color: '#ffffff', fontWeight: 600 }}>{currentLang === 'tr' ? 'Tarih:' : 'Date:'}</strong> {dateStr}
                 </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
@@ -332,9 +349,6 @@ export default async function BlogPostDetailPage({ params }: BlogPostDetailPageP
                 </span>
               </div>
             </div>
-
-            {/* Official Google AdSense In-Article Banner */}
-            <BlogAdBanner lang={currentLang} variant="in-article" />
 
             {/* Newsletter Subscription Box */}
             <NewsletterSubscribe lang={currentLang} />

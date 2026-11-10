@@ -251,6 +251,10 @@ export const en: Dictionary = {
     speed: 'SPEED',
     readTime: 'MIN AUDIO STREAM',
     voiceNotice: 'Natural speech synthesis engine active.',
+    voiceLabel: 'VOICE TONE',
+    voiceAuto: 'Automatic (Most Natural)',
+    naturalBadge: 'NATURAL NEURAL ENGINE',
+    standardBadge: 'STANDARD ENGINE',
   },
 };
 

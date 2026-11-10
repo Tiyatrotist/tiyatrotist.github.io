@@ -1,6 +1,6 @@
 /**
  * TIYATROTIST — Hero
- * Main hero section — dot typography, entrance animation, independent dot particle interaction.
+ * Main hero section — enlarged dot typography, responsive mobile density, independent particle interaction.
  */
 
 'use client';
@@ -28,23 +28,48 @@ export default function Hero({ lang, dict }: HeroProps) {
     ? window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
     : false;
 
+  // Calculates responsive typography settings
+  const getTypographyConfig = useCallback(() => {
+    if (typeof window === 'undefined') {
+      return { fontSize: 150, gridSpacing: 5, isMobile: false, isTablet: false };
+    }
+
+    const width = window.innerWidth;
+    const isMobile = width < 768;
+    const isTablet = width >= 768 && width < 1024;
+
+    let fontSize: number;
+    let gridSpacing: number;
+
+    if (isMobile) {
+      // Dynamic fit for mobile screens: crisp, readable, dense dots without overflow
+      fontSize = Math.floor(Math.max(Math.min((width - 24) / 7.0, 68), 34));
+      gridSpacing = 3;
+    } else if (isTablet) {
+      fontSize = Math.floor(Math.min(width * 0.12, 120));
+      gridSpacing = 4;
+    } else {
+      // Desktop: significantly larger, impactful hero presence as requested
+      fontSize = Math.floor(Math.min(Math.max(width * 0.135, 145), 220));
+      gridSpacing = 5;
+    }
+
+    return { fontSize, gridSpacing, isMobile, isTablet };
+  }, []);
+
   const initEngine = useCallback(() => {
     if (initRef.current) return;
     if (!canvasRef.current) return;
     initRef.current = true;
 
     const canvas = canvasRef.current;
-    const isMobile = window.innerWidth < 768;
-    const isTablet = window.innerWidth < 1024;
-
-    const gridSpacing = isMobile ? 7 : isTablet ? 6 : 5;
-    const fontSize = isMobile ? 48 : isTablet ? 80 : 120;
-    const maxParticles = isMobile ? 1200 : isTablet ? 2000 : 3000;
+    const { fontSize, gridSpacing, isMobile, isTablet } = getTypographyConfig();
+    const maxParticles = isMobile ? 3500 : isTablet ? 4500 : 6000;
 
     const engine = new DotEngine({
       canvas,
       maxParticles,
-      baseSize: isMobile ? 1.2 : 1.5,
+      baseSize: isMobile ? 1.3 : 1.6,
       enableMouseInteraction: !isMobile,
       reducedMotion,
       useGlobalMouse: true,
@@ -55,16 +80,16 @@ export default function Hero({ lang, dict }: HeroProps) {
 
     const layout = textToDots('TIYATROTIST', {
       fontSize,
-      fontWeight: '700',
+      fontWeight: '800',
       gridSpacing,
-      alphaThreshold: 100,
+      alphaThreshold: isMobile ? 85 : 95,
     });
 
     const centerX = engine.getWidth() / 2;
     const centerY = engine.getHeight() * 0.42;
 
     engine.setTargets(layout.dots, centerX, centerY, true);
-    const ambientCount = isMobile ? 30 : isTablet ? 50 : 80;
+    const ambientCount = isMobile ? 25 : isTablet ? 50 : 80;
     engine.addAmbientParticles(ambientCount);
     engine.start();
 
@@ -73,7 +98,7 @@ export default function Hero({ lang, dict }: HeroProps) {
 
     setTimeout(() => setShowSubtitle(true), subtitleDelay);
     setTimeout(() => setShowCta(true), ctaDelay);
-  }, [reducedMotion]);
+  }, [reducedMotion, getTypographyConfig]);
 
   useEffect(() => {
     if (document.fonts) {
@@ -98,16 +123,13 @@ export default function Hero({ lang, dict }: HeroProps) {
       const engine = engineRef.current;
       engine.resize();
 
-      const isMobile = window.innerWidth < 768;
-      const isTablet = window.innerWidth < 1024;
-      const gridSpacing = isMobile ? 7 : isTablet ? 6 : 5;
-      const fontSize = isMobile ? 48 : isTablet ? 80 : 120;
+      const { fontSize, gridSpacing, isMobile } = getTypographyConfig();
 
       const layout = textToDots('TIYATROTIST', {
         fontSize,
-        fontWeight: '700',
+        fontWeight: '800',
         gridSpacing,
-        alphaThreshold: 100,
+        alphaThreshold: isMobile ? 85 : 95,
       });
 
       const centerX = engine.getWidth() / 2;
@@ -118,7 +140,7 @@ export default function Hero({ lang, dict }: HeroProps) {
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [getTypographyConfig]);
 
   return (
     <section id="home" className="hero" ref={containerRef}>

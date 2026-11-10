@@ -251,6 +251,10 @@ export const tr: Dictionary = {
     speed: 'HIZ',
     readTime: 'DK SESLİ AKIŞ',
     voiceNotice: 'Doğal Türkçe konuşma motoru aktiftir.',
+    voiceLabel: 'SES TONU',
+    voiceAuto: 'Otomatik (En Doğal)',
+    naturalBadge: 'DOĞAL NEURAL MOTOR',
+    standardBadge: 'STANDART MOTOR',
   },
 };
 

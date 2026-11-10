@@ -139,6 +139,7 @@ export interface AdminDict {
     breadcrumb: string;
     search: string;
     newPost: string;
+    studio: string;
     edit: string;
     delete: string;
     publish: string;
@@ -430,6 +431,7 @@ export const adminTr: AdminDict = {
     breadcrumb: 'İçerik / Blog',
     search: 'Yazı ara… (başlık veya slug)',
     newPost: 'Yeni Yazı',
+    studio: '✦ AI Blog Studio',
     edit: 'Düzenle',
     delete: 'Sil',
     publish: 'Yayınla',
@@ -721,6 +723,7 @@ export const adminEn: AdminDict = {
     breadcrumb: 'Content / Blog',
     search: 'Search posts… (title or slug)',
     newPost: 'New Post',
+    studio: '✦ AI Blog Studio',
     edit: 'Edit',
     delete: 'Delete',
     publish: 'Publish',

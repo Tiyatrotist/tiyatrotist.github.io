@@ -248,6 +248,10 @@ export interface Dictionary {
     speed: string;
     readTime: string;
     voiceNotice: string;
+    voiceLabel?: string;
+    voiceAuto?: string;
+    naturalBadge?: string;
+    standardBadge?: string;
   };
 }
 

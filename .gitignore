@@ -24,11 +24,18 @@
 .DS_Store
 *.pem
 
-# debug
+# debug & logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
+
+# binaries & build outputs
+*.exe
+*.dll
+*.obj
+_media-inbox/
 
 # env files (can opt-in for committing if needed)
 .env*

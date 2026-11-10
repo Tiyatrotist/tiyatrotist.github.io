@@ -15,7 +15,7 @@ export default function ContactSection({ section, locale }: SectionProps) {
   const { content } = section;
   const tag = locale === 'tr' ? content.tag_tr : content.tag_en;
   const title = locale === 'tr' ? content.title_tr : content.title_en;
-  const email = content.contact_email || 'contact@tiyatrotist.com';
+  const email = content.contact_email || 'iletisim@tiyatrotist.com.tr';
   const links = content.contact_links || [
     { label: 'GitHub', url: 'https://github.com/Tiyatrotist' },
     { label: 'X / Twitter', url: 'https://x.com/Tiyatrotist' },

@@ -183,6 +183,31 @@ export default function Header({ lang, dict }: HeaderProps) {
           >
             <span>⌘K</span>
           </button>
+
+          {/* Hire Me / Beni İşe Al Solid White Button */}
+          <Link
+            href={`/${lang}/hire`}
+            className="site-header__hire-btn"
+            data-cursor="expand"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: '#ffffff',
+              color: '#000000',
+              borderRadius: '3px',
+              padding: '0.28rem 0.65rem',
+              fontFamily: 'ui-monospace, monospace',
+              fontSize: '0.68rem',
+              fontWeight: 700,
+              letterSpacing: '0.06em',
+              textDecoration: 'none',
+              marginLeft: '0.6rem',
+              transition: 'opacity 0.2s ease',
+            }}
+          >
+            {lang === 'tr' ? 'BENİ İŞE AL' : 'HIRE ME'}
+          </Link>
         </nav>
 
         {/* Mobile Hamburger Button */}
@@ -246,6 +271,29 @@ export default function Header({ lang, dict }: HeaderProps) {
               EN
             </Link>
           </div>
+
+          {/* Hire Me Button for Mobile */}
+          <Link
+            href={`/${lang}/hire`}
+            onClick={() => setMobileMenuOpen(false)}
+            style={{
+              marginTop: '1.25rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: '#ffffff',
+              color: '#000000',
+              borderRadius: '4px',
+              padding: '0.65rem 1.25rem',
+              fontFamily: 'ui-monospace, monospace',
+              fontSize: '0.82rem',
+              fontWeight: 700,
+              letterSpacing: '0.05em',
+              textDecoration: 'none',
+            }}
+          >
+            <span>{lang === 'tr' ? 'BENİ İŞE AL' : 'HIRE ME'}</span>
+          </Link>
 
           {/* Command Palette Button for Mobile */}
           <button

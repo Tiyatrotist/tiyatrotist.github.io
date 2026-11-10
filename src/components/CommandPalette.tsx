@@ -134,17 +134,65 @@ export default function CommandPalette() {
           setIsOpen(false);
         },
       },
+      {
+        id: 'page-hire',
+        category: 'PAGES',
+        title: currentLang === 'tr' ? 'Beni İşe Al / Freelance' : 'Hire Me / Freelance',
+        subtitle: currentLang === 'tr' ? 'Öğrenci durumu, freelance iş birliği ve detaylar' : 'Student status, freelance collaboration & details',
+        badge: 'CAREER',
+        keywords: ['hire', 'işe al', 'freelance', 'kariyer', 'iş', 'öğrenci'],
+        action: () => {
+          router.push(`/${currentLang}/hire`);
+          setIsOpen(false);
+        },
+      },
 
       // PROJECTS
       {
-        id: 'project-typeflow',
+        id: 'project-edith',
         category: 'PROJECTS',
-        title: 'TypeFlow',
-        subtitle: 'Minimalist Kinetic Typography & Speed Instrument',
-        badge: 'PROJECT',
-        keywords: ['typeflow', 'typing', 'hızlı yazma', 'klavye'],
+        title: 'E.D.I.T.H',
+        subtitle: currentLang === 'tr' ? 'Kişisel ve otonom yapay zekâ ajanı' : 'Personal & autonomous AI agent framework',
+        badge: 'AI AGENT',
+        keywords: ['edith', 'ai', 'agent', 'yapay zeka', 'python', 'llm'],
         action: () => {
-          router.push(`/${currentLang}/projects/typeflow`);
+          router.push(`/${currentLang}/projects/edith`);
+          setIsOpen(false);
+        },
+      },
+      {
+        id: 'project-etapkitap',
+        category: 'PROJECTS',
+        title: 'EtapKitap',
+        subtitle: currentLang === 'tr' ? 'Pardus ETAP 23 etkileşimli ders kitabı motoru' : 'Interactive textbook engine for smart boards (C++20/Qt6)',
+        badge: 'C++ / QT',
+        keywords: ['etap', 'kitap', 'pardus', 'c++', 'qt', 'akıllı tahta'],
+        action: () => {
+          router.push(`/${currentLang}/projects/etapkitap`);
+          setIsOpen(false);
+        },
+      },
+      {
+        id: 'project-openpet',
+        category: 'PROJECTS',
+        title: 'OpenPet',
+        subtitle: currentLang === 'tr' ? 'Windows 11 için yerel masaüstü yol arkadaşı' : 'Desktop companion for Windows 11',
+        badge: 'DESKTOP',
+        keywords: ['openpet', 'pet', 'desktop', 'companion', 'windows'],
+        action: () => {
+          router.push(`/${currentLang}/projects/openpet`);
+          setIsOpen(false);
+        },
+      },
+      {
+        id: 'project-explorer-terminal',
+        category: 'PROJECTS',
+        title: 'explorer-terminal',
+        subtitle: currentLang === 'tr' ? 'Dosya Gezgini içi entegre terminal modu' : 'File Explorer docked terminal mod (Windhawk)',
+        badge: 'WINDHAWK',
+        keywords: ['explorer', 'terminal', 'windhawk', 'windows', 'c++'],
+        action: () => {
+          router.push(`/${currentLang}/projects/explorer-terminal`);
           setIsOpen(false);
         },
       },
@@ -152,54 +200,16 @@ export default function CommandPalette() {
         id: 'project-bookos',
         category: 'PROJECTS',
         title: 'BookOS',
-        subtitle: 'The Minimalist Web-Based Reading & Publishing System',
-        badge: 'PROJECT',
-        keywords: ['bookos', 'kitap', 'reader', 'publishing'],
+        subtitle: currentLang === 'tr' ? 'Minimalist okuma ve çalışma alanı konsepti' : 'Minimalist reading & workspace concept',
+        badge: 'WORKSPACE',
+        keywords: ['bookos', 'kitap', 'reader', 'publishing', 'workspace'],
         action: () => {
           router.push(`/${currentLang}/projects/bookos`);
           setIsOpen(false);
         },
       },
-      {
-        id: 'project-sandbox',
-        category: 'PROJECTS',
-        title: 'Particle Sandbox',
-        subtitle: currentLang === 'tr' ? 'İnteraktif monokrom parçacık fiziği laboratuvarı' : 'Interactive monochrome particle physics laboratory',
-        badge: 'PROJECT',
-        keywords: ['sandbox', 'kum', 'fizik', 'physics', 'partikül', 'canvas', 'proje'],
-        action: () => {
-          router.push(`/${currentLang}/projects/sandbox`);
-          setIsOpen(false);
-        },
-      },
-
-      // LABS & GAMES
-      {
-        id: 'lab-breaker',
-        category: 'LABS',
-        title: 'Dot Breaker',
-        subtitle: currentLang === 'tr' ? 'Monokrom piksel kırma oyunu' : 'Monochrome arcade dot breaker',
-        badge: 'GAME',
-        keywords: ['game', 'oyun', 'breaker', 'dot breaker', 'brick'],
-        action: () => {
-          window.dispatchEvent(new CustomEvent('open-dot-breaker'));
-          setIsOpen(false);
-        },
-      },
 
       // ACTIONS
-      {
-        id: 'action-terminal',
-        category: 'ACTIONS',
-        title: currentLang === 'tr' ? 'Monokrom Terminali Aç (~ / Ctrl+~)' : 'Open Monochrome Terminal (~ / Ctrl+~)',
-        subtitle: currentLang === 'tr' ? 'Geliştiriciler için interaktif CLI konsolu' : 'Interactive CLI console for developers',
-        badge: 'CLI',
-        keywords: ['terminal', 'cli', 'bash', 'konsol', 'komut'],
-        action: () => {
-          window.dispatchEvent(new CustomEvent('open-tiyatrotist-terminal'));
-          setIsOpen(false);
-        },
-      },
       {
         id: 'action-lang',
         category: 'ACTIONS',
@@ -214,18 +224,6 @@ export default function CommandPalette() {
           const segments = pathname.split('/').filter(Boolean);
           segments[0] = target;
           router.push('/' + segments.join('/'));
-          setIsOpen(false);
-        },
-      },
-      {
-        id: 'action-pulse',
-        category: 'ACTIONS',
-        title: currentLang === 'tr' ? 'Kuantum Partikül Nabzı (Matrix Pulse)' : 'Trigger Quantum Particle Pulse',
-        subtitle: currentLang === 'tr' ? 'Arka plandaki tüm noktacıkları dalgalandırır' : 'Distorts background dot grid',
-        badge: 'EFFECT',
-        keywords: ['pulse', 'matrix', 'partikül', 'dalga', 'animasyon'],
-        action: () => {
-          window.dispatchEvent(new CustomEvent('aperture-pulse'));
           setIsOpen(false);
         },
       },

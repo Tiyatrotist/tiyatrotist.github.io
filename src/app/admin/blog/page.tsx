@@ -236,9 +236,22 @@ CREATE POLICY "Authenticated users full access to blog posts" ON public.blog_pos
           onChange={(e) => setSearch(e.target.value)}
           aria-label={dict.blog.search}
         />
-        <Link href="/admin/blog/new" className="admin-btn admin-btn-primary">
-          + {dict.blog.newPost}
-        </Link>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          <Link
+            href="/admin/blog/studio"
+            className="admin-btn admin-btn-secondary"
+            style={{
+              borderColor: 'rgba(255, 255, 255, 0.4)',
+              background: 'rgba(255, 255, 255, 0.05)',
+              color: '#ffffff',
+            }}
+          >
+            {dict.blog.studio}
+          </Link>
+          <Link href="/admin/blog/new" className="admin-btn admin-btn-primary">
+            + {dict.blog.newPost}
+          </Link>
+        </div>
       </div>
 
       {/* Posts Table or Clean Empty State */}
@@ -248,9 +261,21 @@ CREATE POLICY "Authenticated users full access to blog posts" ON public.blog_pos
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem', marginBottom: '1.25rem' }}>
             {dict.blog.noPostsDesc}
           </p>
-          <Link href="/admin/blog/new" className="admin-btn admin-btn-primary">
-            + {dict.blog.newPost}
-          </Link>
+          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+            <Link
+              href="/admin/blog/studio"
+              className="admin-btn admin-btn-secondary"
+              style={{
+                borderColor: 'rgba(255, 255, 255, 0.4)',
+                background: 'rgba(255, 255, 255, 0.05)',
+              }}
+            >
+              {dict.blog.studio}
+            </Link>
+            <Link href="/admin/blog/new" className="admin-btn admin-btn-primary">
+              + {dict.blog.newPost}
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="admin-table-wrap">

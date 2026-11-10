@@ -179,12 +179,22 @@ export default function Sidebar({ dict, open, onClose }: SidebarProps) {
             </Link>
             <Link
               href="/admin/blog"
-              className={`admin-nav-link ${isLinkActive('/admin/blog') ? 'active' : ''}`}
+              className={`admin-nav-link ${isLinkActive('/admin/blog') && pathname !== '/admin/blog/studio' ? 'active' : ''}`}
               onClick={onClose}
-              aria-current={isLinkActive('/admin/blog') ? 'page' : undefined}
+              aria-current={pathname === '/admin/blog' ? 'page' : undefined}
             >
               {icons.blog}
               <span>{dict.nav.blog}</span>
+            </Link>
+            <Link
+              href="/admin/blog/studio"
+              className={`admin-nav-link ${pathname === '/admin/blog/studio' ? 'active' : ''}`}
+              onClick={onClose}
+              style={{ paddingLeft: '2.4rem', fontSize: '0.75rem', opacity: pathname === '/admin/blog/studio' ? 1 : 0.7 }}
+              aria-current={pathname === '/admin/blog/studio' ? 'page' : undefined}
+            >
+              <span style={{ fontSize: '0.75rem' }}>↳</span>
+              <span>AI Blog Studio</span>
             </Link>
             <Link
               href="/admin/about"

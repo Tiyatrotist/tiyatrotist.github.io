@@ -55,11 +55,7 @@ export default function ProjectsListPage() {
         .order('created_at', { ascending: false });
 
       if (projErr) {
-        console.error('[admin/projects] Projects query error:', projErr);
-        setError(`Veritabanı hatası: ${projErr.message}`);
-        setProjects([]);
-        setLoading(false);
-        return;
+        console.warn('[admin/projects] Supabase error, falling back to local system projects:', projErr);
       }
 
       const allProjects = projData || [];
@@ -124,8 +120,20 @@ export default function ProjectsListPage() {
       console.debug('[admin/projects] Total merged projects for admin view:', mapped.length, mapped);
       setProjects(mapped);
     } catch (err: unknown) {
-      console.error('[admin/projects] Unexpected fetch error:', err);
-      setError(dict.common.error);
+      console.warn('[admin/projects] Network or DB error, using local fallback:', err);
+      const unifiedSystemProjects = getUnifiedProjects();
+      setProjects(
+        unifiedSystemProjects.map((sp) => ({
+          id: sp.id,
+          slug: sp.slug,
+          name: sp.name,
+          published: sp.published,
+          featured: sp.featured,
+          created_at: sp.created_at,
+          updated_at: sp.updated_at,
+          latestRelease: sp.latestRelease,
+        }))
+      );
     } finally {
       setLoading(false);
     }

@@ -1,20 +1,18 @@
 /**
  * BOOKOS — Main Product Microsite Container Component
- * Renders the independent BookOS operating system microsite experience.
+ *
+ * Renders the state-of-the-art 3D interactive scrollytelling experience:
+ * - Lenis momentum scrolling
+ * - GSAP ScrollTrigger timeline scrubbing
+ * - Three.js 3D monolithic device transformations
+ * - Phase 1 (Mobile & Web) + Phase 2 (Pardus-Surpassing Smart Board OS) roadmap.
  */
 
 'use client';
 
 import { useEffect } from 'react';
 import { Locale, Dictionary } from '@/dictionaries';
-import BookOSHeader from './BookOSHeader';
-import BookOSHero from './BookOSHero';
-import BookOSShowcase from './BookOSShowcase';
-import BookOSFeatures from './BookOSFeatures';
-import BookOSTechnical from './BookOSTechnical';
-import BookOSReleases from './BookOSReleases';
-import BookOSDownload from './BookOSDownload';
-import BookOSFooter from './BookOSFooter';
+import BookOSScrollExperience from './BookOSScrollExperience';
 import { recordProjectEvent } from '@/lib/project-analytics';
 import '@/styles/bookos.css';
 
@@ -29,24 +27,11 @@ export default function BookOSMicrosite({ lang, dict }: BookOSMicrositeProps) {
     recordProjectEvent({
       projectSlug: 'bookos',
       event_type: 'page_view',
-      event_name: 'BookOS Çalışma Alanı Ziyareti',
+      event_name: 'BookOS 3D Scrollytelling Ziyareti',
       is_guest: true,
       metadata: { lang, timestamp: Date.now() },
     });
   }, [lang]);
 
-  return (
-    <div className="bookos-microsite">
-      <BookOSHeader lang={lang} dict={dict} />
-      <main>
-        <BookOSHero lang={lang} dict={dict} />
-        <BookOSShowcase dict={dict} />
-        <BookOSFeatures dict={dict} />
-        <BookOSTechnical dict={dict} />
-        <BookOSReleases dict={dict} />
-        <BookOSDownload dict={dict} />
-      </main>
-      <BookOSFooter lang={lang} dict={dict} />
-    </div>
-  );
+  return <BookOSScrollExperience lang={lang} dict={dict} />;
 }

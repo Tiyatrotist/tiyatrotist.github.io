@@ -27,7 +27,12 @@ export default async function ContactPage({ params }: ContactPageProps) {
             <div>
               <span className="page-tag">{c.directLabel}</span>
               <p style={{ marginTop: '0.5rem', fontSize: '1.25rem', color: '#ffffff' }}>
-                contact@tiyatrotist.com
+                <a
+                  href="mailto:iletisim@tiyatrotist.com.tr"
+                  style={{ color: '#ffffff', textDecoration: 'underline', textUnderlineOffset: '6px' }}
+                >
+                  iletisim@tiyatrotist.com.tr
+                </a>
               </p>
             </div>
 

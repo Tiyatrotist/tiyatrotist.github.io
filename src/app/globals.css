@@ -1223,3 +1223,68 @@ button {
   }
 }
 
+/* ─── BLOG SKYSCRAPER GUTTERS & EDITORIAL ARCHITECTURE ──────── */
+.blog-skyscraper-layout {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  margin: 0 auto;
+}
+
+.blog-detail-container {
+  flex: 1 1 1080px;
+  min-width: 0;
+  max-width: 1080px;
+}
+
+.blog-skyscraper-gutter {
+  display: none; /* hidden on mobile, tablet, and compact laptop screens */
+  width: 160px;
+  flex-shrink: 0;
+  margin-top: 8rem; /* Aligns with .page-container top padding */
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.blog-skyscraper-gutter--left {
+  margin-right: 1.5rem;
+}
+
+.blog-skyscraper-gutter--right {
+  margin-left: 1.5rem;
+}
+
+.blog-skyscraper-sticky {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 84px; /* Safely clears the 64px fixed header with 20px headroom */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+/* Tablet & Standard Laptop (1280px - 1439px): compact 120px-130px skyscraper */
+@media (min-width: 1280px) and (max-width: 1439px) {
+  .blog-skyscraper-gutter {
+    display: block;
+    width: 130px;
+  }
+  .blog-skyscraper-gutter--left {
+    margin-right: 1rem;
+  }
+  .blog-skyscraper-gutter--right {
+    margin-left: 1rem;
+  }
+}
+
+/* Wide Desktop & High-Resolution Displays (>= 1440px): full 160px wide skyscraper */
+@media (min-width: 1440px) {
+  .blog-skyscraper-gutter {
+    display: block;
+    width: 160px;
+  }
+}
+

@@ -1,6 +1,6 @@
 /**
  * TIYATROTIST — Footer
- * Minimal monochrome footer with localized internal navigation, social links, and hidden Aperture Terminal trigger.
+ * Clean monochrome footer with localized internal navigation and social links.
  */
 
 'use client';
@@ -28,12 +28,6 @@ export default function Footer({ lang, dict }: FooterProps) {
     { label: dict.nav.blog, path: `/${lang}/blog` },
     { label: dict.nav.contact, path: `/${lang}/contact` },
   ];
-
-  const triggerTerminal = () => {
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('open-tiyatrotist-terminal'));
-    }
-  };
 
   return (
     <footer className="site-footer">
@@ -87,23 +81,6 @@ export default function Footer({ lang, dict }: FooterProps) {
           >
             [ RSS ]
           </a>
-          <button
-            onClick={triggerTerminal}
-            style={{
-              fontFamily: 'monospace',
-              fontSize: '0.65rem',
-              color: 'rgba(255, 255, 255, 0.35)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              padding: '0.15rem 0.4rem',
-              borderRadius: '3px',
-              cursor: 'pointer',
-              background: 'none',
-              transition: 'all 0.25s ease',
-            }}
-            title="Monokrom Terminali Aç (~ / Ctrl+~)"
-          >
-            [ SYS_CLI ]
-          </button>
           <Link
             href="/admin"
             style={{

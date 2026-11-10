@@ -91,15 +91,17 @@ export function textToDots(
   const dots: Array<{ x: number; y: number }> = [];
 
   for (let y = 0; y < canvasHeight; y += cfg.gridSpacing) {
+    const pixelY = Math.floor(y);
     for (let x = 0; x < canvasWidth; x += cfg.gridSpacing) {
-      const index = (y * canvasWidth + x) * 4;
-      const alpha = pixels[index + 3]; // Alpha kanalı
+      const pixelX = Math.floor(x);
+      const index = (pixelY * canvasWidth + pixelX) * 4;
+      const alpha = pixels[index + 3] || 0; // Alpha kanalı
 
       if (alpha >= cfg.alphaThreshold) {
         // Koordinatları merkezle (0,0 metin merkezinde olsun)
         dots.push({
-          x: x - canvasWidth / 2,
-          y: y - canvasHeight / 2,
+          x: pixelX - canvasWidth / 2,
+          y: pixelY - canvasHeight / 2,
         });
       }
     }

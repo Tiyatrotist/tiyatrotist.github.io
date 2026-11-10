@@ -12,6 +12,8 @@ export interface BlogPostItem {
   content_tr?: string;
   content_en?: string;
   cover_image?: string;
+  audio_url_tr?: string;
+  audio_url_en?: string;
   category?: string;
   tags?: string[];
   read_time_tr?: string;

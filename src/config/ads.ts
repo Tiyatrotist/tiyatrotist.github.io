@@ -25,6 +25,8 @@ export interface GoogleAdSenseConfig {
     inFeed: string;
     blogInArticle: string;
     blogInFeed: string;
+    blogSkyscraperLeft: string;
+    blogSkyscraperRight: string;
   };
 
   /**
@@ -45,6 +47,8 @@ export const GOOGLE_ADSENSE_CONFIG: GoogleAdSenseConfig = {
     inFeed: '7364529180',
     blogInArticle: '6453829102',
     blogInFeed: '5342718091',
+    blogSkyscraperLeft: '4829103756',
+    blogSkyscraperRight: '3918274650',
   },
   testMode: process.env.NODE_ENV !== 'production',
 };
@@ -112,4 +116,30 @@ export function getBlogInFeedSlot(): string {
     }
   }
   return GOOGLE_ADSENSE_CONFIG.slots.blogInFeed;
+}
+
+/**
+ * Get active AdSense slot for blog skyscraper left unit
+ */
+export function getBlogSkyscraperLeftSlot(): string {
+  if (typeof window !== 'undefined') {
+    const customSlot = localStorage.getItem('blog_ads_slot_skyscraper_left');
+    if (customSlot && customSlot.trim().length > 4) {
+      return customSlot.trim();
+    }
+  }
+  return GOOGLE_ADSENSE_CONFIG.slots.blogSkyscraperLeft;
+}
+
+/**
+ * Get active AdSense slot for blog skyscraper right unit
+ */
+export function getBlogSkyscraperRightSlot(): string {
+  if (typeof window !== 'undefined') {
+    const customSlot = localStorage.getItem('blog_ads_slot_skyscraper_right');
+    if (customSlot && customSlot.trim().length > 4) {
+      return customSlot.trim();
+    }
+  }
+  return GOOGLE_ADSENSE_CONFIG.slots.blogSkyscraperRight;
 }

@@ -311,6 +311,114 @@ export default function MarkdownRenderer({ content, className }: MarkdownRendere
             return;
           }
 
+          // Markdown Image: ![alt](url)
+          const imgMatch = trimmed.match(/^!\[(.*?)\]\((.*?)\)$/);
+          if (imgMatch) {
+            flushQuote(`quote-${blockIndex}-${lineIdx}`);
+            flushList(`list-${blockIndex}-${lineIdx}`);
+            const altText = imgMatch[1];
+            const imgSrc = imgMatch[2];
+            const isPlaceholder = imgSrc.startsWith('PLACEHOLDER_') || imgSrc === '#' || !imgSrc;
+
+            if (isPlaceholder) {
+              const isScreenshot = altText.toUpperCase().includes('SCREENSHOT') || altText.toUpperCase().includes('EKRAN');
+              elements.push(
+                <div
+                  key={`img-placeholder-${blockIndex}-${lineIdx}`}
+                  style={{
+                    margin: '2rem 0',
+                    padding: '2rem 1.5rem',
+                    borderRadius: '6px',
+                    border: '1px dashed rgba(255, 255, 255, 0.2)',
+                    background: 'rgba(255, 255, 255, 0.015)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.6rem',
+                    textAlign: 'center',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                      fontSize: '0.65rem',
+                      letterSpacing: '0.2em',
+                      textTransform: 'uppercase',
+                      color: isScreenshot ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      padding: '0.2rem 0.6rem',
+                      borderRadius: '2px',
+                    }}
+                  >
+                    [ {isScreenshot ? 'EKRAN GÖRÜNTÜSÜ BEKLENİYOR' : 'BANANA 2 / AI GÖRSELİ BEKLENİYOR'} ]
+                  </span>
+                  <div
+                    style={{
+                      fontSize: '0.85rem',
+                      fontWeight: 500,
+                      color: '#ffffff',
+                      maxWidth: '520px',
+                    }}
+                  >
+                    {altText}
+                  </div>
+                  <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.4)' }}>
+                    Görsel Blog Studio panelinden yüklendiğinde burada canlı olarak belirecektir.
+                  </span>
+                </div>
+              );
+            } else {
+              elements.push(
+                <figure
+                  key={`img-${blockIndex}-${lineIdx}`}
+                  style={{
+                    margin: '2rem 0',
+                    borderRadius: '6px',
+                    overflow: 'hidden',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    background: '#0d0d0d',
+                  }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={imgSrc}
+                    alt={altText}
+                    style={{
+                      width: '100%',
+                      height: 'auto',
+                      display: 'block',
+                      maxHeight: '720px',
+                      objectFit: 'contain',
+                      background: '#050505',
+                    }}
+                    loading="lazy"
+                  />
+                  {altText && (
+                    <figcaption
+                      style={{
+                        padding: '0.6rem 1rem',
+                        fontSize: '0.75rem',
+                        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                        letterSpacing: '0.05em',
+                        color: 'rgba(255, 255, 255, 0.55)',
+                        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                        background: 'rgba(255, 255, 255, 0.02)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                      }}
+                    >
+                      <span style={{ color: 'rgba(255, 255, 255, 0.35)', fontWeight: 600 }}>[ FIG // ]</span>
+                      <span>{altText}</span>
+                    </figcaption>
+                  )}
+                </figure>
+              );
+            }
+            return;
+          }
+
           // H1
           if (line.startsWith('# ')) {
             flushQuote(`quote-${blockIndex}-${lineIdx}`);

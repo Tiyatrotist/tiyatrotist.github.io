@@ -1,7 +1,6 @@
 /**
- * BOOKOS — Release Channels Section
- * Visual channels: Stable (v1.2.0), Beta (v1.3.0-b2), Experimental (v1.4.0-nightly).
- * Prepared for future GitHub Release API integrations.
+ * BOOKOS — Release Channels & Roadmap Section
+ * Shows Development Roadmap: Phase 1 (Mobile & Web), Phase 2 (PC & Smart Boards / Pardus-surpassing), Phase 3 (Ecosystem).
  */
 
 'use client';
@@ -18,25 +17,25 @@ export default function BookOSReleases({ dict }: BookOSReleasesProps) {
   const channels = [
     {
       channel: b.stableTitle,
-      version: 'v1.2.0',
+      version: 'PHASE 01',
       badgeClass: 'bookos-release-badge--stable',
-      badgeText: 'RECOMMENDED',
+      badgeText: 'IN PROGRESS',
       desc: b.stableDesc,
       active: true,
     },
     {
       channel: b.betaTitle,
-      version: 'v1.3.0-b2',
+      version: 'PHASE 02',
       badgeClass: 'bookos-release-badge--beta',
-      badgeText: 'PRE-RELEASE',
+      badgeText: 'PLANNED',
       desc: b.betaDesc,
       active: false,
     },
     {
       channel: b.expTitle,
-      version: 'v1.4.0-nightly',
+      version: 'PHASE 03',
       badgeClass: 'bookos-release-badge--exp',
-      badgeText: 'NIGHTLY',
+      badgeText: 'VISION',
       desc: b.expDesc,
       active: false,
     },
@@ -59,9 +58,7 @@ export default function BookOSReleases({ dict }: BookOSReleasesProps) {
               <span className="bookos-release-channel">{ch.channel}</span>
               <span className={`bookos-release-badge ${ch.badgeClass}`}>{ch.badgeText}</span>
             </div>
-            <span style={{ fontFamily: 'var(--bookos-mono)', fontSize: '1.1rem', color: 'var(--bookos-orange)' }}>
-              {ch.version}
-            </span>
+            <div className="bookos-release-version">{ch.version}</div>
             <p className="bookos-release-desc">{ch.desc}</p>
           </div>
         ))}

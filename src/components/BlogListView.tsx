@@ -2,14 +2,13 @@
  * TIYATROTIST — Interactive Blog List View
  *
  * Provides real-time instant search, category filters,
- * read-time indicators, and pure monochrome cards.
+ * accurate read-time indicators, and pure monochrome cards.
  */
 
 'use client';
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
-import BlogAdBanner from '@/components/blog/BlogAdBanner';
 import NewsletterSubscribe from '@/components/NewsletterSubscribe';
 import { Locale, Dictionary } from '@/dictionaries';
 import { BlogPostItem } from '@/types/blog';
@@ -114,7 +113,7 @@ export default function BlogListView({ posts, lang, dict }: BlogListViewProps) {
             onClick={() => setSelectedTag('all')}
             data-cursor="expand"
           >
-            [ {b.filterAll} ]
+            {b.filterAll} ({posts.length})
           </button>
 
           {allTags.map((tag) => (
@@ -158,7 +157,7 @@ export default function BlogListView({ posts, lang, dict }: BlogListViewProps) {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {filtered.map((post, idx) => {
+          {filtered.map((post) => {
             const displayTitle = (lang === 'tr' ? post.title_tr : post.title_en) || post.title_tr || post.title_en || post.slug;
             const displayExcerpt = (lang === 'tr' ? post.excerpt_tr : post.excerpt_en) || post.excerpt_tr || post.excerpt_en || '';
             const readTime = (lang === 'tr' ? post.read_time_tr : post.read_time_en) || (lang === 'tr' ? '4 dk okuma' : '4 min read');
@@ -171,126 +170,116 @@ export default function BlogListView({ posts, lang, dict }: BlogListViewProps) {
               : '';
 
             return (
-              <React.Fragment key={post.slug}>
-                <Link
-                  href={`/${lang}/blog/${post.slug}`}
-                  className="blog-card-item"
-                  data-cursor="expand"
+              <Link
+                key={post.slug}
+                href={`/${lang}/blog/${post.slug}`}
+                className="blog-card-item"
+                data-cursor="expand"
+                style={{
+                  display: 'block',
+                  textDecoration: 'none',
+                  padding: '2rem',
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: post.featured ? '1px solid rgba(255, 255, 255, 0.22)' : '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '6px',
+                  transition: 'border-color 0.3s ease, background 0.3s ease, transform 0.2s ease',
+                }}
+              >
+                {/* Meta Top Bar */}
+                <div
                   style={{
-                    display: 'block',
-                    textDecoration: 'none',
-                    padding: '2rem',
-                    background: 'rgba(255, 255, 255, 0.02)',
-                    border: post.featured ? '1px solid rgba(255, 255, 255, 0.22)' : '1px solid rgba(255, 255, 255, 0.08)',
-                    borderRadius: '6px',
-                    transition: 'border-color 0.3s ease, background 0.3s ease, transform 0.2s ease',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '0.5rem',
+                    marginBottom: '0.85rem',
                   }}
                 >
-                  {/* Meta Top Bar */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.08em' }}>
+                      {dateStr}
+                    </span>
+                    <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: 'rgba(255,255,255,0.35)' }}>
+                      • {readTime}
+                    </span>
+                  </div>
+
+                  {post.featured && (
+                    <span
+                      style={{
+                        fontSize: '0.65rem',
+                        fontFamily: 'monospace',
+                        letterSpacing: '0.12em',
+                        color: '#000000',
+                        background: '#ffffff',
+                        padding: '0.15rem 0.5rem',
+                        borderRadius: '2px',
+                        fontWeight: 700,
+                      }}
+                    >
+                      [ {b.featured.toUpperCase()} ]
+                    </span>
+                  )}
+                </div>
+
+                {/* Title */}
+                <h2
+                  style={{
+                    fontSize: '1.45rem',
+                    fontWeight: 500,
+                    color: '#ffffff',
+                    marginBottom: '0.75rem',
+                    lineHeight: 1.35,
+                    letterSpacing: '-0.01em',
+                  }}
+                >
+                  {displayTitle}
+                </h2>
+
+                {/* Excerpt */}
+                {displayExcerpt && (
+                  <p
+                    style={{
+                      fontSize: '0.85rem',
+                      color: 'rgba(255, 255, 255, 0.65)',
+                      lineHeight: 1.6,
+                      marginBottom: '1.25rem',
+                    }}
+                  >
+                    {displayExcerpt}
+                  </p>
+                )}
+
+                {/* Tags Bottom Bar */}
+                {post.tags && post.tags.length > 0 && (
                   <div
                     style={{
                       display: 'flex',
                       flexWrap: 'wrap',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: '0.5rem',
-                      marginBottom: '0.85rem',
+                      gap: '0.4rem',
+                      paddingTop: '0.85rem',
+                      borderTop: '1px solid rgba(255, 255, 255, 0.05)',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-                      <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: 'rgba(255,255,255,0.45)', letterSpacing: '0.1em' }}>
-                        {dateStr}
-                      </span>
-                      <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: 'rgba(255,255,255,0.3)' }}>
-                        // {readTime}
-                      </span>
-                    </div>
-
-                    {post.featured && (
+                    {post.tags.map((tag) => (
                       <span
+                        key={tag}
                         style={{
                           fontSize: '0.65rem',
                           fontFamily: 'monospace',
-                          letterSpacing: '0.12em',
-                          color: '#000000',
-                          background: '#ffffff',
-                          padding: '0.15rem 0.5rem',
+                          color: 'rgba(255, 255, 255, 0.4)',
+                          background: 'rgba(255, 255, 255, 0.03)',
+                          padding: '0.15rem 0.45rem',
                           borderRadius: '2px',
-                          fontWeight: 700,
                         }}
                       >
-                        [ {b.featured.toUpperCase()} ]
+                        #{tag}
                       </span>
-                    )}
+                    ))}
                   </div>
-
-                  {/* Title */}
-                  <h2
-                    style={{
-                      fontSize: '1.45rem',
-                      fontWeight: 500,
-                      color: '#ffffff',
-                      marginBottom: '0.75rem',
-                      lineHeight: 1.35,
-                      letterSpacing: '-0.01em',
-                    }}
-                  >
-                    {displayTitle}
-                  </h2>
-
-                  {/* Excerpt */}
-                  {displayExcerpt && (
-                    <p
-                      style={{
-                        fontSize: '0.85rem',
-                        color: 'rgba(255, 255, 255, 0.65)',
-                        lineHeight: 1.6,
-                        marginBottom: '1.25rem',
-                      }}
-                    >
-                      {displayExcerpt}
-                    </p>
-                  )}
-
-                  {/* Tags Bottom Bar */}
-                  {post.tags && post.tags.length > 0 && (
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: '0.4rem',
-                        paddingTop: '0.85rem',
-                        borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-                      }}
-                    >
-                      {post.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          style={{
-                            fontSize: '0.65rem',
-                            fontFamily: 'monospace',
-                            color: 'rgba(255, 255, 255, 0.4)',
-                            background: 'rgba(255, 255, 255, 0.03)',
-                            padding: '0.15rem 0.45rem',
-                            borderRadius: '2px',
-                          }}
-                        >
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </Link>
-
-                {/* In-Feed Google AdSense Slot after 2nd post */}
-                {idx === 1 && (
-                  <BlogAdBanner lang={lang} variant="in-feed" key="blog-in-feed-ad-main" />
                 )}
-                {/* Additional in-feed ad every 4 posts on long lists */}
-                {idx > 1 && (idx + 1) % 4 === 0 && idx !== filtered.length - 1 && (
-                  <BlogAdBanner lang={lang} variant="in-feed" key={`blog-in-feed-ad-${idx}`} />
-                )}
-              </React.Fragment>
+              </Link>
             );
           })}
         </div>
