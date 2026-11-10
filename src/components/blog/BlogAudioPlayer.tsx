@@ -413,10 +413,9 @@ export default function BlogAudioPlayer({
         fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
       }}
     >
-      {/* Hidden DOM Audio Elements with strict no-referrer */}
+      {/* Hidden DOM Audio Elements */}
       <audio
         ref={audioRef}
-        referrerPolicy="no-referrer"
         playsInline
         preload="auto"
         onEnded={handleAudioEnded}
@@ -424,7 +423,6 @@ export default function BlogAudioPlayer({
       />
       <audio
         ref={prefetchAudioRef}
-        referrerPolicy="no-referrer"
         playsInline
         preload="auto"
       />
