@@ -7,6 +7,7 @@
 
 import Link from 'next/link';
 import { Locale, Dictionary } from '@/dictionaries';
+import { GithubIcon, XIcon, InstagramIcon, YoutubeIcon } from '@/components/SocialIcons';
 
 interface FooterProps {
   lang: Locale;
@@ -14,10 +15,10 @@ interface FooterProps {
 }
 
 const EXTERNAL_LINKS = [
-  { label: 'GitHub', url: 'https://github.com/Tiyatrotist' },
-  { label: 'X', url: 'https://x.com/Tiyatrotist' },
-  { label: 'Instagram', url: 'https://instagram.com/Tiyatrotist' },
-  { label: 'YouTube', url: 'https://youtube.com/@Tiyatrotist' },
+  { label: 'GitHub', url: 'https://github.com/Tiyatrotist', icon: GithubIcon },
+  { label: 'X', url: 'https://x.com/Tiyatrotist', icon: XIcon },
+  { label: 'Instagram', url: 'https://instagram.com/Tiyatrotist', icon: InstagramIcon },
+  { label: 'YouTube', url: 'https://youtube.com/@Tiyatrotist', icon: YoutubeIcon },
 ];
 
 export default function Footer({ lang, dict }: FooterProps) {
@@ -45,19 +46,30 @@ export default function Footer({ lang, dict }: FooterProps) {
           ))}
         </div>
 
-        <div className="site-footer__social">
-          {EXTERNAL_LINKS.map((item) => (
-            <a
-              key={item.label}
-              href={item.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="site-footer__external-link"
-              data-cursor="expand"
-            >
-              {item.label} ↗
-            </a>
-          ))}
+        <div className="site-footer__social" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
+          {EXTERNAL_LINKS.map((item) => {
+            const Icon = item.icon;
+            return (
+              <a
+                key={item.label}
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="site-footer__external-link"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  transition: 'opacity 0.2s ease, transform 0.2s ease',
+                }}
+                data-cursor="expand"
+                aria-label={item.label}
+              >
+                <Icon size={14} />
+                <span>{item.label}</span>
+              </a>
+            );
+          })}
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>

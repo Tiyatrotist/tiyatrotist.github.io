@@ -19,27 +19,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
       <Header lang={currentLang} dict={dict} />
       <div className="page-container" style={{ maxWidth: '960px' }}>
         <header className="page-header">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '0.75rem' }}>
-            <span className="page-tag" style={{ margin: 0 }}>{a.tag}</span>
-            <Link
-              href="/admin/about"
-              style={{
-                fontFamily: 'monospace',
-                fontSize: '0.65rem',
-                letterSpacing: '0.12em',
-                color: 'rgba(255, 255, 255, 0.4)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                padding: '0.2rem 0.6rem',
-                borderRadius: '3px',
-                textDecoration: 'none',
-                transition: 'all 0.2s ease',
-              }}
-              data-cursor="expand"
-              title="Admin About & Timeline Editor"
-            >
-              [ ADMİN DÜZENLE ]
-            </Link>
-          </div>
+          <span className="page-tag">{a.tag}</span>
           <h1 className="page-title">{a.title}</h1>
           <p className="page-subtitle">{a.subtitle}</p>
         </header>

@@ -329,7 +329,7 @@ export default function NewProjectPage() {
             Proje İçin Sayfa Şablonu Seçin
           </h2>
           <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginBottom: '1.5rem' }}>
-            Şablon, projenizin kamusal sayfasının başlangıç blok yapısını belirler. İstediğiniz zaman blokları düzenleyebilir veya içeriği değiştirebilirsiniz.
+            Şablon, projenizin web sayfasının başlangıç blok yapısını belirler. İstediğiniz zaman blokları düzenleyebilir veya içeriği değiştirebilirsiniz.
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>

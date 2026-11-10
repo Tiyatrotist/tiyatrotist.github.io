@@ -168,7 +168,7 @@ export const PROJECT_TEMPLATES: Record<ProjectTemplateKey, ProjectTemplateDef> =
           tag_en: '[ SYSTEM 01 // OPEN SOURCE ]',
           title_tr: 'BookOS — Minimalist İşletim Sistemi',
           title_en: 'BookOS — Minimalist Operating System',
-          subtitle_tr: 'Saf mantık ve yalın form ile inşa edilmiş yeni nesil dijital ortam.',
+          subtitle_tr: 'Sistem seviyesinde mühendislik ve bağımsız açık kaynak yazılım mimarisi.',
           subtitle_en: 'Next-generation digital medium built with pure logic and minimal form.',
           button_label_tr: 'Sürümü İndir ↓',
           button_label_en: 'Download Release ↓',

@@ -266,7 +266,8 @@ export default async function BlogPostDetailPage({ params }: BlogPostDetailPageP
         >
           {/* Main Article Column */}
           <div style={{ minWidth: 0 }}>
-            {/* Editorial Audio Player & Podcast Synthesis */}
+            {/* Editorial Audio Player (Temporarily disabled by user request - kept in codebase) */}
+            {/*
             <BlogAudioPlayer
               content={displayContent}
               title={displayTitle}
@@ -274,6 +275,7 @@ export default async function BlogPostDetailPage({ params }: BlogPostDetailPageP
               estimatedMinutes={realMinutes}
               audioSrc={currentLang === 'tr' ? post.audio_url_tr : post.audio_url_en}
             />
+            */}
 
             {/* Article Body (Rendered with MarkdownRenderer) */}
             <article className="blog-article-body" style={{ minHeight: '300px' }}>

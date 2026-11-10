@@ -35,16 +35,7 @@ export default function CustomCursor() {
       return;
     }
 
-    // Masaüstünde tarayıcı imlecini gizle
-    document.documentElement.style.cursor = 'none';
-    document.body.style.cursor = 'none';
-
-    console.debug('[CustomCursor] Desktop mode — custom cursor enabled');
-
-    return () => {
-      document.documentElement.style.cursor = '';
-      document.body.style.cursor = '';
-    };
+    console.debug('[CustomCursor] Desktop mode — companion cursor enabled');
   }, []);
 
   // Fare takibi ve animasyon döngüsü

@@ -112,7 +112,7 @@ export default function SectionEditorModal({
                   name="tag"
                   value={langTab === 'tr' ? form.content.tag_tr || '' : form.content.tag_en || ''}
                   onChange={(v) => updateContent(langTab === 'tr' ? 'tag_tr' : 'tag_en', v)}
-                  placeholder="[ SAHNE 01 ]"
+                  placeholder="[ BÖLÜM 01 ]"
                 />
 
                 <FormField

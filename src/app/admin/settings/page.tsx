@@ -127,7 +127,7 @@ export default function SettingsPage() {
               name="site_title_tr"
               value={form.site_title_tr}
               onChange={(v) => { setForm((p) => ({ ...p, site_title_tr: v })); setSuccess(''); }}
-              placeholder="TIYATROTIST — Dijital Ortam"
+              placeholder="TIYATROTIST — Açık Kaynak Portfolyo"
             />
             <FormField
               label={dict.settings.siteTitleEn}

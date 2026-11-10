@@ -27,7 +27,7 @@ export async function GET(
 ) {
   const { lang } = await params;
   const currentLang = lang === 'en' ? 'en' : 'tr';
-  const siteUrl = 'https://tiyatrotist.com';
+  const siteUrl = 'https://tiyatrotist.com.tr';
 
   let itemsXml = '';
 
@@ -71,7 +71,7 @@ export async function GET(
   const rssFeed = `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>TIYATROTIST — ${currentLang === 'tr' ? 'Saf Monokrom Dijital Ortam' : 'Pure Monochrome Digital Environment'}</title>
+    <title>TIYATROTIST — ${currentLang === 'tr' ? 'Açık Kaynak Sistemler & Portfolyo' : 'Open Source Systems & Portfolio'}</title>
     <link>${siteUrl}/${currentLang}</link>
     <description>${currentLang === 'tr' ? 'Yazılar, mimari analizler ve teknik notlar.' : 'Essays, architectural analyses and technical notes.'}</description>
     <language>${currentLang === 'tr' ? 'tr-TR' : 'en-US'}</language>

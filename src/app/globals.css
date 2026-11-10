@@ -49,23 +49,18 @@ button {
   font: inherit;
 }
 
-/* ─── GLOBAL CURSOR HIDE (DESKTOP) ───────────────────────────── */
-@media (hover: hover) and (pointer: fine) {
-  html,
-  body,
-  *,
-  *::before,
-  *::after,
-  a,
-  button,
-  input,
-  textarea,
-  select,
-  summary,
-  [role="button"],
-  [data-cursor] {
-    cursor: none !important;
-  }
+/* ─── NATIVE & CUSTOM INTERACTION ───────────────────────────── */
+a,
+button,
+[role="button"],
+summary {
+  cursor: pointer;
+}
+
+input,
+textarea,
+select {
+  cursor: text;
 }
 
 /* ─── GLOBAL DOT CANVAS ───────────────────────────────────────── */

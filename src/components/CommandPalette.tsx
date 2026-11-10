@@ -78,7 +78,7 @@ export default function CommandPalette() {
         id: 'page-home',
         category: 'PAGES',
         title: currentLang === 'tr' ? 'Ana Sayfa' : 'Home',
-        subtitle: currentLang === 'tr' ? 'Monokrom Dijital Ortam' : 'Monochrome Digital Environment',
+        subtitle: currentLang === 'tr' ? 'Açık Kaynak Sistemler & Portfolyo' : 'Open Source Systems & Portfolio',
         badge: 'PAGE',
         keywords: ['home', 'landing', 'main', 'ana sayfa'],
         action: () => {
@@ -90,7 +90,7 @@ export default function CommandPalette() {
         id: 'page-projects',
         category: 'PAGES',
         title: currentLang === 'tr' ? 'Projeler' : 'Projects',
-        subtitle: currentLang === 'tr' ? 'Tüm dijital sistemler ve araçlar' : 'All digital systems & tools',
+        subtitle: currentLang === 'tr' ? 'Açık kaynak sistemler ve araçlar' : 'Open-source systems & tools',
         badge: 'PAGE',
         keywords: ['projects', 'işler', 'projeler', 'works'],
         action: () => {
@@ -102,9 +102,9 @@ export default function CommandPalette() {
         id: 'page-about',
         category: 'PAGES',
         title: currentLang === 'tr' ? 'Hakkında & Zaman Çizelgesi' : 'About & Timeline',
-        subtitle: currentLang === 'tr' ? 'Manifesto ve gelişim kronolojisi' : 'Manifesto and evolution timeline',
+        subtitle: currentLang === 'tr' ? 'Biyografi ve gelişim kronolojisi' : 'Biography and engineering timeline',
         badge: 'PAGE',
-        keywords: ['about', 'hakkında', 'timeline', 'manifesto', 'vizyon'],
+        keywords: ['about', 'hakkında', 'timeline', 'biyografi'],
         action: () => {
           router.push(`/${currentLang}/about`);
           setIsOpen(false);
@@ -114,7 +114,7 @@ export default function CommandPalette() {
         id: 'page-blog',
         category: 'PAGES',
         title: 'Blog',
-        subtitle: currentLang === 'tr' ? 'Yazılar, manifestolar ve teknik notlar' : 'Essays, manifestos and technical notes',
+        subtitle: currentLang === 'tr' ? 'Teknik yazılar ve sistem notları' : 'Technical essays and system notes',
         badge: 'PAGE',
         keywords: ['blog', 'yazılar', 'articles', 'posts'],
         action: () => {

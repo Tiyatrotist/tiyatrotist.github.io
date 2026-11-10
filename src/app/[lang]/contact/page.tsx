@@ -1,6 +1,7 @@
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Locale, getDictionary } from '@/dictionaries';
+import { GithubIcon, XIcon, InstagramIcon, YoutubeIcon } from '@/components/SocialIcons';
 
 interface ContactPageProps {
   params: Promise<{ lang: string }>;
@@ -38,42 +39,90 @@ export default async function ContactPage({ params }: ContactPageProps) {
 
             <div>
               <span className="page-tag">{c.networksLabel}</span>
-              <div style={{ marginTop: '0.75rem', display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+              <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                 <a
                   href="https://github.com/Tiyatrotist"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="project-card-link"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.6rem',
+                    padding: '0.6rem 1.1rem',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '4px',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    transition: 'border-color 0.2s ease, background 0.2s ease',
+                  }}
                   data-cursor="expand"
                 >
-                  GitHub ↗
+                  <GithubIcon size={16} />
+                  <span>GitHub</span>
+                  <span style={{ opacity: 0.5 }}>↗</span>
                 </a>
                 <a
                   href="https://x.com/Tiyatrotist"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="project-card-link"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.6rem',
+                    padding: '0.6rem 1.1rem',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '4px',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    transition: 'border-color 0.2s ease, background 0.2s ease',
+                  }}
                   data-cursor="expand"
                 >
-                  X / Twitter ↗
+                  <XIcon size={16} />
+                  <span>X / Twitter</span>
+                  <span style={{ opacity: 0.5 }}>↗</span>
                 </a>
                 <a
                   href="https://instagram.com/Tiyatrotist"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="project-card-link"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.6rem',
+                    padding: '0.6rem 1.1rem',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '4px',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    transition: 'border-color 0.2s ease, background 0.2s ease',
+                  }}
                   data-cursor="expand"
                 >
-                  Instagram ↗
+                  <InstagramIcon size={16} />
+                  <span>Instagram</span>
+                  <span style={{ opacity: 0.5 }}>↗</span>
                 </a>
                 <a
                   href="https://youtube.com/@Tiyatrotist"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="project-card-link"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.6rem',
+                    padding: '0.6rem 1.1rem',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '4px',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    transition: 'border-color 0.2s ease, background 0.2s ease',
+                  }}
                   data-cursor="expand"
                 >
-                  YouTube ↗
+                  <YoutubeIcon size={16} />
+                  <span>YouTube</span>
+                  <span style={{ opacity: 0.5 }}>↗</span>
                 </a>
               </div>
             </div>

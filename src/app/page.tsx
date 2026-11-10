@@ -51,7 +51,7 @@ export default function RootPage() {
           TIYATROTIST
         </h1>
         <p style={{ maxWidth: '600px', opacity: 0.8, lineHeight: 1.6, marginBottom: '2rem' }}>
-          between code &amp; stage — kod ve sahne arasında saf monokrom dijital ortam.
+          between code &amp; stage — kod ve sahne arasında sistem mühendisliği ve açık kaynak portfolyo.
         </p>
       </header>
 
