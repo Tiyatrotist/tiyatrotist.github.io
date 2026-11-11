@@ -43,7 +43,7 @@ export default function BlogStudioPage() {
         console.debug('[BlogStudio] Failed to load cached draft:', err);
       }
     }
-    return generateBlogStudioDraft({ presetId: 'typeflow-deep-dive' });
+    return generateBlogStudioDraft({ presetId: 'edith-autonomous-agent' });
   });
 
   const [showGenModal, setShowGenModal] = useState(false);
@@ -177,8 +177,9 @@ export default function BlogStudioPage() {
       }
 
       if (dbError) {
-        console.debug('[BlogStudio] Supabase write error:', dbError);
-        setErrorMessage(`Kayıt sırasında hata oluştu: ${dbError.message}`);
+        console.debug('[BlogStudio] Supabase write notice/error:', dbError);
+        setSuccessMessage('Taslak yerel tarayıcı belleğine kaydedildi. "📥 .md İndir" butonuyla dosyayı doğrudan alabilirsiniz.');
+        setErrorMessage(`Supabase uyarısı: ${dbError.message} (Yerel kopya günceldir)`);
       } else {
         setPublishedSlug(postSlug);
         if (publishLive) {
@@ -191,10 +192,68 @@ export default function BlogStudioPage() {
       }
     } catch (err: unknown) {
       console.debug('[BlogStudio] Exception:', err);
+      setSuccessMessage('Taslak yerel bellekte korundu.');
       setErrorMessage(err instanceof Error ? err.message : 'Beklenmeyen bir hata oluştu.');
     } finally {
       setSaving(false);
       setPublishing(false);
+    }
+  };
+
+  const generateMarkdownFile = (lang: 'tr' | 'en' = 'tr') => {
+    if (!draft) return '';
+    const finalContent = syncMarkdownWithAssets(
+      lang === 'tr' ? draft.content_tr : draft.content_en,
+      draft.visualAssets
+    );
+    const postSlug = draft.slug || generateSlug(draft.title_tr || draft.title_en);
+    const firstReadyAsset = draft.visualAssets.find((a) => a.imageUrl && a.status === 'ready');
+    const finalCover = draft.cover_image || firstReadyAsset?.imageUrl || '';
+
+    return `---
+slug: "${postSlug}"
+title_tr: "${(draft.title_tr || '').replace(/"/g, '\\"')}"
+title_en: "${(draft.title_en || '').replace(/"/g, '\\"')}"
+excerpt_tr: "${(draft.excerpt_tr || '').replace(/"/g, '\\"')}"
+excerpt_en: "${(draft.excerpt_en || '').replace(/"/g, '\\"')}"
+category: "${draft.category || 'Mühendislik'}"
+tags: ${JSON.stringify(draft.tags || ['Tech'])}
+cover_image: "${finalCover}"
+published: ${draft.published}
+featured: ${draft.featured}
+date: "${draft.createdAt || new Date().toISOString()}"
+---
+
+${finalContent}
+`;
+  };
+
+  const handleDownloadMarkdown = (lang: 'tr' | 'en' = 'tr') => {
+    if (!draft) return;
+    const md = generateMarkdownFile(lang);
+    const postSlug = draft.slug || generateSlug(draft.title_tr || draft.title_en);
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${postSlug}.${lang}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setSuccessMessage(`"${postSlug}.${lang}.md" dosyası indirildi! Doğrudan content/posts/ içine taşıyabilirsiniz.`);
+    setTimeout(() => setSuccessMessage(null), 5000);
+  };
+
+  const handleCopyMarkdown = async (lang: 'tr' | 'en' = 'tr') => {
+    if (!draft) return;
+    const md = generateMarkdownFile(lang);
+    try {
+      await navigator.clipboard.writeText(md);
+      setSuccessMessage(`Markdown içeriği (${lang.toUpperCase()}) panoya kopyalandı.`);
+      setTimeout(() => setSuccessMessage(null), 4000);
+    } catch {
+      // ignore
     }
   };
 
@@ -276,6 +335,24 @@ export default function BlogStudioPage() {
             className="admin-btn admin-btn-secondary admin-btn-sm"
           >
             ✦ Yeni AI Taslak
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleDownloadMarkdown('tr')}
+            className="admin-btn admin-btn-secondary admin-btn-sm"
+            title="Markdown ve frontmatter dosyasını doğrudan indir"
+          >
+            📥 .md İndir
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleCopyMarkdown('tr')}
+            className="admin-btn admin-btn-secondary admin-btn-sm"
+            title="Markdown içeriğini panoya kopyala"
+          >
+            📋 MD Kopyala
           </button>
 
           <button
