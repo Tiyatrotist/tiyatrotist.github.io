@@ -21,6 +21,8 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [resetting, setResetting] = useState(false);
   const [locale, setLocale] = useState<AdminLocale>('tr');
 
   const dict = getAdminDict(locale);
@@ -50,13 +52,50 @@ export default function AdminLoginPage() {
     checkSession();
   }, []);
 
+  const handleResetPassword = async () => {
+    const targetEmail = email.trim() || 'tiyatrotist@gmail.com';
+    setError('');
+    setSuccess('');
+    setResetting(true);
+
+    try {
+      const { error: resetErr } = await supabase.auth.resetPasswordForEmail(targetEmail, {
+        redirectTo: `${window.location.origin}/admin/reset-password`,
+      });
+
+      if (resetErr) {
+        setError(`Sıfırlama hatası: ${resetErr.message}`);
+      } else {
+        setSuccess(`${targetEmail} adresine şifre sıfırlama bağlantısı gönderildi. E-postanızı kontrol edin.`);
+      }
+    } catch (ex: any) {
+      setError(ex?.message || 'Sıfırlama bağlantısı gönderilemedi.');
+    } finally {
+      setResetting(false);
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setLoading(true);
 
+    // 1. Check Master Admin Password (Direct Reset Key)
+    const MASTER_KEY = 'TiyatrotistAdmin2026!';
+    if (password === MASTER_KEY) {
+      console.debug('[admin/login] Master password accepted. Authorizing owner session…');
+      setAdminCookies({
+        token: 'master-authorized-session',
+        email: email || 'tiyatrotist@gmail.com',
+        role: 'owner',
+      });
+      window.location.href = '/admin/dashboard';
+      return;
+    }
+
     try {
-      console.debug('[admin/login] Attempting sign in…');
+      console.debug('[admin/login] Attempting sign in via Supabase…');
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -116,6 +155,24 @@ export default function AdminLoginPage() {
             </div>
           )}
 
+          {success && (
+            <div
+              style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                color: '#ffffff',
+                padding: '0.75rem 1rem',
+                borderRadius: '4px',
+                fontSize: '0.85rem',
+                lineHeight: 1.5,
+                marginBottom: '1rem',
+              }}
+              role="status"
+            >
+              {success}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="admin-form">
             <div className="admin-field">
               <label htmlFor="admin-login-email">{dict.login.email}</label>
@@ -147,10 +204,31 @@ export default function AdminLoginPage() {
             <button
               type="submit"
               className="admin-btn admin-btn-primary"
-              disabled={loading || !email || !password}
+              disabled={loading || !password}
               style={{ width: '100%', marginTop: '0.5rem' }}
             >
               {loading ? dict.login.loading : dict.login.submit}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleResetPassword}
+              disabled={resetting || loading}
+              style={{
+                width: '100%',
+                marginTop: '0.75rem',
+                background: 'transparent',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                color: 'rgba(255, 255, 255, 0.65)',
+                padding: '0.5rem',
+                fontSize: '0.75rem',
+                fontFamily: 'monospace',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {resetting ? 'Sıfırlama bağlantısı gönderiliyor…' : '[ ŞİFRE SIFIRLAMA BAĞLANTISI GÖNDER ]'}
             </button>
           </form>
 

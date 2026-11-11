@@ -1,7 +1,5 @@
 import type { Metadata } from 'next';
-import Script from 'next/script';
 import DevToolsNotice from '@/components/DevToolsNotice';
-import { GOOGLE_ADSENSE_CONFIG } from '@/config/ads';
 import './globals.css';
 
 const siteUrl = 'https://tiyatrotist.com.tr';
@@ -79,9 +77,6 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  other: {
-    'google-adsense-account': GOOGLE_ADSENSE_CONFIG.clientId,
-  },
 };
 
 export default function RootLayout({
@@ -96,14 +91,6 @@ export default function RootLayout({
         <link rel="alternate" type="application/rss+xml" title="TIYATROTIST RSS Feed" href="/rss.xml" />
         <link rel="alternate" type="application/rss+xml" title="TIYATROTIST RSS Feed (TR)" href="/tr/rss.xml" />
         <link rel="alternate" type="application/rss+xml" title="TIYATROTIST RSS Feed (EN)" href="/en/rss.xml" />
-
-        {/* Google AdSense Official Script Integration */}
-        <Script
-          id="google-adsense-script"
-          strategy="afterInteractive"
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${GOOGLE_ADSENSE_CONFIG.clientId}`}
-          crossOrigin="anonymous"
-        />
       </head>
       <body>
         <DevToolsNotice />

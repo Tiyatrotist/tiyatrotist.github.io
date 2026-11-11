@@ -12,7 +12,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { supabase, OWNER_ID } from '@/lib/supabase';
 import { getAdminDict, AdminLocale } from '@/lib/admin-i18n';
-import { setAdminCookies, clearAdminCookies } from '@/lib/admin-auth';
+import { setAdminCookies, clearAdminCookies, hasAdminCookie, getAdminCookie } from '@/lib/admin-auth';
 import Sidebar from '@/components/admin/Sidebar';
 import AdminHeader from '@/components/admin/AdminHeader';
 import LoadingSpinner from '@/components/admin/LoadingSpinner';
@@ -42,6 +42,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         const { data: { session } } = await supabase.auth.getSession();
         console.debug('[admin/layout] Session check:', session?.user?.id ?? 'none');
 
+        // 1. Supabase owner session
+        if (session?.user && session.user.id === OWNER_ID) {
+          if (session.access_token) {
+            setAdminCookies({
+              token: session.access_token,
+              email: session.user.email || '',
+              role: 'owner',
+            });
+          }
+          setAuthState('authenticated');
+          return;
+        }
+
+        // 2. Cookie fallback for master authentication
+        if (hasAdminCookie() && getAdminCookie('admin_role') === 'owner') {
+          setAuthState('authenticated');
+          return;
+        }
+
         if (!session?.user) {
           console.debug('[admin/layout] No session, clearing cookies and redirecting to login…');
           clearAdminCookies();
@@ -56,15 +75,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           clearAdminCookies();
           setAuthState('denied');
           return;
-        }
-
-        // Refresh/confirm admin session cookies
-        if (session.access_token) {
-          setAdminCookies({
-            token: session.access_token,
-            email: session.user.email || '',
-            role: 'owner',
-          });
         }
 
         setAuthState('authenticated');
