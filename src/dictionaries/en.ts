@@ -9,21 +9,21 @@ export const en: Dictionary = {
     contact: 'CONTACT',
   },
   hero: {
-    role: 'Systems Developer & Open Source Contributor',
-    tagline: 'between code & stage — kod ve sahne arasında',
-    cta: 'EXPLORE PROJECTS ↓',
+    role: 'Building Systems on My Own Terms',
+    tagline: 'Scroll down to get to know me and my projects better.',
+    cta: 'EXPLORE MY PROJECTS ↓',
   },
   manifesto: {
-    tag: '[ ARCHITECTURE & APPROACH ]',
-    headingPrefix: 'System-level ',
-    logicWord: 'engineering',
-    headingMiddle: ' and autonomous ',
-    formWord: 'open-source',
+    tag: '[ Who am I? ]',
+    headingPrefix: 'I am ',
+    logicWord: 'Buğra',
+    headingMiddle: ' and as an independent developer I build ',
+    formWord: 'open source',
     headingSuffix: ' architectures.',
     paragraph1:
-      'Working across Linux kernel environments, C++20, Qt 6, and Rust to craft lightweight, robust systems at the edge of software and hardware.',
+      'I am Buğra Dere (Tiyatrotist), 15 years old. I am a prep-year student at Düzce Science & Technology Hafız Anatolian Imam Hatip High School. I work on low-level system architecture, C++20 and Qt 6 desktop applications, Linux distribution infrastructure, and Rust. In short, you can consult me on anything related to software development—but when it comes to design, count me out.',
     paragraph2:
-      'Stripped of bloated abstractions, optimized for minimal memory footprint, and engineered with purposeful open-source discipline.',
+      'I focus on developing open-source and independent systems that genuinely help people. This website and my projects are completely open source and independent, though I also have non-open-source projects that you can check out if you wish.',
   },
   projectIntro: {
     tag: '[ FEATURED SYSTEM ]',
@@ -34,7 +34,7 @@ export const en: Dictionary = {
   projectsPage: {
     tag: '[ PROJECTS & SYSTEMS ]',
     title: 'PROJECTS',
-    subtitle: 'System utilities, desktop applications, C++20/Qt 6, and Rust open-source repositories.',
+    subtitle: 'Here you can find detailed information about my projects and the systems I develop. The project pages are quite high-level right now; I will improve them soon.',
     enterBtn: 'EXPLORE PROJECT →',
   },
   projectDetail: {
@@ -45,10 +45,10 @@ export const en: Dictionary = {
     notFoundSubtitle: 'The requested project does not exist or has been removed.',
   },
   aboutPage: {
-    tag: '[ BIOGRAPHY & ENGINEERING ]',
-    title: 'ABOUT',
+    tag: '[ ABOUT ME ]',
+    title: 'ABOUT ME',
     subtitle: 'Systems programming, Linux architecture, and open-source software engineering.',
-    p1: 'I am Buğra Dere (Tiyatrotist), a high-school student at Düzce Science & Technology Hafız Anatolian Imam Hatip High School. I specialize in low-level systems architecture, C++20 and Qt 6 desktop engines, custom Linux deployment, and Rust tooling.',
+    p1: 'I am Buğra Dere (Tiyatrotist). I am a prep-year student at Düzce Science & Technology Hafız Anatolian Imam Hatip High School. I work on low-level system architecture, C++20 and Qt 6 desktop applications, Linux distribution infrastructure, and Rust.',
     p2: 'Core engineering principles:',
     principles: [
       'Low resource consumption: Prioritizing native OS APIs and compile-time optimizations over heavy runtime wrappers.',
@@ -67,11 +67,11 @@ export const en: Dictionary = {
     researchingDesc:
       'Low-latency system architectures, Linux kernel tuning, and lightweight local autonomous agent workflows.',
     locationLabel: '[ LOCATION ]',
-    locationDesc: 'Düzce, Turkey — GMT+3',
+    locationDesc: 'Düzce, Turkey',
   },
   blogPage: {
     tag: '[ TECHNICAL ARTICLES ]',
-    title: 'BLOG & ARTICLES',
+    title: 'BLOG',
     subtitle: 'Technical perspectives on systems architecture, C++20/Qt 6, Linux, and open source.',
     searchPlaceholder: 'Search articles or topics...',
     filterAll: 'ALL POSTS',
@@ -93,7 +93,7 @@ export const en: Dictionary = {
     networksLabel: '[ CONNECT & REACH OUT ]',
   },
   footer: {
-    copy: 'TIYATROTIST © ' + new Date().getFullYear() + ' — OPEN SOURCE SYSTEMS',
+    copy: 'TIYATROTIST © ' + new Date().getFullYear(),
   },
   bookos: {
     backToMain: '← Back to Tiyatrotist',
@@ -193,7 +193,7 @@ export const en: Dictionary = {
     },
   },
   terminal: {
-    bootTitle: 'TIYATROTIST OPERATING ENVIRONMENT v2.4.0 (x86_64-monochrome)',
+    bootTitle: 'TIYATROTIST v2.4.0 (x86_64)',
     bootStatus: 'All subsystems nominal. Zero third-party trackers detected.',
     helpTip: 'Type "help" to see available terminal commands.',
     helpTitle: 'TIYATROTIST CLI — COMMAND REFERENCE',

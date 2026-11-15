@@ -6,6 +6,7 @@
  * Queries unified blog service: local Git-tracked Markdown files merged with Supabase.
  */
 
+import type { Metadata } from 'next';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import BlogListView from '@/components/BlogListView';
@@ -14,6 +15,26 @@ import { getAllBlogPosts } from '@/lib/blog-service';
 
 interface BlogPageProps {
   params: Promise<{ lang: string }>;
+}
+
+export async function generateMetadata({ params }: BlogPageProps): Promise<Metadata> {
+  const { lang } = await params;
+  const currentLang = (lang === 'tr' ? 'tr' : 'en') as Locale;
+  const isTr = currentLang === 'tr';
+
+  return {
+    title: 'Blog',
+    description: isTr
+      ? 'Sistem mimarisi, C++20/Qt 6, Linux ve açık kaynak üzerine teknik yazılar ve notlar.'
+      : 'Technical essays on systems architecture, C++20/Qt 6, Linux, and open source.',
+    alternates: {
+      canonical: `/${currentLang}/blog`,
+      languages: {
+        tr: '/tr/blog',
+        en: '/en/blog',
+      },
+    },
+  };
 }
 
 export async function generateStaticParams() {

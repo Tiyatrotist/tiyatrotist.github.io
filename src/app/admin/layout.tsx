@@ -28,6 +28,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const dict = getAdminDict(locale);
 
+  // Set document title for Admin
+  useEffect(() => {
+    document.title = 'TIYATROTIST — Yönetim Paneli';
+  }, []);
+
   // Skip auth check for login page (account for trailing slash)
   const isLoginPage = pathname?.startsWith('/admin/login');
 

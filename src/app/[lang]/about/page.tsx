@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -6,6 +7,26 @@ import { Locale, getDictionary } from '@/dictionaries';
 
 interface AboutPageProps {
   params: Promise<{ lang: string }>;
+}
+
+export async function generateMetadata({ params }: AboutPageProps): Promise<Metadata> {
+  const { lang } = await params;
+  const currentLang = (lang === 'tr' ? 'tr' : 'en') as Locale;
+  const isTr = currentLang === 'tr';
+
+  return {
+    title: isTr ? 'Hakkımda' : 'About Me',
+    description: isTr
+      ? 'Buğra Dere (Tiyatrotist) hakkında bilgi, sistem mühendisliği prensipleri ve zaman çizelgesi.'
+      : 'About Buğra Dere (Tiyatrotist), systems engineering principles and timeline.',
+    alternates: {
+      canonical: `/${currentLang}/about`,
+      languages: {
+        tr: '/tr/about',
+        en: '/en/about',
+      },
+    },
+  };
 }
 
 export default async function AboutPage({ params }: AboutPageProps) {

@@ -121,7 +121,7 @@ export default function SettingsPage() {
               name="site_title_en"
               value={form.site_title_en}
               onChange={(v) => { setForm((p) => ({ ...p, site_title_en: v })); setSuccess(''); }}
-              placeholder="TIYATROTIST — Digital Environment"
+              placeholder="TIYATROTIST — Sistem Geliştiricisi & Açık Kaynak Portfolyo"
             />
           </div>
           <div style={{ display: 'flex', gap: '1rem' }}>

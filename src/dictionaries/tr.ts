@@ -9,21 +9,21 @@ export const tr: Dictionary = {
     contact: 'İLETİŞİM',
   },
   hero: {
-    role: 'Sistem Geliştiricisi & Açık Kaynak',
-    tagline: 'kod ve sahne arasında — between code & stage',
-    cta: 'PROJELERİ İNCELE ↓',
+    role: 'Kendimce Sistemler Geliştiriyorum',
+    tagline: 'Beni ve projelerimi daha yakından tanımak için aşağı kaydırın.',
+    cta: 'PROJELERİMİ İNCELE ↓',
   },
   manifesto: {
-    tag: '[ MİMARİ VE YAKLAŞIM ]',
-    headingPrefix: 'Sistem seviyesinde ',
-    logicWord: 'mühendislik',
-    headingMiddle: ' ve bağımsız ',
+    tag: '[ Ben kimim? ]',
+    headingPrefix: 'Ben ',
+    logicWord: 'Buğra',
+    headingMiddle: ' ve bağımsız bir geliştirici olarak ',
     formWord: 'açık kaynak',
-    headingSuffix: ' mimarileri.',
+    headingSuffix: ' mimarileri geliştiriyorum.',
     paragraph1:
-      'Linux çekirdeği, C++20, Qt 6 ve Rust ekosisteminde; donanım ile yazılım sınırlarında çalışan, hafif ve dayanıklı sistemler geliştiriyorum.',
+      'Ben Buğra Dere (Tiyatrotist) 15 yaşındayım. Düzce Fen ve Teknoloji Hafız Anadolu İmam Hatip Lisesi hazırlık sınıfı öğrencisiyim. Düşük seviyeli sistem mimarisi, C++20 ve Qt 6 masaüstü uygulamaları, Linux dağıtım altyapısı ve Rust üzerine çalışıyorum kısacası yazılım konusunda her şeyde bana danışabilirsiniz ama tasarıma gelince ben yokum.',
     paragraph2:
-      'Gereksiz bağımlılıklardan arındırılmış, düşük bellek ayak izine sahip ve doğrudan amaca hizmet eden yalın kod disiplini.',
+      'İnsanlara yardımcı olabilecek, açık kaynak ve bağımsız sistemler geliştirmeye odaklanıyorum. Bu web sitesi ve projelerim tamamen açık kaynak ve bağımsızdır ama açık kaynak olmayan projelerim de var isterseniz onlarada göze atabilirsiniz.',
   },
   projectIntro: {
     tag: '[ ÖNE ÇIKAN SİSTEM ]',
@@ -34,7 +34,7 @@ export const tr: Dictionary = {
   projectsPage: {
     tag: '[ PROJELER VE SİSTEMLER ]',
     title: 'PROJELER',
-    subtitle: 'Sistem araçları, masaüstü uygulamaları, C++20/Qt 6 ve Rust açık kaynak depoları.',
+    subtitle: 'Burada projelerim ve geliştirdiğim sistemler hakkında detaylı bilgiler bulabilirsiniz. Siteler şuan çok yüzeysel yakın zamanda düzelteceğim.',
     enterBtn: 'PROJEYİ İNCELE →',
   },
   projectDetail: {
@@ -45,8 +45,8 @@ export const tr: Dictionary = {
     notFoundSubtitle: 'İstenen proje mevcut değil veya kaldırılmış.',
   },
   aboutPage: {
-    tag: '[ BİYOGRAFİ & MÜHENDİSLİK ]',
-    title: 'HAKKINDA',
+    tag: '[ HAKKIMDA ]',
+    title: 'HAKKIMDA',
     subtitle: 'Sistem programlama, Linux mimarisi ve açık kaynak yazılım mühendisliği.',
     p1: 'Ben Buğra Dere (Tiyatrotist). Düzce Fen ve Teknoloji Hafız Anadolu İmam Hatip Lisesi hazırlık sınıfı öğrencisiyim. Düşük seviyeli sistem mimarisi, C++20 ve Qt 6 masaüstü uygulamaları, Linux dağıtım altyapısı ve Rust üzerine çalışıyorum.',
     p2: 'Çalışma ve mühendislik prensiplerim:',
@@ -67,11 +67,11 @@ export const tr: Dictionary = {
     researchingDesc:
       'Düşük gecikmeli sistem mimarileri, Linux çekirdeği optimizasyonu ve hafif yerel otonom agent iş akışları.',
     locationLabel: '[ KONUM ]',
-    locationDesc: 'Düzce, Türkiye — GMT+3',
+    locationDesc: 'Düzce, Türkiye',
   },
   blogPage: {
     tag: '[ TEKNİK YAZILAR ]',
-    title: 'BLOG & NOTLAR',
+    title: 'BLOG',
     subtitle: 'Sistem mimarisi, C++20/Qt 6, Linux ve açık kaynak üzerine teknik yazılar.',
     searchPlaceholder: 'Yazılarda veya başlıklarda ara...',
     filterAll: 'TÜM YAZILAR',
@@ -93,7 +93,7 @@ export const tr: Dictionary = {
     networksLabel: '[ BANA ULAŞIN ]',
   },
   footer: {
-    copy: 'TIYATROTIST © ' + new Date().getFullYear() + ' — AÇIK KAYNAK SİSTEMLER',
+    copy: 'TIYATROTIST © ' + new Date().getFullYear(),
   },
   bookos: {
     backToMain: '← Tiyatrotist\'e Dön',
@@ -162,7 +162,7 @@ export const tr: Dictionary = {
     restartBtn: 'TEKRAR DENE',
     returnHomeBtn: 'ANA SAYFAYA DÖN',
   },
-  typeflow: {
+typeflow: {
     tagline: 'Dokunsal mekanik klavye sesleri, 5 siberpunk tema ve 3 özel mod (Kelimeler, Hikayeler, PowerShell & CLI) içeren yeni nesil hızlı yazı laboratuvarı.',
     description: 'Sıfır gecikmeli Web Audio mekanik klavye sentezleyicisi, akıcı imleç ve derinlemesine hız analitiği ile geliştirilmiş bağımsız hızlı yazım deneyimi.',
     wordsMode: 'Sık Kullanılan Kelimeler',
@@ -193,7 +193,7 @@ export const tr: Dictionary = {
     },
   },
   terminal: {
-    bootTitle: 'TIYATROTIST İŞLETİM ORTAMI v2.4.0 (x86_64-monokrom)',
+    bootTitle: 'TIYATROTIST v2.4.0 (x86_64)',
     bootStatus: 'Tüm alt sistemler devrede. Sıfır üçüncü parti izleyici tespit edildi.',
     helpTip: 'Kullanılabilir komutlar için "help" yazın.',
     helpTitle: 'TIYATROTIST CLI — KOMUT REHBERİ',

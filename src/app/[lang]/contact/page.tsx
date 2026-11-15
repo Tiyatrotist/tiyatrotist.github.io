@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Locale, getDictionary } from '@/dictionaries';
@@ -5,6 +6,26 @@ import { GithubIcon, XIcon, InstagramIcon, YoutubeIcon } from '@/components/Soci
 
 interface ContactPageProps {
   params: Promise<{ lang: string }>;
+}
+
+export async function generateMetadata({ params }: ContactPageProps): Promise<Metadata> {
+  const { lang } = await params;
+  const currentLang = (lang === 'tr' ? 'tr' : 'en') as Locale;
+  const isTr = currentLang === 'tr';
+
+  return {
+    title: isTr ? 'İletişim' : 'Contact',
+    description: isTr
+      ? 'Açık kaynak iş birlikleri, sorular veya teknik iletişim için bağlantılar.'
+      : 'Direct links and contact methods for open-source collaborations and inquiries.',
+    alternates: {
+      canonical: `/${currentLang}/contact`,
+      languages: {
+        tr: '/tr/contact',
+        en: '/en/contact',
+      },
+    },
+  };
 }
 
 export default async function ContactPage({ params }: ContactPageProps) {

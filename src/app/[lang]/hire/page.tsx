@@ -7,6 +7,7 @@
  * - Direct contact & communication channels
  */
 
+import type { Metadata } from 'next';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
@@ -14,6 +15,26 @@ import { Locale, getDictionary } from '@/dictionaries';
 
 interface HirePageProps {
   params: Promise<{ lang: string }>;
+}
+
+export async function generateMetadata({ params }: HirePageProps): Promise<Metadata> {
+  const { lang } = await params;
+  const currentLang = (lang === 'tr' ? 'tr' : 'en') as Locale;
+  const isTr = currentLang === 'tr';
+
+  return {
+    title: isTr ? 'İş Birliği & İletişim' : 'Collaboration & Work',
+    description: isTr
+      ? 'Açık kaynak sistem mimarisi, C++, Rust ve Python projelerinde teknik iş birliği.'
+      : 'Technical collaboration in systems architecture, C++, Rust, and Python projects.',
+    alternates: {
+      canonical: `/${currentLang}/hire`,
+      languages: {
+        tr: '/tr/hire',
+        en: '/en/hire',
+      },
+    },
+  };
 }
 
 export default async function HirePage({ params }: HirePageProps) {

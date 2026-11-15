@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
@@ -7,6 +8,26 @@ import { SYSTEM_PROJECTS } from '@/config/projects';
 
 interface ProjectsPageProps {
   params: Promise<{ lang: string }>;
+}
+
+export async function generateMetadata({ params }: ProjectsPageProps): Promise<Metadata> {
+  const { lang } = await params;
+  const currentLang = (lang === 'tr' ? 'tr' : 'en') as Locale;
+  const isTr = currentLang === 'tr';
+
+  return {
+    title: isTr ? 'Projeler' : 'Projects',
+    description: isTr
+      ? 'Açık kaynak sistem araçları, C++20/Qt 6 ve Rust projeleri.'
+      : 'Open source system utilities, C++20/Qt 6 and Rust projects.',
+    alternates: {
+      canonical: `/${currentLang}/projects`,
+      languages: {
+        tr: '/tr/projects',
+        en: '/en/projects',
+      },
+    },
+  };
 }
 
 export default async function ProjectsPage({ params }: ProjectsPageProps) {

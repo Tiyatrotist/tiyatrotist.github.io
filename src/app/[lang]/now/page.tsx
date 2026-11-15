@@ -1,9 +1,30 @@
+import type { Metadata } from 'next';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Locale, getDictionary } from '@/dictionaries';
 
 interface NowPageProps {
   params: Promise<{ lang: string }>;
+}
+
+export async function generateMetadata({ params }: NowPageProps): Promise<Metadata> {
+  const { lang } = await params;
+  const currentLang = (lang === 'tr' ? 'tr' : 'en') as Locale;
+  const isTr = currentLang === 'tr';
+
+  return {
+    title: isTr ? 'Şu An' : 'Now',
+    description: isTr
+      ? 'Şu anda üzerinde çalışılan sistemler, araştırmalar ve güncel odak noktası.'
+      : 'What is currently being built, researched, and refined.',
+    alternates: {
+      canonical: `/${currentLang}/now`,
+      languages: {
+        tr: '/tr/now',
+        en: '/en/now',
+      },
+    },
+  };
 }
 
 export async function generateStaticParams() {

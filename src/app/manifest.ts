@@ -9,9 +9,9 @@ export const dynamic = 'force-static';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'TIYATROTIST — Monochrome Digital Environment',
+    name: 'TIYATROTIST — Sistem Geliştiricisi & Açık Kaynak Portfolyo',
     short_name: 'TIYATROTIST',
-    description: 'A pure monochrome, typography-driven digital environment and experimental laboratory.',
+    description: 'Buğra Dere (Tiyatrotist). Sistem mimarisi, C++20, Qt 6, Linux dağıtım altyapısı ve açık kaynak projeler.',
     start_url: '/',
     display: 'standalone',
     background_color: '#000000',
