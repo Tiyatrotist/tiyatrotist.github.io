@@ -40,6 +40,7 @@ export async function generateMetadata({ params }: ProjectDetailPageProps): Prom
     const title = `${systemProj.name} — ${isTr ? systemProj.short_description_tr : systemProj.short_description_en}`;
     const description = isTr ? systemProj.description_tr : systemProj.description_en;
 
+    const projImageUrl = 'https://tiyatrotist.com.tr/icon.svg';
     return {
       title,
       description,
@@ -57,7 +58,7 @@ export async function generateMetadata({ params }: ProjectDetailPageProps): Prom
         type: 'website',
         images: [
           {
-            url: '/icon.svg',
+            url: projImageUrl,
             width: 512,
             height: 512,
             alt: systemProj.name,
@@ -69,6 +70,7 @@ export async function generateMetadata({ params }: ProjectDetailPageProps): Prom
         title: `${systemProj.name} | TIYATROTIST`,
         description,
         creator: '@tiyatrotist',
+        images: [projImageUrl],
       },
     };
   }
@@ -139,29 +141,70 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
   const isTr = currentLang === 'tr';
 
   const systemProjForSchema = SYSTEM_PROJECTS.find((p) => p.slug === slug);
+  const projectPageUrl = `https://tiyatrotist.com.tr/${currentLang}/projects/${slug}`;
+
   const jsonLd = systemProjForSchema
     ? {
         '@context': 'https://schema.org',
-        '@type': 'SoftwareApplication',
-        name: systemProjForSchema.name,
-        description: isTr ? systemProjForSchema.description_tr : systemProjForSchema.description_en,
-        applicationCategory: 'DeveloperApplication',
-        operatingSystem:
-          systemProjForSchema.slug === 'etapkitap'
-            ? 'Linux (Pardus ETAP 23)'
-            : systemProjForSchema.slug === 'explorer-terminal'
-            ? 'Windows 11'
-            : systemProjForSchema.slug === 'openpet'
-            ? 'Windows / Linux'
-            : 'Linux / Android / Windows',
-        author: {
-          '@type': 'Person',
-          name: 'Buğra Dere',
-          alternateName: 'Tiyatrotist',
-          url: 'https://tiyatrotist.com.tr',
-        },
-        url: `https://tiyatrotist.com.tr/${currentLang}/projects/${slug}`,
-        codeRepository: systemProjForSchema.github_url,
+        '@graph': [
+          {
+            '@type': 'SoftwareApplication',
+            '@id': `${projectPageUrl}#software`,
+            name: systemProjForSchema.name,
+            description: isTr ? systemProjForSchema.description_tr : systemProjForSchema.description_en,
+            applicationCategory: 'DeveloperApplication',
+            operatingSystem:
+              systemProjForSchema.slug === 'etapkitap'
+                ? 'Linux (Pardus ETAP 23)'
+                : systemProjForSchema.slug === 'explorer-terminal'
+                ? 'Windows 11'
+                : systemProjForSchema.slug === 'openpet'
+                ? 'Windows / Linux'
+                : 'Linux / Android / Windows',
+            offers: {
+              '@type': 'Offer',
+              price: '0',
+              priceCurrency: 'TRY',
+            },
+            author: {
+              '@type': 'Person',
+              name: 'Buğra Dere',
+              alternateName: 'Tiyatrotist',
+              url: 'https://tiyatrotist.com.tr',
+            },
+            publisher: {
+              '@type': 'Organization',
+              name: 'TIYATROTIST',
+              url: 'https://tiyatrotist.com.tr',
+            },
+            url: projectPageUrl,
+            codeRepository: systemProjForSchema.github_url,
+          },
+          {
+            '@type': 'BreadcrumbList',
+            '@id': `${projectPageUrl}#breadcrumb`,
+            itemListElement: [
+              {
+                '@type': 'ListItem',
+                position: 1,
+                name: currentLang === 'tr' ? 'Ana Sayfa' : 'Home',
+                item: `https://tiyatrotist.com.tr/${currentLang}`,
+              },
+              {
+                '@type': 'ListItem',
+                position: 2,
+                name: currentLang === 'tr' ? 'Projeler' : 'Projects',
+                item: `https://tiyatrotist.com.tr/${currentLang}/projects`,
+              },
+              {
+                '@type': 'ListItem',
+                position: 3,
+                name: systemProjForSchema.name,
+                item: projectPageUrl,
+              },
+            ],
+          },
+        ],
       }
     : null;
 

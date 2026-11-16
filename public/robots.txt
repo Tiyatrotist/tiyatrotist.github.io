@@ -2,5 +2,17 @@ User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /api/
+Disallow: /maintenance/
+
+User-agent: Googlebot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: Bingbot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
 
 Sitemap: https://tiyatrotist.com.tr/sitemap.xml
+Host: https://tiyatrotist.com.tr

@@ -21,18 +21,41 @@ export async function generateMetadata({ params }: HirePageProps): Promise<Metad
   const { lang } = await params;
   const currentLang = (lang === 'tr' ? 'tr' : 'en') as Locale;
   const isTr = currentLang === 'tr';
+  const hireUrl = `https://tiyatrotist.com.tr/${currentLang}/hire`;
+  const description = isTr
+    ? 'Açık kaynak sistem mimarisi, C++, Rust ve Python projelerinde teknik danışmanlık ve iş birliği.'
+    : 'Technical collaboration and consulting in systems architecture, C++, Rust, and Python projects.';
 
   return {
-    title: isTr ? 'İş Birliği & İletişim' : 'Collaboration & Work',
-    description: isTr
-      ? 'Açık kaynak sistem mimarisi, C++, Rust ve Python projelerinde teknik iş birliği.'
-      : 'Technical collaboration in systems architecture, C++, Rust, and Python projects.',
+    title: isTr ? 'İş Birliği & Danışmanlık' : 'Collaboration & Consulting',
+    description,
     alternates: {
-      canonical: `/${currentLang}/hire`,
+      canonical: hireUrl,
       languages: {
         tr: '/tr/hire',
         en: '/en/hire',
       },
+    },
+    openGraph: {
+      type: 'website',
+      title: (isTr ? 'İş Birliği & Danışmanlık' : 'Collaboration & Consulting') + ' | TIYATROTIST',
+      description,
+      url: hireUrl,
+      images: [
+        {
+          url: 'https://tiyatrotist.com.tr/icon.svg',
+          width: 512,
+          height: 512,
+          alt: 'TIYATROTIST İş Birliği',
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary',
+      title: (isTr ? 'İş Birliği & Danışmanlık' : 'Collaboration & Consulting') + ' | TIYATROTIST',
+      description,
+      creator: '@tiyatrotist',
+      images: ['https://tiyatrotist.com.tr/icon.svg'],
     },
   };
 }
@@ -42,9 +65,48 @@ export default async function HirePage({ params }: HirePageProps) {
   const currentLang = (lang === 'tr' ? 'tr' : 'en') as Locale;
   const dict = getDictionary(currentLang);
   const isTr = currentLang === 'tr';
+  const hireUrl = `https://tiyatrotist.com.tr/${currentLang}/hire`;
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebPage',
+        '@id': `${hireUrl}#webpage`,
+        url: hireUrl,
+        name: isTr ? 'İş Birliği & Danışmanlık' : 'Collaboration & Consulting',
+        description: isTr
+          ? 'Teknik danışmanlık ve açık kaynak iş birliği sayfası.'
+          : 'Technical consulting and open source collaboration page.',
+        inLanguage: currentLang === 'tr' ? 'tr-TR' : 'en-US',
+      },
+      {
+        '@type': 'BreadcrumbList',
+        '@id': `${hireUrl}#breadcrumb`,
+        itemListElement: [
+          {
+            '@type': 'ListItem',
+            position: 1,
+            name: isTr ? 'Ana Sayfa' : 'Home',
+            item: `https://tiyatrotist.com.tr/${currentLang}`,
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: isTr ? 'İş Birliği' : 'Hire',
+            item: hireUrl,
+          },
+        ],
+      },
+    ],
+  };
 
   return (
     <main className="main-container">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Header lang={currentLang} dict={dict} />
 
       <div className="page-container" style={{ maxWidth: '880px', paddingTop: '2.5rem', paddingBottom: '6rem' }}>

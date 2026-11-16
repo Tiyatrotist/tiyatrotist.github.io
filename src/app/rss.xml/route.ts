@@ -1,10 +1,11 @@
 /**
  * TIYATROTIST — Global RSS 2.0 Feed Route Handler
  * Endpoint: /rss.xml
+ * Incorporates all unified blog posts (Markdown & database)
  */
 
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { getAllBlogPosts } from '@/lib/blog-service';
 
 export const dynamic = 'force-static';
 
@@ -23,12 +24,7 @@ export async function GET() {
   let itemsXml = '';
 
   try {
-    const { data: posts } = await supabase
-      .from('blog_posts')
-      .select('slug, title_tr, title_en, excerpt_tr, excerpt_en, published_at, created_at')
-      .eq('published', true)
-      .order('published_at', { ascending: false })
-      .limit(20);
+    const posts = await getAllBlogPosts();
 
     if (posts && posts.length > 0) {
       itemsXml = posts
@@ -36,7 +32,9 @@ export async function GET() {
           const title = escapeXml(p.title_tr || p.title_en || p.slug);
           const excerpt = escapeXml(p.excerpt_tr || p.excerpt_en || '');
           const link = `${siteUrl}/tr/blog/${p.slug}`;
-          const pubDate = new Date(p.published_at || p.created_at).toUTCString();
+          const rawDate = p.published_at || p.created_at;
+          const pubDate = rawDate ? new Date(rawDate).toUTCString() : new Date().toUTCString();
+          const category = p.category ? `<category>${escapeXml(p.category)}</category>` : '';
 
           return `
     <item>
@@ -45,6 +43,7 @@ export async function GET() {
       <guid isPermaLink="true">${link}</guid>
       <description>${excerpt}</description>
       <pubDate>${pubDate}</pubDate>
+      ${category}
     </item>`;
         })
         .join('');
@@ -56,9 +55,9 @@ export async function GET() {
   const rssFeed = `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>TIYATROTIST — Açık Kaynak Sistemler &amp; Portfolyo</title>
+    <title>TIYATROTIST — Sistem Mühendisliği, Çekirdek ve Açık Kaynak</title>
     <link>${siteUrl}</link>
-    <description>Essays, architecture breakdowns, typography, and pure monochrome experiments.</description>
+    <description>Sistem mimarisi, Linux çekirdeği, C++20, Qt 6, Rust, dağıtık simülasyon ve açık kaynak projeler.</description>
     <language>tr-TR</language>
     <atom:link href="${siteUrl}/rss.xml" rel="self" type="application/rss+xml" />
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>${itemsXml}

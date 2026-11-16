@@ -123,9 +123,17 @@ export default async function LangLayout({ children, params }: LangLayoutProps) 
         name: 'TIYATROTIST',
         description:
           validLang === 'tr'
-            ? 'Buğra Dere (Tiyatrotist). Sistem mimarisi, C++20, Qt 6, Rust ve açık kaynak projeler.'
-            : 'Buğra Dere (Tiyatrotist). Systems architecture, C++20, Qt 6, Rust, and open-source projects.',
+            ? 'Buğra Dere (Tiyatrotist). Sistem mimarisi, Linux çekirdeği, C++20, Qt 6, Rust ve açık kaynak projeler.'
+            : 'Buğra Dere (Tiyatrotist). Systems architecture, Linux kernel, C++20, Qt 6, Rust, and open-source projects.',
         inLanguage: validLang === 'tr' ? 'tr-TR' : 'en-US',
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: {
+            '@type': 'EntryPoint',
+            urlTemplate: `https://tiyatrotist.com.tr/${validLang}/blog?q={search_term_string}`,
+          },
+          'query-input': 'required name=search_term_string',
+        },
       },
       {
         '@type': 'Person',
@@ -134,9 +142,28 @@ export default async function LangLayout({ children, params }: LangLayoutProps) 
         alternateName: 'Tiyatrotist',
         url: 'https://tiyatrotist.com.tr',
         image: 'https://tiyatrotist.com.tr/icon.svg',
-        jobTitle: validLang === 'tr' ? 'Sistem Geliştiricisi' : 'Systems Developer',
+        jobTitle: validLang === 'tr' ? 'Sistem Geliştiricisi & Açık Kaynak Mimarı' : 'Systems Developer & Open Source Architect',
+        worksFor: {
+          '@type': 'Organization',
+          name: 'TIYATROTIST',
+          url: 'https://tiyatrotist.com.tr',
+        },
+        knowsAbout: [
+          'Linux Kernel',
+          'Systems Architecture',
+          'C++20',
+          'Qt 6',
+          'Rust',
+          'Distributed Systems',
+          'Deterministic Simulation Testing',
+          'eBPF',
+          'Open Source Software',
+        ],
         sameAs: [
           'https://github.com/Tiyatrotist',
+          'https://x.com/Tiyatrotist',
+          'https://youtube.com/@Tiyatrotist',
+          'https://instagram.com/Tiyatrotist',
           'https://tiyatrotist.com.tr',
         ],
       },

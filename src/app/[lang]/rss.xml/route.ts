@@ -1,10 +1,11 @@
 /**
  * TIYATROTIST — Localized RSS Feed Route Handler
  * Endpoint: /[lang]/rss.xml
+ * Incorporates all unified blog posts (Markdown & database)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { getAllBlogPosts } from '@/lib/blog-service';
 
 export const dynamic = 'force-static';
 
@@ -32,12 +33,7 @@ export async function GET(
   let itemsXml = '';
 
   try {
-    const { data: posts } = await supabase
-      .from('blog_posts')
-      .select('slug, title_tr, title_en, excerpt_tr, excerpt_en, published_at, created_at')
-      .eq('published', true)
-      .order('published_at', { ascending: false })
-      .limit(20);
+    const posts = await getAllBlogPosts();
 
     if (posts && posts.length > 0) {
       itemsXml = posts
@@ -51,7 +47,9 @@ export async function GET(
             currentLang === 'tr' ? p.excerpt_tr || p.excerpt_en || '' : p.excerpt_en || p.excerpt_tr || ''
           );
           const link = `${siteUrl}/${currentLang}/blog/${p.slug}`;
-          const pubDate = new Date(p.published_at || p.created_at).toUTCString();
+          const rawDate = p.published_at || p.created_at;
+          const pubDate = rawDate ? new Date(rawDate).toUTCString() : new Date().toUTCString();
+          const category = p.category ? `<category>${escapeXml(p.category)}</category>` : '';
 
           return `
     <item>
@@ -60,6 +58,7 @@ export async function GET(
       <guid isPermaLink="true">${link}</guid>
       <description>${excerpt}</description>
       <pubDate>${pubDate}</pubDate>
+      ${category}
     </item>`;
         })
         .join('');
@@ -68,12 +67,20 @@ export async function GET(
     console.debug('[lang/rss.xml] Error building RSS items:', err);
   }
 
+  const feedTitle = currentLang === 'tr'
+    ? 'TIYATROTIST — Sistem Mühendisliği, Çekirdek ve Açık Kaynak'
+    : 'TIYATROTIST — Systems Engineering, Kernel & Open Source';
+
+  const feedDesc = currentLang === 'tr'
+    ? 'Sistem mimarisi, Linux çekirdeği, C++20, Qt 6, Rust, dağıtık simülasyon ve açık kaynak projeler.'
+    : 'Systems architecture, Linux kernel, C++20, Qt 6, Rust, distributed simulation, and open-source projects.';
+
   const rssFeed = `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>TIYATROTIST — ${currentLang === 'tr' ? 'Açık Kaynak Sistemler & Portfolyo' : 'Open Source Systems & Portfolio'}</title>
+    <title>${feedTitle}</title>
     <link>${siteUrl}/${currentLang}</link>
-    <description>${currentLang === 'tr' ? 'Yazılar, mimari analizler ve teknik notlar.' : 'Essays, architectural analyses and technical notes.'}</description>
+    <description>${feedDesc}</description>
     <language>${currentLang === 'tr' ? 'tr-TR' : 'en-US'}</language>
     <atom:link href="${siteUrl}/${currentLang}/rss.xml" rel="self" type="application/rss+xml" />
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>${itemsXml}

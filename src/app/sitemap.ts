@@ -8,119 +8,107 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://tiyatrotist.com.tr';
   const currentDate = new Date();
 
+  const staticRoutes = [
+    { path: '', changeFrequency: 'daily' as const, priorityTr: 1.0, priorityEn: 0.9 },
+    { path: 'about', changeFrequency: 'monthly' as const, priorityTr: 0.8, priorityEn: 0.7 },
+    { path: 'projects', changeFrequency: 'weekly' as const, priorityTr: 0.9, priorityEn: 0.85 },
+    { path: 'blog', changeFrequency: 'daily' as const, priorityTr: 0.95, priorityEn: 0.9 },
+    { path: 'contact', changeFrequency: 'monthly' as const, priorityTr: 0.7, priorityEn: 0.6 },
+    { path: 'hire', changeFrequency: 'monthly' as const, priorityTr: 0.75, priorityEn: 0.65 },
+    { path: 'now', changeFrequency: 'weekly' as const, priorityTr: 0.75, priorityEn: 0.65 },
+  ];
+
   const entries: MetadataRoute.Sitemap = [
     {
       url: `${baseUrl}/`,
       lastModified: currentDate,
       changeFrequency: 'daily',
       priority: 1.0,
-    },
-    {
-      url: `${baseUrl}/tr`,
-      lastModified: currentDate,
-      changeFrequency: 'daily',
-      priority: 1.0,
-    },
-    {
-      url: `${baseUrl}/en`,
-      lastModified: currentDate,
-      changeFrequency: 'daily',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/tr/about`,
-      lastModified: currentDate,
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/en/about`,
-      lastModified: currentDate,
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/tr/projects`,
-      lastModified: currentDate,
-      changeFrequency: 'weekly',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/en/projects`,
-      lastModified: currentDate,
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/tr/blog`,
-      lastModified: currentDate,
-      changeFrequency: 'daily',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/en/blog`,
-      lastModified: currentDate,
-      changeFrequency: 'daily',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/tr/contact`,
-      lastModified: currentDate,
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}/en/contact`,
-      lastModified: currentDate,
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
-    {
-      url: `${baseUrl}/tr/hire`,
-      lastModified: currentDate,
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/en/hire`,
-      lastModified: currentDate,
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}/tr/now`,
-      lastModified: currentDate,
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/en/now`,
-      lastModified: currentDate,
-      changeFrequency: 'weekly',
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}/bookos`,
-      lastModified: currentDate,
-      changeFrequency: 'monthly',
-      priority: 0.6,
+      alternates: {
+        languages: {
+          tr: `${baseUrl}/tr`,
+          en: `${baseUrl}/en`,
+        },
+      },
     },
   ];
+
+  // Localized static routes
+  for (const route of staticRoutes) {
+    const trUrl = route.path ? `${baseUrl}/tr/${route.path}` : `${baseUrl}/tr`;
+    const enUrl = route.path ? `${baseUrl}/en/${route.path}` : `${baseUrl}/en`;
+
+    entries.push({
+      url: trUrl,
+      lastModified: currentDate,
+      changeFrequency: route.changeFrequency,
+      priority: route.priorityTr,
+      alternates: {
+        languages: {
+          tr: trUrl,
+          en: enUrl,
+        },
+      },
+    });
+
+    entries.push({
+      url: enUrl,
+      lastModified: currentDate,
+      changeFrequency: route.changeFrequency,
+      priority: route.priorityEn,
+      alternates: {
+        languages: {
+          tr: trUrl,
+          en: enUrl,
+        },
+      },
+    });
+  }
+
+  // BookOS standalone entry
+  entries.push({
+    url: `${baseUrl}/bookos`,
+    lastModified: currentDate,
+    changeFrequency: 'monthly',
+    priority: 0.7,
+    alternates: {
+      languages: {
+        tr: `${baseUrl}/tr/projects/bookos`,
+        en: `${baseUrl}/en/projects/bookos`,
+      },
+    },
+  });
 
   // System Projects (Dedicated 3D Scrollytelling Microsites)
   for (const proj of SYSTEM_PROJECTS) {
     if (proj.slug) {
+      const trUrl = `${baseUrl}/tr/projects/${proj.slug}`;
+      const enUrl = `${baseUrl}/en/projects/${proj.slug}`;
+
       entries.push({
-        url: `${baseUrl}/tr/projects/${proj.slug}`,
+        url: trUrl,
         lastModified: currentDate,
         changeFrequency: 'weekly',
         priority: 0.9,
+        alternates: {
+          languages: {
+            tr: trUrl,
+            en: enUrl,
+          },
+        },
       });
+
       entries.push({
-        url: `${baseUrl}/en/projects/${proj.slug}`,
+        url: enUrl,
         lastModified: currentDate,
         changeFrequency: 'weekly',
-        priority: 0.8,
+        priority: 0.85,
+        alternates: {
+          languages: {
+            tr: trUrl,
+            en: enUrl,
+          },
+        },
       });
     }
   }
@@ -130,18 +118,35 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const posts = await getAllBlogPosts();
     for (const post of posts) {
       if (post.slug) {
-        const lastMod = post.updated_at ? new Date(post.updated_at) : currentDate;
+        const rawDate = post.updated_at || post.published_at;
+        const lastMod = rawDate ? new Date(rawDate) : currentDate;
+        const trUrl = `${baseUrl}/tr/blog/${post.slug}`;
+        const enUrl = `${baseUrl}/en/blog/${post.slug}`;
+
         entries.push({
-          url: `${baseUrl}/tr/blog/${post.slug}`,
+          url: trUrl,
           lastModified: lastMod,
           changeFrequency: 'weekly',
-          priority: 0.85,
+          priority: post.featured ? 0.9 : 0.85,
+          alternates: {
+            languages: {
+              tr: trUrl,
+              en: enUrl,
+            },
+          },
         });
+
         entries.push({
-          url: `${baseUrl}/en/blog/${post.slug}`,
+          url: enUrl,
           lastModified: lastMod,
           changeFrequency: 'weekly',
-          priority: 0.75,
+          priority: post.featured ? 0.85 : 0.8,
+          alternates: {
+            languages: {
+              tr: trUrl,
+              en: enUrl,
+            },
+          },
         });
       }
     }

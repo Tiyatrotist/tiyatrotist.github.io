@@ -12,18 +12,41 @@ export async function generateMetadata({ params }: ContactPageProps): Promise<Me
   const { lang } = await params;
   const currentLang = (lang === 'tr' ? 'tr' : 'en') as Locale;
   const isTr = currentLang === 'tr';
+  const contactUrl = `https://tiyatrotist.com.tr/${currentLang}/contact`;
+  const description = isTr
+    ? 'Açık kaynak iş birlikleri, sistem mimarisi danışmanlığı veya teknik iletişim için doğrudan bağlantılar.'
+    : 'Direct links and contact methods for open-source collaborations and systems engineering inquiries.';
 
   return {
     title: isTr ? 'İletişim' : 'Contact',
-    description: isTr
-      ? 'Açık kaynak iş birlikleri, sorular veya teknik iletişim için bağlantılar.'
-      : 'Direct links and contact methods for open-source collaborations and inquiries.',
+    description,
     alternates: {
-      canonical: `/${currentLang}/contact`,
+      canonical: contactUrl,
       languages: {
         tr: '/tr/contact',
         en: '/en/contact',
       },
+    },
+    openGraph: {
+      type: 'website',
+      title: (isTr ? 'İletişim' : 'Contact') + ' | TIYATROTIST',
+      description,
+      url: contactUrl,
+      images: [
+        {
+          url: 'https://tiyatrotist.com.tr/icon.svg',
+          width: 512,
+          height: 512,
+          alt: 'TIYATROTIST İletişim',
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary',
+      title: (isTr ? 'İletişim' : 'Contact') + ' | TIYATROTIST',
+      description,
+      creator: '@tiyatrotist',
+      images: ['https://tiyatrotist.com.tr/icon.svg'],
     },
   };
 }
@@ -31,11 +54,51 @@ export async function generateMetadata({ params }: ContactPageProps): Promise<Me
 export default async function ContactPage({ params }: ContactPageProps) {
   const { lang } = await params;
   const currentLang = (lang === 'tr' ? 'tr' : 'en') as Locale;
+  const isTr = currentLang === 'tr';
   const dict = getDictionary(currentLang);
   const c = dict.contactPage;
+  const contactUrl = `https://tiyatrotist.com.tr/${currentLang}/contact`;
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'ContactPage',
+        '@id': `${contactUrl}#contact`,
+        url: contactUrl,
+        name: isTr ? 'İletişim' : 'Contact',
+        description: isTr
+          ? 'TIYATROTIST iletişim sayfası.'
+          : 'TIYATROTIST contact page.',
+        inLanguage: currentLang === 'tr' ? 'tr-TR' : 'en-US',
+      },
+      {
+        '@type': 'BreadcrumbList',
+        '@id': `${contactUrl}#breadcrumb`,
+        itemListElement: [
+          {
+            '@type': 'ListItem',
+            position: 1,
+            name: isTr ? 'Ana Sayfa' : 'Home',
+            item: `https://tiyatrotist.com.tr/${currentLang}`,
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: isTr ? 'İletişim' : 'Contact',
+            item: contactUrl,
+          },
+        ],
+      },
+    ],
+  };
 
   return (
     <main className="main-container">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Header lang={currentLang} dict={dict} />
       <div className="page-container">
         <header className="page-header">

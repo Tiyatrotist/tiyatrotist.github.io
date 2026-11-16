@@ -14,18 +14,41 @@ export async function generateMetadata({ params }: ProjectsPageProps): Promise<M
   const { lang } = await params;
   const currentLang = (lang === 'tr' ? 'tr' : 'en') as Locale;
   const isTr = currentLang === 'tr';
+  const projectsUrl = `https://tiyatrotist.com.tr/${currentLang}/projects`;
+  const description = isTr
+    ? 'Açık kaynak sistem araçları, C++20/Qt 6 ve Rust projeleri: E.D.I.T.H, EtapKitap, BookOS, explorer-terminal ve OpenPet.'
+    : 'Open source system utilities, C++20/Qt 6 and Rust projects: E.D.I.T.H, EtapKitap, BookOS, explorer-terminal, and OpenPet.';
 
   return {
     title: isTr ? 'Projeler' : 'Projects',
-    description: isTr
-      ? 'Açık kaynak sistem araçları, C++20/Qt 6 ve Rust projeleri.'
-      : 'Open source system utilities, C++20/Qt 6 and Rust projects.',
+    description,
     alternates: {
-      canonical: `/${currentLang}/projects`,
+      canonical: projectsUrl,
       languages: {
         tr: '/tr/projects',
         en: '/en/projects',
       },
+    },
+    openGraph: {
+      type: 'website',
+      title: isTr ? 'Projeler | TIYATROTIST' : 'Projects | TIYATROTIST',
+      description,
+      url: projectsUrl,
+      images: [
+        {
+          url: 'https://tiyatrotist.com.tr/icon.svg',
+          width: 512,
+          height: 512,
+          alt: 'TIYATROTIST Projects',
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary',
+      title: isTr ? 'Projeler | TIYATROTIST' : 'Projects | TIYATROTIST',
+      description,
+      creator: '@tiyatrotist',
+      images: ['https://tiyatrotist.com.tr/icon.svg'],
     },
   };
 }
@@ -33,7 +56,43 @@ export async function generateMetadata({ params }: ProjectsPageProps): Promise<M
 export default async function ProjectsPage({ params }: ProjectsPageProps) {
   const { lang } = await params;
   const currentLang = (lang === 'tr' ? 'tr' : 'en') as Locale;
+  const isTr = currentLang === 'tr';
   const dict = getDictionary(currentLang);
+  const projectsUrl = `https://tiyatrotist.com.tr/${currentLang}/projects`;
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'CollectionPage',
+        '@id': `${projectsUrl}#collection`,
+        url: projectsUrl,
+        name: isTr ? 'TIYATROTIST Projeler' : 'TIYATROTIST Projects',
+        description: isTr
+          ? 'Açık kaynak sistem araçları, C++20/Qt 6 ve Rust projeleri.'
+          : 'Open source system utilities, C++20/Qt 6 and Rust projects.',
+        inLanguage: currentLang === 'tr' ? 'tr-TR' : 'en-US',
+      },
+      {
+        '@type': 'BreadcrumbList',
+        '@id': `${projectsUrl}#breadcrumb`,
+        itemListElement: [
+          {
+            '@type': 'ListItem',
+            position: 1,
+            name: isTr ? 'Ana Sayfa' : 'Home',
+            item: `https://tiyatrotist.com.tr/${currentLang}`,
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: isTr ? 'Projeler' : 'Projects',
+            item: projectsUrl,
+          },
+        ],
+      },
+    ],
+  };
 
   const projects = SYSTEM_PROJECTS.map((sp) => ({
     slug: sp.slug,
@@ -47,6 +106,10 @@ export default async function ProjectsPage({ params }: ProjectsPageProps) {
 
   return (
     <main className="main-container">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Header lang={currentLang} dict={dict} />
       <div className="page-container">
         <header className="page-header">

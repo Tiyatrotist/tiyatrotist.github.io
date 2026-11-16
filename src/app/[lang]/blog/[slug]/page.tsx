@@ -38,6 +38,10 @@ export async function generateMetadata({ params }: BlogPostDetailPageProps): Pro
 
   const title = (isTr ? post.title_tr : post.title_en) || post.title_tr || post.title_en || post.slug;
   const description = (isTr ? post.excerpt_tr : post.excerpt_en) || post.excerpt_tr || post.excerpt_en || '';
+  const postUrl = `https://tiyatrotist.com.tr/${currentLang}/blog/${slug}`;
+  const imageUrl = post.cover_image
+    ? (post.cover_image.startsWith('http') ? post.cover_image : `https://tiyatrotist.com.tr${post.cover_image}`)
+    : 'https://tiyatrotist.com.tr/icon.svg';
 
   return {
     title,
@@ -53,23 +57,27 @@ export async function generateMetadata({ params }: BlogPostDetailPageProps): Pro
       type: 'article',
       title: `${title} | TIYATROTIST`,
       description,
-      url: `https://tiyatrotist.com.tr/${currentLang}/blog/${slug}`,
+      url: postUrl,
       publishedTime: post.published_at || undefined,
+      modifiedTime: post.updated_at || post.published_at || undefined,
+      section: post.category || 'Mühendislik',
+      tags: post.tags,
       authors: ['https://tiyatrotist.com.tr'],
       images: [
         {
-          url: '/icon.svg',
-          width: 512,
-          height: 512,
+          url: imageUrl,
+          width: post.cover_image ? 1024 : 512,
+          height: post.cover_image ? 572 : 512,
           alt: title,
         },
       ],
     },
     twitter: {
-      card: 'summary',
+      card: post.cover_image ? 'summary_large_image' : 'summary',
       title: `${title} | TIYATROTIST`,
       description,
       creator: '@tiyatrotist',
+      images: [imageUrl],
     },
   };
 }
@@ -147,28 +155,71 @@ export default async function BlogPostDetailPage({ params }: BlogPostDetailPageP
       })
     : '';
 
+  const articleUrl = `https://tiyatrotist.com.tr/${currentLang}/blog/${slug}`;
+  const articleImageUrl = post.cover_image
+    ? (post.cover_image.startsWith('http') ? post.cover_image : `https://tiyatrotist.com.tr${post.cover_image}`)
+    : 'https://tiyatrotist.com.tr/icon.svg';
+
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'TechArticle',
-    headline: displayTitle,
-    description: (currentLang === 'tr' ? post.excerpt_tr : post.excerpt_en) || '',
-    inLanguage: currentLang === 'tr' ? 'tr-TR' : 'en-US',
-    datePublished: post.published_at || undefined,
-    author: {
-      '@type': 'Person',
-      name: 'Buğra Dere',
-      alternateName: 'Tiyatrotist',
-      url: 'https://tiyatrotist.com.tr',
-    },
-    publisher: {
-      '@type': 'Organization',
-      name: 'TIYATROTIST',
-      url: 'https://tiyatrotist.com.tr',
-      logo: {
-        '@type': 'ImageObject',
-        url: 'https://tiyatrotist.com.tr/icon.svg',
+    '@graph': [
+      {
+        '@type': 'TechArticle',
+        '@id': `${articleUrl}#article`,
+        isPartOf: {
+          '@type': 'WebPage',
+          '@id': articleUrl,
+        },
+        headline: displayTitle,
+        description: (currentLang === 'tr' ? post.excerpt_tr : post.excerpt_en) || '',
+        inLanguage: currentLang === 'tr' ? 'tr-TR' : 'en-US',
+        mainEntityOfPage: articleUrl,
+        image: articleImageUrl,
+        datePublished: post.published_at || undefined,
+        dateModified: post.updated_at || post.published_at || undefined,
+        articleSection: post.category || (currentLang === 'tr' ? 'Mühendislik' : 'Engineering'),
+        keywords: post.tags && post.tags.length > 0 ? post.tags.join(', ') : undefined,
+        author: {
+          '@type': 'Person',
+          name: 'Buğra Dere',
+          alternateName: 'Tiyatrotist',
+          url: 'https://tiyatrotist.com.tr',
+        },
+        publisher: {
+          '@type': 'Organization',
+          name: 'TIYATROTIST',
+          url: 'https://tiyatrotist.com.tr',
+          logo: {
+            '@type': 'ImageObject',
+            url: 'https://tiyatrotist.com.tr/icon.svg',
+          },
+        },
       },
-    },
+      {
+        '@type': 'BreadcrumbList',
+        '@id': `${articleUrl}#breadcrumb`,
+        itemListElement: [
+          {
+            '@type': 'ListItem',
+            position: 1,
+            name: currentLang === 'tr' ? 'Ana Sayfa' : 'Home',
+            item: `https://tiyatrotist.com.tr/${currentLang}`,
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: 'Blog',
+            item: `https://tiyatrotist.com.tr/${currentLang}/blog`,
+          },
+          {
+            '@type': 'ListItem',
+            position: 3,
+            name: displayTitle,
+            item: articleUrl,
+          },
+        ],
+      },
+    ],
   };
 
   return (
